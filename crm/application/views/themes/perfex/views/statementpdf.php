@@ -1,6 +1,4 @@
-<?php
-
-defined('BASEPATH') or exit('No direct script access allowed');
+<?php defined('BASEPATH') or exit('No direct script access allowed');
 $dimensions = $pdf->getPageDimensions();
 
 $info_right_column = '';
@@ -30,31 +28,31 @@ $pdf->writeHTMLCell(($dimensions['wk'] / 2) - $dimensions['lm'] + 15, '', '', $y
 
 $summary = '';
 $summary .= '<h2>' . _l('account_summary') . '</h2>';
-$summary .= '<div style="color:#676767;">' . _l('statement_from_to', [
+$summary .= '<div style="color:#676767;">' . _l('statement_from_to', array(
     _d($statement['from']),
-    _d($statement['to']),
-]) . '</div>';
+    _d($statement['to'])
+)) . '</div>';
 $summary .= '<hr />';
 $summary .= '
 <table cellpadding="4" border="0" style="color:#424242;" width="100%">
    <tbody>
       <tr>
           <td align="left"><br /><br />' . _l('statement_beginning_balance') . ':</td>
-          <td><br /><br />' . app_format_money($statement['beginning_balance'], $statement['currency']) . '</td>
+          <td><br /><br />' . format_money($statement['beginning_balance'], $statement['currency']->symbol) . '</td>
       </tr>
       <tr>
           <td align="left">' . _l('invoiced_amount') . ':</td>
-          <td>' . app_format_money($statement['invoiced_amount'], $statement['currency']) . '</td>
+          <td>' . format_money($statement['invoiced_amount'], $statement['currency']->symbol) . '</td>
       </tr>
       <tr>
           <td align="left">' . _l('amount_paid') . ':</td>
-          <td>' . app_format_money($statement['amount_paid'], $statement['currency']) . '</td>
+          <td>' . format_money($statement['amount_paid'], $statement['currency']->symbol) . '</td>
       </tr>
   </tbody>
   <tfoot>
       <tr>
         <td align="left"><b>' . _l('balance_due') . '</b>:</td>
-        <td>' . app_format_money($statement['balance_due'], $statement['currency']) . '</td>
+        <td>' . format_money($statement['balance_due'], $statement['currency']->symbol) . '</td>
     </tr>
   </tfoot>
 </table>';
@@ -64,10 +62,10 @@ $pdf->writeHTMLCell(($dimensions['wk'] / 2) - $dimensions['rm'] - 15, '', '', ''
 
 $summary_info = '
 <div style="text-align: center;">
-    ' . _l('customer_statement_info', [
+    ' . _l('customer_statement_info', array(
     _d($statement['from']),
-    _d($statement['to']),
-]) . '
+    _d($statement['to'])
+)) . '
 </div>';
 
 $pdf->ln(9);
@@ -90,64 +88,58 @@ $tblhtml = '<table width="100%" cellspacing="0" cellpadding="8" border="0">
  <tr>
      <td width="13%">' . _d($statement['from']) . '</td>
      <td width="27%">' . _l('statement_beginning_balance') . '</td>
-     <td align="right">' . app_format_money($statement['beginning_balance'], $statement['currency'], true) . '</td>
+     <td align="right">' . _format_number($statement['beginning_balance']) . '</td>
      <td></td>
-     <td align="right">' . app_format_money($statement['beginning_balance'], $statement['currency'], true) . '</td>
+     <td align="right">' . _format_number($statement['beginning_balance']) . '</td>
  </tr>';
-$count = 0;
+$count   = 0;
 foreach ($statement['result'] as $data) {
-    $tblhtml .= '<tr' . (++$count % 2 ? ' bgcolor="#f6f5f5"' : '') . '>
+    $tblhtml .= '<tr' . (++$count % 2 ? " bgcolor=\"#f6f5f5\"" : "") . '>
   <td width="13%">' . _d($data['date']) . '</td>
   <td width="27%">';
     if (isset($data['invoice_id'])) {
-        $tblhtml .= _l('statement_invoice_details', [
+        $tblhtml .= _l('statement_invoice_details', array(
             format_invoice_number($data['invoice_id']),
-            _d($data['duedate']),
-        ]);
-    } elseif (isset($data['payment_id'])) {
-        $tblhtml .= _l('statement_payment_details', [
+            _d($data['duedate'])
+        ));
+    } else if (isset($data['payment_id'])) {
+        $tblhtml .= _l('statement_payment_details', array(
             '#' . $data['payment_id'],
-            format_invoice_number($data['payment_invoice_id']),
-        ]);
+            format_invoice_number($data['payment_invoice_id'])
+        ));
     } elseif (isset($data['credit_note_id'])) {
         $tblhtml .= _l('statement_credit_note_details', format_credit_note_number($data['credit_note_id']));
     } elseif (isset($data['credit_id'])) {
-        $tblhtml .= _l('statement_credits_applied_details', [
+        $tblhtml .= _l('statement_credits_applied_details', array(
             format_credit_note_number($data['credit_applied_credit_note_id']),
-            app_format_money($data['credit_amount'], $statement['currency'], true),
-            format_invoice_number($data['credit_invoice_id']),
-        ]);
-    } elseif (isset($data['credit_note_refund_id'])) {
-        $tblhtml .= _l('statement_credit_note_refund', format_credit_note_number($data['refund_credit_note_id']));
+            _format_number($data['credit_amount']),
+            format_invoice_number($data['credit_invoice_id'])
+        ));
     }
 
     $tblhtml .= '</td>
     <td align="right">';
     if (isset($data['invoice_id'])) {
-        $tblhtml .= app_format_money($data['invoice_amount'], $statement['currency'], true);
-    } elseif (isset($data['credit_note_id'])) {
-        $tblhtml .= app_format_money($data['credit_note_amount'], $statement['currency'], true);
+        $tblhtml .= _format_number($data['invoice_amount']);
+    } else if (isset($data['credit_note_id'])) {
+        $tblhtml .= _format_number($data['credit_note_amount']);
     }
     $tblhtml .= '</td>
         <td align="right">';
     if (isset($data['payment_id'])) {
-        $tblhtml .= app_format_money($data['payment_total'], $statement['currency'], true);
-    } elseif (isset($data['credit_note_refund_id'])) {
-        $tblhtml .= app_format_money($data['refund_amount'], $statement['currency'], true);
+        $tblhtml .= _format_number($data['payment_total']);
     }
     $tblhtml .= '</td>
             <td align="right">';
     if (isset($data['invoice_id'])) {
         $tmpBeginningBalance = ($tmpBeginningBalance + $data['invoice_amount']);
-    } elseif (isset($data['payment_id'])) {
+    } else if (isset($data['payment_id'])) {
         $tmpBeginningBalance = ($tmpBeginningBalance - $data['payment_total']);
-    } elseif (isset($data['credit_note_id'])) {
+    } else if (isset($data['credit_note_id'])) {
         $tmpBeginningBalance = ($tmpBeginningBalance - $data['credit_note_amount']);
-    } elseif (isset($data['credit_note_refund_id'])) {
-        $tmpBeginningBalance = ($tmpBeginningBalance + $data['refund_amount']);
     }
     if (!isset($data['credit_id'])) {
-        $tblhtml .= app_format_money($tmpBeginningBalance, $statement['currency'], true);
+        $tblhtml .= _format_number($tmpBeginningBalance);
     }
 
     $tblhtml .= '</td>
@@ -161,7 +153,7 @@ $tblhtml .= '</tbody>
              <td align="right"><b>' . _l('balance_due') . '</b></td>
              <td></td>
              <td align="right">
-                 <b>' . app_format_money($statement['balance_due'], $statement['currency']) . '</b>
+                 <b>' . format_money($statement['balance_due'], $statement['currency']->symbol) . '</b>
              </td>
          </tr>
      </tfoot>

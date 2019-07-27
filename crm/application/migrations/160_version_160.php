@@ -37,7 +37,7 @@ class Migration_Version_160 extends CI_Migration
         $this->db->query("ALTER TABLE `tblprojects` ADD `date_finished` DATETIME NULL AFTER `project_created`;");
 
         $this->db->where('name','email_piping_enabled');
-        $this->db->delete(db_prefix().'options');
+        $this->db->delete('tbloptions');
 
         update_option('update_info_message', '<div class="col-md-12">
             <div class="alert alert-success bold">

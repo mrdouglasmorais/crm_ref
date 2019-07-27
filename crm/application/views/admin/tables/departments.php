@@ -9,7 +9,7 @@ $aColumns = [
     'calendar_id',
     ];
 $sIndexColumn = 'departmentid';
-$sTable       = db_prefix().'departments';
+$sTable       = 'tbldepartments';
 
 $result  = data_tables_init($aColumns, $sIndexColumn, $sTable, [], [], ['email', 'hidefromclient', 'host', 'encryption', 'password', 'delete_after_import', 'imap_username']);
 $output  = $result['output'];

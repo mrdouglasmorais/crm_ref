@@ -2,22 +2,22 @@
 
 defined('BASEPATH') or exit('No direct script access allowed');
 
-hooks()->add_filter('before_invoice_updated', '_format_data_sales_feature');
-hooks()->add_filter('before_invoice_added', '_format_data_sales_feature');
+add_action('before_invoice_updated', '_format_data_sales_feature');
+add_action('before_invoice_added', '_format_data_sales_feature');
 
-hooks()->add_filter('before_estimate_updated', '_format_data_sales_feature');
-hooks()->add_filter('before_estimate_added', '_format_data_sales_feature');
+add_action('before_estimate_updated', '_format_data_sales_feature');
+add_action('before_estimate_added', '_format_data_sales_feature');
 
-hooks()->add_filter('before_create_credit_note', '_format_data_sales_feature');
-hooks()->add_filter('before_update_credit_note', '_format_data_sales_feature');
+add_action('before_create_credit_note', '_format_data_sales_feature');
+add_action('before_update_credit_note', '_format_data_sales_feature');
 
-hooks()->add_filter('before_create_proposal', '_format_data_sales_feature');
-hooks()->add_filter('before_proposal_updated', '_format_data_sales_feature');
+add_action('before_create_proposal', '_format_data_sales_feature');
+add_action('before_proposal_updated', '_format_data_sales_feature');
 
-hooks()->add_filter('before_client_added', '_format_data_client');
-hooks()->add_filter('before_client_updated', '_format_data_client', 10, 2);
-hooks()->add_filter('before_update_contact', '_format_data_client', 10, 2);
-hooks()->add_filter('before_create_contact', '_format_data_client');
+add_action('before_client_added', '_format_data_client');
+add_action('before_client_updated', '_format_data_client');
+add_action('before_update_contact', '_format_data_client');
+add_action('before_create_contact', '_format_data_client');
 
 /**
  * Remove and format some common used data for the sales feature eq invoice,estimates etc..
@@ -79,27 +79,29 @@ function _format_data_sales_feature($data)
     return $data;
 }
 
-function _format_data_client($data, $id = null)
+function _format_data_client($data)
 {
     foreach (_get_client_unused_names() as $u) {
-        if (isset($data[$u])) {
+        if (isset($data['data'][$u])) {
+            unset($data['data'][$u]);
+        } elseif (isset($data[$u])) {
             unset($data[$u]);
         }
     }
 
-    if (isset($data['address'])) {
-        $data['address'] = trim($data['address']);
-        $data['address'] = nl2br($data['address']);
+    if (isset($data['data']['address'])) {
+        $data['data']['address'] = trim($data['data']['address']);
+        $data['data']['address'] = nl2br($data['data']['address']);
     }
 
-    if (isset($data['billing_street'])) {
-        $data['billing_street'] = trim($data['billing_street']);
-        $data['billing_street'] = nl2br($data['billing_street']);
+    if (isset($data['data']['billing_street'])) {
+        $data['data']['billing_street'] = trim($data['data']['billing_street']);
+        $data['data']['billing_street'] = nl2br($data['data']['billing_street']);
     }
 
-    if (isset($data['shipping_street'])) {
-        $data['shipping_street'] = trim($data['shipping_street']);
-        $data['shipping_street'] = nl2br($data['shipping_street']);
+    if (isset($data['data']['shipping_street'])) {
+        $data['data']['shipping_street'] = trim($data['data']['shipping_street']);
+        $data['data']['shipping_street'] = nl2br($data['data']['shipping_street']);
     }
 
     return $data;
@@ -124,7 +126,7 @@ function _get_sales_feature_unused_names()
         'repeat_type_custom', 'bill_expenses',
         'save_and_send', 'merge_current_invoice',
         'cancel_merged_invoices', 'invoices_to_merge',
-        'tags', 's_prefix', 'save_and_record_payment',
+        'tags', 's_prefix','save_and_record_payment'
     ];
 }
 

@@ -6,11 +6,9 @@
          <?php if(has_permission('invoices','','create')){ ?>
             <a href="<?php echo admin_url('invoices/invoice'); ?>" class="btn btn-info pull-left new new-invoice-list mright5"><?php echo _l('create_new_invoice'); ?></a>
          <?php } ?>
-         <?php if(!isset($project)){ ?>
-               <a href="<?php echo admin_url('invoices/recurring'); ?>" class="btn btn-info pull-left">
-                  <?php echo _l('invoices_list_recurring'); ?>
-               </a>
-         <?php } ?>
+
+         <a href="<?php echo admin_url('invoices/recurring'); ?>" class="btn btn-info pull-left"><?php echo _l('invoices_list_recurring'); ?></a>
+
          <div class="display-block text-right">
             <div class="btn-group pull-right mleft4 invoice-view-buttons btn-with-tooltip-group _filter_data" data-toggle="tooltip" data-title="<?php echo _l('filter_by'); ?>">
                <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -73,7 +71,7 @@
                   <li class="divider"></li>
                   <?php } ?>
                   <?php foreach($payment_modes as $mode){
-                     if(total_rows(db_prefix().'invoicepaymentrecords',array('paymentmode'=>$mode['id'])) == 0){continue;}
+                     if(total_rows('tblinvoicepaymentrecords',array('paymentmode'=>$mode['id'])) == 0){continue;}
                      ?>
                   <li>
                      <a href="#" data-cview="invoice_payments_by_<?php echo $mode['id']; ?>" onclick="dt_custom_view('<?php echo $mode['id']; ?>','.table-invoices','invoice_payments_by_<?php echo $mode['id']; ?>'); return false;">

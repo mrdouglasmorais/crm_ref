@@ -33,7 +33,7 @@
     _l('note'),
     _l('time_h'),
     _l('time_decimal'));
-$table_data = hooks()->apply_filters('projects_timesheets_table_columns', $table_data);
+$table_data = do_action('projects_timesheets_table_columns',$table_data);
 array_push($table_data,_l('options'));
 render_datatable($table_data,'timesheets'); ?>
 <?php $this->load->view('admin/projects/timesheet'); ?>

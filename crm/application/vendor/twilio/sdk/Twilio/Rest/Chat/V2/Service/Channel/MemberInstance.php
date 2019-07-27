@@ -28,7 +28,6 @@ use Twilio\Version;
  * @property integer lastConsumedMessageIndex
  * @property \DateTime lastConsumptionTimestamp
  * @property string url
- * @property string attributes
  */
 class MemberInstance extends InstanceResource {
     /**
@@ -58,7 +57,6 @@ class MemberInstance extends InstanceResource {
             'lastConsumedMessageIndex' => Values::array_get($payload, 'last_consumed_message_index'),
             'lastConsumptionTimestamp' => Deserialize::dateTime(Values::array_get($payload, 'last_consumption_timestamp')),
             'url' => Values::array_get($payload, 'url'),
-            'attributes' => Values::array_get($payload, 'attributes'),
         );
 
         $this->solution = array(

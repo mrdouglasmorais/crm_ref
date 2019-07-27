@@ -58,7 +58,7 @@
 			$("#gantt").gantt({
 				source: gantt_data,
 				itemsPerPage: 25,
-				months: app.months_json,
+				months: JSON.parse(monthsJSON),
 				navigate: 'scroll',
 				onRender: function() {
 					$('#gantt .leftPanel .name .fn-label:empty').parents('.name').css('background', 'initial');

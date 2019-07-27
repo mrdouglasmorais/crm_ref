@@ -2,6 +2,8 @@
 
 namespace Omnipay\AuthorizeNet\Message;
 
+use Omnipay\Common\CreditCard;
+
 /**
  * Authorize.Net AIM Capture Only Request
  */

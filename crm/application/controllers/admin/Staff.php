@@ -1,9 +1,13 @@
 <?php
 
 defined('BASEPATH') or exit('No direct script access allowed');
-
-class Staff extends AdminController
+class Staff extends Admin_controller
 {
+    public function __construct()
+    {
+        parent::__construct();
+    }
+
     /* List all staff members */
     public function index()
     {
@@ -24,16 +28,14 @@ class Staff extends AdminController
         if (!has_permission('staff', '', 'view')) {
             access_denied('staff');
         }
-        hooks()->do_action('staff_member_edit_view_profile', $id);
+        do_action('staff_member_edit_view_profile', $id);
 
         $this->load->model('departments_model');
         if ($this->input->post()) {
             $data = $this->input->post();
             // Don't do XSS clean here.
             $data['email_signature'] = $this->input->post('email_signature', false);
-            $data['email_signature'] = html_entity_decode($data['email_signature']);
-
-            $data['password'] = $this->input->post('password', false);
+            $data['password']        = $this->input->post('password', false);
 
             if ($id == '') {
                 if (!has_permission('staff', '', 'create')) {
@@ -72,6 +74,7 @@ class Staff extends AdminController
             }
             $data['member']            = $member;
             $title                     = $member->firstname . ' ' . $member->lastname;
+            $data['staff_permissions'] = $this->roles_model->get_staff_permissions($id);
             $data['staff_departments'] = $this->departments_model->get_staff_departments($member->staffid);
 
             $ts_filter_data = [];
@@ -92,26 +95,16 @@ class Staff extends AdminController
         $this->load->model('currencies_model');
         $data['base_currency'] = $this->currencies_model->get_base_currency();
         $data['roles']         = $this->roles_model->get();
+        $data['permissions']   = $this->roles_model->get_permissions();
         $data['user_notes']    = $this->misc_model->get_notes($id, 'staff');
         $data['departments']   = $this->departments_model->get();
         $data['title']         = $title;
-
         $this->load->view('admin/staff/member', $data);
-    }
-
-    /* Get role permission for specific role id */
-    public function role_changed($id)
-    {
-        if (!has_permission('staff', '', 'view')) {
-            ajax_access_denied('staff');
-        }
-
-        echo json_encode($this->roles_model->get($id)->permissions);
     }
 
     public function save_dashboard_widgets_order()
     {
-        hooks()->do_action('before_save_dashboard_widgets_order');
+        do_action('before_save_dashboard_widgets_order');
 
         $post_data = $this->input->post();
         foreach ($post_data as $container => $widgets) {
@@ -124,7 +117,7 @@ class Staff extends AdminController
 
     public function save_dashboard_widgets_visibility()
     {
-        hooks()->do_action('before_save_dashboard_widgets_visibility');
+        do_action('before_save_dashboard_widgets_visibility');
 
         $post_data = $this->input->post();
         update_staff_meta(get_staff_user_id(), 'dashboard_widgets_visibility', serialize($post_data['widgets']));
@@ -140,7 +133,7 @@ class Staff extends AdminController
 
     public function save_hidden_table_columns()
     {
-        hooks()->do_action('before_save_hidden_table_columns');
+        do_action('before_save_hidden_table_columns');
         $data   = $this->input->post();
         $id     = $data['id'];
         $hidden = isset($data['hidden']) ? $data['hidden'] : [];
@@ -149,10 +142,9 @@ class Staff extends AdminController
 
     public function change_language($lang = '')
     {
-        hooks()->do_action('before_staff_change_language', $lang);
-
+        $lang = do_action('before_staff_change_language', $lang);
         $this->db->where('staffid', get_staff_user_id());
-        $this->db->update(db_prefix() . 'staff', ['default_language' => $lang]);
+        $this->db->update('tblstaff', ['default_language' => $lang]);
         if (isset($_SERVER['HTTP_REFERER']) && !empty($_SERVER['HTTP_REFERER'])) {
             redirect($_SERVER['HTTP_REFERER']);
         } else {
@@ -164,7 +156,7 @@ class Staff extends AdminController
     {
         $data['view_all'] = false;
         if (is_admin() && $this->input->get('view') == 'all') {
-            $data['staff_members_with_timesheets'] = $this->db->query('SELECT DISTINCT staff_id FROM ' . db_prefix() . 'taskstimers WHERE staff_id !=' . get_staff_user_id())->result_array();
+            $data['staff_members_with_timesheets'] = $this->db->query('SELECT DISTINCT staff_id FROM tbltaskstimers WHERE staff_id !=' . get_staff_user_id())->result_array();
             $data['view_all']                      = true;
         }
 
@@ -202,9 +194,9 @@ class Staff extends AdminController
             handle_staff_profile_image_upload();
             $data = $this->input->post();
             // Don't do XSS clean here.
-            $data['email_signature'] = $this->input->post('email_signature', false);
-            $data['email_signature'] = html_entity_decode($data['email_signature']);
-            $success                 = $this->staff_model->update_profile($data, get_staff_user_id());
+            $data['email_signature'] = $data['email_signature'] = $this->input->post('email_signature', false);
+
+            $success = $this->staff_model->update_profile($data, get_staff_user_id());
             if ($success) {
                 set_alert('success', _l('staff_profile_updated'));
             }
@@ -226,13 +218,13 @@ class Staff extends AdminController
         if (is_numeric($id) && (has_permission('staff', '', 'create') || has_permission('staff', '', 'edot'))) {
             $staff_id = $id;
         }
-        hooks()->do_action('before_remove_staff_profile_image');
+        do_action('before_remove_staff_profile_image');
         $member = $this->staff_model->get($staff_id);
         if (file_exists(get_upload_path_by_type('staff') . $staff_id)) {
             delete_dir(get_upload_path_by_type('staff') . $staff_id);
         }
         $this->db->where('staffid', $staff_id);
-        $this->db->update(db_prefix() . 'staff', [
+        $this->db->update('tblstaff', [
             'profile_image' => null,
         ]);
 
@@ -268,7 +260,7 @@ class Staff extends AdminController
             $id = get_staff_user_id();
         }
 
-        hooks()->do_action('staff_profile_access', $id);
+        do_action('staff_profile_access', $id);
 
         $data['logged_time'] = $this->staff_model->get_logged_time_data($id);
         $data['staff_p']     = $this->staff_model->get($id);
@@ -282,7 +274,7 @@ class Staff extends AdminController
         $data['departments']       = $this->departments_model->get();
         $data['title']             = _l('staff_profile_string') . ' - ' . $data['staff_p']->firstname . ' ' . $data['staff_p']->lastname;
         // notifications
-        $total_notifications = total_rows(db_prefix() . 'notifications', [
+        $total_notifications = total_rows('tblnotifications', [
             'touserid' => get_staff_user_id(),
         ]);
         $data['total_pages'] = ceil($total_notifications / $this->misc_model->get_notifications_limit());
@@ -309,7 +301,7 @@ class Staff extends AdminController
             $this->db->limit($this->misc_model->get_notifications_limit(), $offset);
             $this->db->where('touserid', get_staff_user_id());
             $this->db->order_by('date', 'desc');
-            $notifications = $this->db->get(db_prefix() . 'notifications')->result_array();
+            $notifications = $this->db->get('tblnotifications')->result_array();
             $i             = 0;
             foreach ($notifications as $notification) {
                 if (($notification['fromcompany'] == null && $notification['fromuserid'] != 0) || ($notification['fromcompany'] == null && $notification['fromclientid'] != 0)) {

@@ -29,11 +29,12 @@ use Twilio\Version;
  * @property \DateTime dateUpdated
  * @property \DateTime dateResponded
  * @property \DateTime expirationDate
+ * @property string verificationSid
  * @property string status
- * @property string respondedReason
+ * @property string reason
  * @property string details
  * @property string hiddenDetails
- * @property string factorType
+ * @property string type
  * @property string url
  */
 class ChallengeInstance extends InstanceResource {
@@ -64,11 +65,12 @@ class ChallengeInstance extends InstanceResource {
             'dateUpdated' => Deserialize::dateTime(Values::array_get($payload, 'date_updated')),
             'dateResponded' => Deserialize::dateTime(Values::array_get($payload, 'date_responded')),
             'expirationDate' => Deserialize::dateTime(Values::array_get($payload, 'expiration_date')),
+            'verificationSid' => Values::array_get($payload, 'verification_sid'),
             'status' => Values::array_get($payload, 'status'),
-            'respondedReason' => Values::array_get($payload, 'responded_reason'),
+            'reason' => Values::array_get($payload, 'reason'),
             'details' => Values::array_get($payload, 'details'),
             'hiddenDetails' => Values::array_get($payload, 'hidden_details'),
-            'factorType' => Values::array_get($payload, 'factor_type'),
+            'type' => Values::array_get($payload, 'type'),
             'url' => Values::array_get($payload, 'url'),
         );
 

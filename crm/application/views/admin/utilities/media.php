@@ -15,7 +15,6 @@
 </div>
 </div>
 </div>
-<link rel="stylesheet" type="text/css" href="<?php echo base_url('assets/plugins/elFinder/themes/Material/css/theme-gray.css?v='.get_app_version()); ?>">
 <?php init_tail(); ?>
 <script src="//cdnjs.cloudflare.com/ajax/libs/require.js/2.3.2/require.min.js"></script>
 <script>
@@ -94,6 +93,7 @@ define('elFinderConfig', {
                       },
                       opts = {
                           height: 700,
+                          cssAutoLoad : [site_url+'assets/plugins/elFinder/themes/Material/css/theme-gray.css'],
                           customData: elfEditorCustomData,
                           contextmenu : {
                               files  : [
@@ -101,9 +101,6 @@ define('elFinderConfig', {
                                 'rm', '|', 'edit', 'rename', '|', 'archive', 'extract'
                               ]
                           },
-                          // https://github.com/Studio-42/elFinder/wiki/Client-configuration-options-2.1#ui
-                          // Removes Places
-                          ui: ['toolbar', 'tree', 'path', 'stat'],
                           uiOptions: {
                               // toolbar configuration
                               toolbar: [
@@ -152,6 +149,7 @@ define('elFinderConfig', {
                   }
               });
           },
+
           // JavaScript loader (REQUIRED)
           load = function() {
               require(
@@ -172,7 +170,7 @@ define('elFinderConfig', {
 
           // config of RequireJS (REQUIRED)
           require.config({
-              baseUrl: site_url + 'assets/plugins/elFinder/js',
+              baseUrl: '//cdnjs.cloudflare.com/ajax/libs/elfinder/' + elver + '/js',
               paths: {
                   'jquery': '//cdnjs.cloudflare.com/ajax/libs/jquery/' + (ie8 ? '1.12.4' : jqver) + '/jquery.min',
                   'jquery-ui': '//cdnjs.cloudflare.com/ajax/libs/jqueryui/' + uiver + '/jquery-ui.min',

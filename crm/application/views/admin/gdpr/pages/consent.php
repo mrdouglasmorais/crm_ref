@@ -60,7 +60,7 @@
             $('#consentModal').modal('show');
             var $consentForm = $('#consentForm');
             $consentForm.attr('action', url);
-            appValidateForm($consentForm, {
+            _validate_form($consentForm, {
                 name:'required',
             });
         });

@@ -4,16 +4,16 @@ defined('BASEPATH') or exit('No direct script access allowed');
 
 $aColumns = [
     '1', // bulk actions
-    db_prefix() . 'tickets.ticketid',
+    'tbltickets.ticketid',
     'subject',
-    '(SELECT GROUP_CONCAT(name SEPARATOR ",") FROM ' . db_prefix() . 'taggables JOIN ' . db_prefix() . 'tags ON ' . db_prefix() . 'taggables.tag_id = ' . db_prefix() . 'tags.id WHERE rel_id = ' . db_prefix() . 'tickets.ticketid and rel_type="ticket" ORDER by tag_order ASC) as tags',
-    db_prefix() . 'departments.name as department_name',
-    db_prefix() . 'services.name as service_name',
-    'CONCAT(' . db_prefix() . 'contacts.firstname, \' \', ' . db_prefix() . 'contacts.lastname) as contact_full_name',
+    '(SELECT GROUP_CONCAT(name SEPARATOR ",") FROM tbltags_in JOIN tbltags ON tbltags_in.tag_id = tbltags.id WHERE rel_id = tbltickets.ticketid and rel_type="ticket" ORDER by tag_order ASC) as tags',
+    'tbldepartments.name as department_name',
+    'tblservices.name as service_name',
+    'CONCAT(tblcontacts.firstname, \' \', tblcontacts.lastname) as contact_full_name',
     'status',
     'priority',
     'lastreply',
-    db_prefix() . 'tickets.date',
+    'tbltickets.date',
     ];
 
 $contactColumn = 6;
@@ -21,22 +21,22 @@ $tagsColumns   = 3;
 
 $additionalSelect = [
     'adminread',
-    db_prefix() . 'tickets.userid',
+    'tbltickets.userid',
     'statuscolor',
-    db_prefix() . 'tickets.name as ticket_opened_by_name',
-    db_prefix() . 'tickets.email',
-    db_prefix() . 'tickets.userid',
+    'tbltickets.name as ticket_opened_by_name',
+    'tbltickets.email',
+    'tbltickets.userid',
     'assigned',
-    db_prefix() . 'clients.company',
+    'tblclients.company',
     ];
 
 $join = [
-    'LEFT JOIN ' . db_prefix() . 'contacts ON ' . db_prefix() . 'contacts.id = ' . db_prefix() . 'tickets.contactid',
-    'LEFT JOIN ' . db_prefix() . 'services ON ' . db_prefix() . 'services.serviceid = ' . db_prefix() . 'tickets.service',
-    'LEFT JOIN ' . db_prefix() . 'departments ON ' . db_prefix() . 'departments.departmentid = ' . db_prefix() . 'tickets.department',
-    'LEFT JOIN ' . db_prefix() . 'tickets_status ON ' . db_prefix() . 'tickets_status.ticketstatusid = ' . db_prefix() . 'tickets.status',
-    'LEFT JOIN ' . db_prefix() . 'clients ON ' . db_prefix() . 'clients.userid = ' . db_prefix() . 'tickets.userid',
-    'LEFT JOIN ' . db_prefix() . 'tickets_priorities ON ' . db_prefix() . 'tickets_priorities.priorityid = ' . db_prefix() . 'tickets.priority',
+    'LEFT JOIN tblcontacts ON tblcontacts.id = tbltickets.contactid',
+    'LEFT JOIN tblservices ON tblservices.serviceid = tbltickets.service',
+    'LEFT JOIN tbldepartments ON tbldepartments.departmentid = tbltickets.department',
+    'LEFT JOIN tblticketstatus ON tblticketstatus.ticketstatusid = tbltickets.status',
+    'LEFT JOIN tblclients ON tblclients.userid = tbltickets.userid',
+    'LEFT JOIN tblpriorities ON tblpriorities.priorityid = tbltickets.priority',
     ];
 
 $custom_fields = get_table_custom_fields('tickets');
@@ -44,19 +44,19 @@ foreach ($custom_fields as $key => $field) {
     $selectAs = (is_cf_date($field) ? 'date_picker_cvalue_' . $key : 'cvalue_' . $key);
     array_push($customFieldsColumns, $selectAs);
     array_push($aColumns, 'ctable_' . $key . '.value as ' . $selectAs);
-    array_push($join, 'LEFT JOIN ' . db_prefix() . 'customfieldsvalues as ctable_' . $key . ' ON ' . db_prefix() . 'tickets.ticketid = ctable_' . $key . '.relid AND ctable_' . $key . '.fieldto="' . $field['fieldto'] . '" AND ctable_' . $key . '.fieldid=' . $field['id']);
+    array_push($join, 'LEFT JOIN tblcustomfieldsvalues as ctable_' . $key . ' ON tbltickets.ticketid = ctable_' . $key . '.relid AND ctable_' . $key . '.fieldto="' . $field['fieldto'] . '" AND ctable_' . $key . '.fieldid=' . $field['id']);
 }
 
 $where  = [];
 $filter = [];
 
 if (isset($userid) && $userid != '') {
-    array_push($where, 'AND ' . db_prefix() . 'tickets.userid = ' . $userid);
+    array_push($where, 'AND tbltickets.userid = ' . $userid);
 } elseif (isset($by_email)) {
-    array_push($where, 'AND ' . db_prefix() . 'tickets.email = "' . $by_email . '"');
+    array_push($where, 'AND tbltickets.email = "' . $by_email . '"');
 }
 if (isset($where_not_ticket_id)) {
-    array_push($where, 'AND ' . db_prefix() . 'tickets.ticketid != ' . $where_not_ticket_id);
+    array_push($where, 'AND tbltickets.ticketid != ' . $where_not_ticket_id);
 }
 if ($this->ci->input->post('project_id')) {
     array_push($where, 'AND project_id = ' . $this->ci->input->post('project_id'));
@@ -106,13 +106,13 @@ if (!is_admin()) {
             $departments_ids = $staff_deparments_ids;
         }
         if (count($departments_ids) > 0) {
-            array_push($where, 'AND department IN (SELECT departmentid FROM ' . db_prefix() . 'staff_departments WHERE departmentid IN (' . implode(',', $departments_ids) . ') AND staffid="' . get_staff_user_id() . '")');
+            array_push($where, 'AND department IN (SELECT departmentid FROM tblstaffdepartments WHERE departmentid IN (' . implode(',', $departments_ids) . ') AND staffid="' . get_staff_user_id() . '")');
         }
     }
 }
 
 $sIndexColumn = 'ticketid';
-$sTable       = db_prefix() . 'tickets';
+$sTable       = 'tbltickets';
 
 // Fix for big queries. Some hosting have max_join_limit
 if (count($custom_fields) > 4) {
@@ -134,29 +134,29 @@ foreach ($rResult as $aRow) {
         }
 
         if ($aColumns[$i] == '1') {
-            $_data = '<div class="checkbox"><input type="checkbox" value="' . $aRow[db_prefix() . 'tickets.ticketid'] . '"><label></label></div>';
+            $_data = '<div class="checkbox"><input type="checkbox" value="' . $aRow['tbltickets.ticketid'] . '"><label></label></div>';
         } elseif ($aColumns[$i] == 'lastreply') {
             if ($aRow[$aColumns[$i]] == null) {
                 $_data = _l('ticket_no_reply_yet');
             } else {
                 $_data = _dt($aRow[$aColumns[$i]]);
             }
-        } elseif ($aColumns[$i] == 'subject' || $aColumns[$i] == db_prefix() . 'tickets.ticketid') {
+        } elseif ($aColumns[$i] == 'subject' || $aColumns[$i] == 'tbltickets.ticketid') {
             // Ticket is assigned
             if ($aRow['assigned'] != 0) {
-                if ($aColumns[$i] != db_prefix() . 'tickets.ticketid') {
+                if ($aColumns[$i] != 'tbltickets.ticketid') {
                     $_data .= '<a href="' . admin_url('profile/' . $aRow['assigned']) . '" data-toggle="tooltip" title="' . get_staff_full_name($aRow['assigned']) . '" class="pull-left mright5">' . staff_profile_image($aRow['assigned'], [
                         'staff-profile-image-xs',
                         ]) . '</a>';
                 }
             }
-            $url   = admin_url('tickets/ticket/' . $aRow[db_prefix() . 'tickets.ticketid']);
+            $url   = admin_url('tickets/ticket/' . $aRow['tbltickets.ticketid']);
             $_data = '<a href="' . $url . '" class="valign">' . $_data . '</a>';
             if ($aColumns[$i] == 'subject') {
                 $_data .= '<div class="row-options">';
                 $_data .= '<a href="' . $url . '">' . _l('view') . '</a>';
                 $_data .= ' <span class="text-dark"> | </span><a href="' . $url . '?tab=settings">' . _l('edit') . '</a>';
-                $_data .= ' <span class="text-dark"> | </span><a href="' . admin_url('tickets/delete/' . $aRow[db_prefix() . 'tickets.ticketid']) . '" class="text-danger _delete">' . _l('delete') . '</a>';
+                $_data .= ' <span class="text-dark"> | </span><a href="' . admin_url('tickets/delete/' . $aRow['tbltickets.ticketid']) . '" class="text-danger _delete">' . _l('delete') . '</a>';
                 $_data .= '</div>';
             }
         } elseif ($i == $tagsColumns) {
@@ -173,7 +173,7 @@ foreach ($rResult as $aRow) {
             }
         } elseif ($aColumns[$i] == 'status') {
             $_data = '<span class="label inline-block" style="border:1px solid ' . $aRow['statuscolor'] . '; color:' . $aRow['statuscolor'] . '">' . ticket_status_translate($aRow['status']) . '</span>';
-        } elseif ($aColumns[$i] == db_prefix() . 'tickets.date') {
+        } elseif ($aColumns[$i] == 'tbltickets.date') {
             $_data = _dt($_data);
         } elseif ($aColumns[$i] == 'priority') {
             $_data = ticket_priority_translate($aRow['priority']);

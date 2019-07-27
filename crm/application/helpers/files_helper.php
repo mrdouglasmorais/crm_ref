@@ -20,12 +20,16 @@ function access_control_media($attr, $path, $data, $volume, $isDir, $relpath)
  * Copy directory and all contents
  * @since  Version 1.0.2
  * @param  string  $source      string
- * @param  string  $dest        destination
+ * @param  string  $dest        destionation
  * @param  integer $permissions folder permissions
  * @return boolean
  */
 function xcopy($source, $dest, $permissions = 0755)
 {
+    // Check for symlinks
+    if (is_link($source)) {
+        return symlink(readlink($source), $dest);
+    }
     // Simple copy for a file
     if (is_file($source)) {
         return copy($source, $dest);
@@ -84,10 +88,21 @@ function delete_dir($dirPath)
 function is_image($path)
 {
     $possibleBigFiles = [
-            'pdf', 'zip', 'mp4', 'ai',
-            'psd', 'ppt',  'gzip', 'rar',
-            'tar', 'tgz',  'mpeg', 'mpg',
-            'flv', 'mov',  'wav', 'avi',
+            'pdf',
+            'zip',
+            'mp4',
+            'ai',
+            'psd',
+            'ppt',
+            'gzip',
+            'rar',
+            'tar',
+            'tgz',
+            'mpeg',
+            'mpg',
+            'flv',
+            'mov',
+            'wav',
         ];
 
     $pathArray = explode('.', $path);
@@ -116,7 +131,7 @@ function is_image($path)
  */
 function get_html5_video_extensions()
 {
-    return hooks()->apply_filters(
+    return do_action(
         'html5_video_extensions',
         [
             'mp4',
@@ -481,7 +496,7 @@ function project_file_url($file, $preview = false)
 function is_markdown_file($path)
 {
     $extensions = ['.markdown', '.mdown', '.mkdn', '.md', '.mkd', '.mdwn', '.mdtxt', '.mdtext', '.text', '.Rmd'];
-    $extensions = hooks()->apply_filters('markdown_extensions', $extensions);
+    $extensions = do_action('markdown_extensions', $extensions);
 
     foreach ($extensions as $markdownExtension) {
         if (endsWith($path, $markdownExtension)) {
@@ -500,163 +515,13 @@ function markdown_parse_preview($path)
 {
     $Parsedown = new Parsedown();
 
-    $markDownSafeMode = hooks()->apply_filters('mark_down_safe_mode', 'true');
+    $markDownSafeMode = do_action('mark_down_safe_mode', 'true');
     $Parsedown->setSafeMode($markDownSafeMode == 'true' ? true : false);
 
     $contents = @file_get_contents($path);
-
     if (!$contents) {
         return false;
     }
 
     return $Parsedown->text($contents);
-}
-
-/**
- * Get all files/folder from dir in an array
- * @param  string $dir      directory full path
- * @param  array  &$results
- * @return array
- */
-function get_dir_contents($dir, &$results = [])
-{
-    $files = scandir($dir);
-
-    foreach ($files as $key => $value) {
-        $path = realpath($dir . DIRECTORY_SEPARATOR . $value);
-        if (!is_dir($path)) {
-            $results[] = $path;
-        } elseif ($value != '.' && $value != '..') {
-            get_dir_contents($path, $results);
-            $results[] = $path;
-        }
-    }
-
-    return $results;
-}
-
-/**
- * @since  2.3.2
- * Get app TEMP_FOLDER constant and perform additional checks
- * This is the recommended function that should be used to get the TEMP_FOLDER constant
- * @return string
- */
-function app_temp_dir()
-{
-    if (!is_dir(TEMP_FOLDER)) {
-        mkdir(TEMP_FOLDER, DIR_WRITE_MODE);
-    }
-
-    // In case index.html is removed from the folder, re-create it again
-    if (!file_exists(TEMP_FOLDER . '/index.html')) {
-        fopen(TEMP_FOLDER . '/index.html', 'w');
-    }
-
-    return TEMP_FOLDER;
-}
-
-/**
- * Try to delete temporary files/folder in TEMP_FOLDER (TEMP_FOLDER is constant)
- * This function is called via cron job
- * @since  2.3.2
- * @return void
- */
-function app_maybe_delete_old_temporary_files()
-{
-    $older_than = _delete_temporary_files_older_then();
-    $files      = list_files(TEMP_FOLDER);
-    foreach ($files as $file) {
-        $path = TEMP_FOLDER . $file;
-
-        if ($file == 'index.html') {
-            continue;
-        } elseif (strpos($file, '-upgrade-version-') !== false) {
-            if ($data = get_last_upgrade_copy_data()) {
-                $basename = basename($data->path);
-                if ($basename == $file && (time() - $data->time) > $older_than) {
-                    @unlink($data->path);
-                    update_option('last_upgrade_copy_data', '');
-                }
-            } else {
-                // Is probably an old upgrade file because of multiple upgrade tries
-                // Delete it in all cases
-                @unlink($path);
-            }
-        } else {
-            if ((time() - filectime($path)) > $older_than) {
-                @unlink($path);
-            }
-        }
-    }
-
-    // In case index.html is removed from the folder, re-create it again
-    if (!file_exists(TEMP_FOLDER . '/index.html')) {
-        fopen(TEMP_FOLDER . '/index.html', 'w');
-    }
-
-    $folders = list_folders(TEMP_FOLDER);
-    foreach ($folders as $folder) {
-        $path = TEMP_FOLDER . $folder;
-        if ((time() - filectime($path)) > $older_than) {
-            @delete_dir($path);
-        }
-    }
-}
-
-/**
- * Get the number of seconds to delete temporary old files
- * @since  2.3.2
- * @return integer
- */
-function _delete_temporary_files_older_then()
-{
-    return hooks()->apply_filters('delete_old_temporary_files_older_than', 1800); // 30 minutes is default
-}
-
-
-if (!function_exists('validate_file')) {
-    /**
-     * Validate file name
-     *
-     * @since  2.3.2
-     *
-     * A return value of `1` means the file path contains directory traversal.
-     *
-     * A return value of `2` means the file path contains a Windows drive path.
-     *
-     * A return value of `3` means the file is not in the allowed files list.
-     *
-     * @param  string $file          file name to validate
-     * @param  array  $allowed_files allowed files
-     * @return integer
-     */
-    function validate_file($file, $allowed_files = [])
-    {
-        // `../` on its own is not allowed:
-        if ('../' === $file) {
-            return 1;
-        }
-
-        // More than one occurence of `../` is not allowed:
-        if (preg_match_all('#\.\./#', $file, $matches, PREG_SET_ORDER) && (count($matches) > 1)) {
-            return 1;
-        }
-
-        // `../` which does not occur at the end of the path is not allowed:
-        if (false !== strpos($file, '../') && '../' !== mb_substr($file, -3, 3)) {
-            return 1;
-        }
-
-        // Files not in the allowed file list are not allowed:
-        if (! empty($allowed_files) && ! in_array($file, $allowed_files)) {
-            return 3;
-        }
-
-        // Absolute Windows drive paths are not allowed:
-        if (':' == substr($file, 1, 1)) {
-            return 2;
-        }
-
-        return 0;
-    }
 }

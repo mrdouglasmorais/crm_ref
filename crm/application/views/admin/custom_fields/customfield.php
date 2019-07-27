@@ -40,7 +40,7 @@
                                 <?php
                                 $disable = '';
                                 if(isset($custom_field)){
-                                  if(total_rows(db_prefix().'customfieldsvalues',array('fieldid'=>$custom_field->id,'fieldto'=>$custom_field->fieldto)) > 0){
+                                  if(total_rows('tblcustomfieldsvalues',array('fieldid'=>$custom_field->id,'fieldto'=>$custom_field->fieldto)) > 0){
                                     $disable = 'disabled';
                                 }
                             }
@@ -64,7 +64,6 @@
                                 <option value="proposal" <?php if(isset($custom_field) && $custom_field->fieldto == 'proposal'){echo 'selected';} ?>><?php echo _l('proposal'); ?></option>
                                 <option value="projects" <?php if(isset($custom_field) && $custom_field->fieldto == 'projects'){echo 'selected';} ?>><?php echo _l('projects'); ?></option>
                                 <option value="tickets" <?php if(isset($custom_field) && $custom_field->fieldto == 'tickets'){echo 'selected';} ?>><?php echo _l('tickets'); ?></option>
-                                <?php hooks()->do_action('after_custom_fields_select_options', isset($custom_field) ? $custom_field : null); ?>
                             </select>
                           </div>
                             <div class="clearfix"></div>
@@ -72,7 +71,7 @@
                             <?php echo render_input('name','custom_field_name',$value); ?>
                            <div class="select-placeholder form-group">
                                 <label for="type"><?php echo _l('custom_field_add_edit_type'); ?></label>
-                            <select name="type" id="type" class="selectpicker"<?php if(isset($custom_field) && total_rows(db_prefix().'customfieldsvalues',array('fieldid'=>$custom_field->id,'fieldto'=>$custom_field->fieldto)) > 0){echo ' disabled';} ?> data-width="100%" data-none-selected-text="<?php echo _l('dropdown_non_selected_tex'); ?>" data-hide-disabled="true">
+                            <select name="type" id="type" class="selectpicker"<?php if(isset($custom_field) && total_rows('tblcustomfieldsvalues',array('fieldid'=>$custom_field->id,'fieldto'=>$custom_field->fieldto)) > 0){echo ' disabled';} ?> data-width="100%" data-none-selected-text="<?php echo _l('dropdown_non_selected_tex'); ?>" data-hide-disabled="true">
                                 <option value=""></option>
                                 <option value="input" <?php if(isset($custom_field) && $custom_field->type == 'input'){echo 'selected';} ?>>Input</option>
                                 <option value="number" <?php if(isset($custom_field) && $custom_field->type == 'number'){echo 'selected';} ?>>Number</option>
@@ -153,7 +152,7 @@ var pdf_fields = <?php echo json_encode($pdf_fields); ?>;
 var client_portal_fields = <?php echo json_encode($client_portal_fields); ?>;
 var client_editable_fields = <?php echo json_encode($client_editable_fields); ?>;
 $(function () {
-    appValidateForm($('form'), {
+    _validate_form($('form'), {
         fieldto: 'required',
         name: 'required',
         type: 'required',

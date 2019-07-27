@@ -2,11 +2,14 @@
 
 defined('BASEPATH') or exit('No direct script access allowed');
 
-class Dashboard_model extends App_Model
+class Dashboard_model extends CRM_Model
 {
+    private $is_admin;
+
     public function __construct()
     {
         parent::__construct();
+        $this->is_admin = is_admin();
     }
 
     /**
@@ -21,7 +24,7 @@ class Dashboard_model extends App_Model
         $this->db->order_by('start', 'desc');
         $this->db->limit(6);
 
-        return $this->db->get(db_prefix() . 'events')->result_array();
+        return $this->db->get('tblevents')->result_array();
     }
 
     /**
@@ -37,7 +40,7 @@ class Dashboard_model extends App_Model
         $this->db->where('(start BETWEEN "' . $monday_this_week . '" AND "' . $sunday_this_week . '")');
         $this->db->where('(userid = ' . get_staff_user_id() . ' OR public = 1)');
 
-        return $this->db->count_all_results(db_prefix() . 'events');
+        return $this->db->count_all_results('tblevents');
     }
 
     /**
@@ -50,27 +53,27 @@ class Dashboard_model extends App_Model
     {
         $all_payments                 = [];
         $has_permission_payments_view = has_permission('payments', '', 'view');
-        $this->db->select('amount,' . db_prefix() . 'invoicepaymentrecords.date');
-        $this->db->from(db_prefix() . 'invoicepaymentrecords');
-        $this->db->join(db_prefix() . 'invoices', '' . db_prefix() . 'invoices.id = ' . db_prefix() . 'invoicepaymentrecords.invoiceid');
-        $this->db->where('CAST(' . db_prefix() . 'invoicepaymentrecords.date as DATE) >= "' . date('Y-m-d', strtotime('monday this week')) . '" AND CAST(' . db_prefix() . 'invoicepaymentrecords.date as DATE) <= "' . date('Y-m-d', strtotime('sunday this week')) . '"');
-        $this->db->where('' . db_prefix() . 'invoices.status !=', 5);
+        $this->db->select('amount,tblinvoicepaymentrecords.date');
+        $this->db->from('tblinvoicepaymentrecords');
+        $this->db->join('tblinvoices', 'tblinvoices.id = tblinvoicepaymentrecords.invoiceid');
+        $this->db->where('CAST(tblinvoicepaymentrecords.date as DATE) >= "' . date('Y-m-d', strtotime('monday this week')) . '" AND CAST(tblinvoicepaymentrecords.date as DATE) <= "' . date('Y-m-d', strtotime('sunday this week')) . '"');
+        $this->db->where('tblinvoices.status !=', 5);
         if ($currency != 'undefined') {
             $this->db->where('currency', $currency);
         }
 
         if (!$has_permission_payments_view) {
-            $this->db->where('invoiceid IN (SELECT id FROM ' . db_prefix() . 'invoices WHERE addedfrom=' . get_staff_user_id() . ')');
+            $this->db->where('invoiceid IN (SELECT id FROM tblinvoices WHERE addedfrom=' . get_staff_user_id() . ')');
         }
 
         // Current week
         $all_payments[] = $this->db->get()->result_array();
-        $this->db->select('amount,' . db_prefix() . 'invoicepaymentrecords.date');
-        $this->db->from(db_prefix() . 'invoicepaymentrecords');
-        $this->db->join(db_prefix() . 'invoices', '' . db_prefix() . 'invoices.id = ' . db_prefix() . 'invoicepaymentrecords.invoiceid');
-        $this->db->where('CAST(' . db_prefix() . 'invoicepaymentrecords.date as DATE) >= "' . date('Y-m-d', strtotime('monday last week', strtotime('last sunday'))) . '" AND CAST(' . db_prefix() . 'invoicepaymentrecords.date as DATE) <= "' . date('Y-m-d', strtotime('sunday last week', strtotime('last sunday'))) . '"');
+        $this->db->select('amount,tblinvoicepaymentrecords.date');
+        $this->db->from('tblinvoicepaymentrecords');
+        $this->db->join('tblinvoices', 'tblinvoices.id = tblinvoicepaymentrecords.invoiceid');
+        $this->db->where('CAST(tblinvoicepaymentrecords.date as DATE) >= "' . date('Y-m-d', strtotime('monday last week', strtotime('last sunday'))) . '" AND CAST(tblinvoicepaymentrecords.date as DATE) <= "' . date('Y-m-d', strtotime('sunday last week', strtotime('last sunday'))) . '"');
 
-        $this->db->where('' . db_prefix() . 'invoices.status !=', 5);
+        $this->db->where('tblinvoices.status !=', 5);
         if ($currency != 'undefined') {
             $this->db->where('currency', $currency);
         }
@@ -154,10 +157,10 @@ class Dashboard_model extends App_Model
         $sql            = '';
         foreach ($statuses as $status) {
             $sql .= ' SELECT COUNT(*) as total';
-            $sql .= ' FROM ' . db_prefix() . 'projects';
+            $sql .= ' FROM tblprojects';
             $sql .= ' WHERE status=' . $status['id'];
             if (!$has_permission) {
-                $sql .= ' AND id IN (SELECT project_id FROM ' . db_prefix() . 'project_members WHERE staff_id=' . get_staff_user_id() . ')';
+                $sql .= ' AND id IN (SELECT project_id FROM tblprojectmembers WHERE staff_id=' . get_staff_user_id() . ')';
             }
             $sql .= ' UNION ALL ';
             $sql = trim($sql);
@@ -238,7 +241,7 @@ class Dashboard_model extends App_Model
 
         $i = 0;
         foreach ($departments as $department) {
-            if (!is_admin()) {
+            if (!$this->is_admin) {
                 if (get_option('staff_access_only_assigned_departments') == 1) {
                     $staff_deparments_ids = $this->departments_model->get_staff_departments(get_staff_user_id(), true);
                     $departments_ids      = [];
@@ -251,7 +254,7 @@ class Dashboard_model extends App_Model
                         $departments_ids = $staff_deparments_ids;
                     }
                     if (count($departments_ids) > 0) {
-                        $this->db->where('department IN (SELECT departmentid FROM ' . db_prefix() . 'staff_departments WHERE departmentid IN (' . implode(',', $departments_ids) . ') AND staffid="' . get_staff_user_id() . '")');
+                        $this->db->where('department IN (SELECT departmentid FROM tblstaffdepartments WHERE departmentid IN (' . implode(',', $departments_ids) . ') AND staffid="' . get_staff_user_id() . '")');
                     }
                 }
             }
@@ -262,7 +265,7 @@ class Dashboard_model extends App_Model
             ]);
 
             $this->db->where('department', $department['departmentid']);
-            $total = $this->db->count_all_results(db_prefix() . 'tickets');
+            $total = $this->db->count_all_results('tbltickets');
 
             if ($total > 0) {
                 $color = '#333';
@@ -309,7 +312,7 @@ class Dashboard_model extends App_Model
 
         foreach ($statuses as $status) {
             if (in_array($status['ticketstatusid'], $_statuses_with_reply)) {
-                if (!is_admin()) {
+                if (!$this->is_admin) {
                     if (get_option('staff_access_only_assigned_departments') == 1) {
                         $staff_deparments_ids = $this->departments_model->get_staff_departments(get_staff_user_id(), true);
                         $departments_ids      = [];
@@ -322,13 +325,13 @@ class Dashboard_model extends App_Model
                             $departments_ids = $staff_deparments_ids;
                         }
                         if (count($departments_ids) > 0) {
-                            $this->db->where('department IN (SELECT departmentid FROM ' . db_prefix() . 'staff_departments WHERE departmentid IN (' . implode(',', $departments_ids) . ') AND staffid="' . get_staff_user_id() . '")');
+                            $this->db->where('department IN (SELECT departmentid FROM tblstaffdepartments WHERE departmentid IN (' . implode(',', $departments_ids) . ') AND staffid="' . get_staff_user_id() . '")');
                         }
                     }
                 }
 
                 $this->db->where('status', $status['ticketstatusid']);
-                $total = $this->db->count_all_results(db_prefix() . 'tickets');
+                $total = $this->db->count_all_results('tbltickets');
                 if ($total > 0) {
                     array_push($chart['labels'], ticket_status_translate($status['ticketstatusid']));
                     array_push($_data['statusLink'], admin_url('tickets/index/' . $status['ticketstatusid']));

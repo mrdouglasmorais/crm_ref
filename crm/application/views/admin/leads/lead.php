@@ -25,7 +25,7 @@
            } else if($lead->junk == 1){
               echo '<div class="ribbon warning"><span>'._l('lead_junk').'</span></div>';
            } else {
-              if (total_rows(db_prefix().'clients', array(
+              if (total_rows('tblclients', array(
                 'leadid' => $lead->id))) {
                 echo '<div class="ribbon success"><span>'._l('lead_is_client').'</span></div>';
              }
@@ -53,7 +53,7 @@
          <?php if(count($mail_activity) > 0 || isset($show_email_activity) && $show_email_activity){ ?>
          <li role="presentation">
             <a href="#tab_email_activity" aria-controls="tab_email_activity" role="tab" data-toggle="tab">
-                <?php echo hooks()->apply_filters('lead_email_activity_subject', _l('lead_email_activity')); ?>
+                <?php echo do_action('lead_email_activity_subject',_l('lead_email_activity')); ?>
             </a>
          </li>
          <?php } ?>
@@ -76,7 +76,7 @@
             <a href="#lead_reminders" onclick="initDataTable('.table-reminders-leads', admin_url + 'misc/get_reminders/' + <?php echo $lead->id; ?> + '/' + 'lead', undefined, undefined,undefined,[1, 'asc']);" aria-controls="lead_reminders" role="tab" data-toggle="tab">
             <?php echo _l('leads_reminders_tab'); ?>
             <?php
-               $total_reminders = total_rows(db_prefix().'reminders',
+               $total_reminders = total_rows('tblreminders',
                   array(
                      'isnotified'=>0,
                      'staff'=>get_staff_user_id(),
@@ -121,7 +121,7 @@
       <?php if(isset($lead)){ ?>
       <?php if(count($mail_activity) > 0 || isset($show_email_activity) && $show_email_activity){ ?>
       <div role="tabpanel" class="tab-pane" id="tab_email_activity">
-         <?php hooks()->do_action('before_lead_email_activity', array('lead'=>$lead, 'email_activity'=>$mail_activity)); ?>
+         <?php do_action('before_lead_email_activity',array('lead'=>$lead,'email_activity'=>$mail_activity)); ?>
          <?php foreach($mail_activity as $_mail_activity){ ?>
          <div class="lead-email-activity">
             <div class="media-left">
@@ -142,7 +142,7 @@
          </div>
          <div class="clearfix"></div>
          <?php } ?>
-         <?php hooks()->do_action('after_lead_email_activity', array('lead_id'=>$lead->id, 'emails'=>$mail_activity)); ?>
+         <?php do_action('after_lead_email_activity',array('lead_id'=>$lead->id,'emails'=>$mail_activity)); ?>
       </div>
       <?php } ?>
       <?php if(is_gdpr() && (get_option('gdpr_enable_lead_public_form') == '1' || get_option('gdpr_enable_consent_for_leads') == '1' || (get_option('gdpr_data_portability_leads') == '1') && is_admin())) { ?>
@@ -223,7 +223,7 @@
          <?php if(has_permission('proposals','','create')){ ?>
          <a href="<?php echo admin_url('proposals/proposal?rel_type=lead&rel_id='.$lead->id); ?>" class="btn btn-info mbot25"><?php echo _l('new_proposal'); ?></a>
          <?php } ?>
-         <?php if(total_rows(db_prefix().'proposals',array('rel_type'=>'lead','rel_id'=>$lead->id))> 0 && (has_permission('proposals','','create') || has_permission('proposals','','edit'))){ ?>
+         <?php if(total_rows('tblproposals',array('rel_type'=>'lead','rel_id'=>$lead->id))> 0 && (has_permission('proposals','','create') || has_permission('proposals','','edit'))){ ?>
          <a href="#" class="btn btn-info mbot25" data-toggle="modal" data-target="#sync_data_proposal_data"><?php echo _l('sync_data'); ?></a>
          <?php $this->load->view('admin/proposals/sync_data',array('related'=>$lead,'rel_id'=>$lead->id,'rel_type'=>'lead')); ?>
          <?php } ?>
@@ -241,7 +241,7 @@
             foreach($custom_fields as $field){
              array_push($table_data,$field['name']);
             }
-            $table_data = hooks()->apply_filters('proposals_relation_table_columns', $table_data);
+            $table_data = do_action('proposals_relation_table_columns',$table_data);
             render_datatable($table_data,'proposals-lead',[], [
                 'data-last-order-identifier' => 'proposals-relation',
                 'data-default-order'         => get_table_last_order('proposals-relation'),
@@ -280,6 +280,8 @@
          <div class="form-group">
                 <textarea id="lead_note_description" name="lead_note_description" class="form-control" rows="4"></textarea>
          </div>
+         <button type="submit" class="btn btn-info pull-right"><?php echo _l('lead_add_edit_add_note'); ?></button>
+         <div class="clearfix"></div>
          <div class="lead-select-date-contacted hide">
             <?php echo render_datetime_input('custom_contact_date','lead_add_edit_datecontacted','',array('data-date-end-date'=>date('Y-m-d'))); ?>
          </div>
@@ -291,11 +293,9 @@
             <input type="radio" name="contacted_indicator" id="contacted_indicator_no" value="no" checked>
             <label for="contacted_indicator_no"><?php echo _l('lead_not_contacted'); ?></label>
          </div>
-         <button type="submit" class="btn btn-info pull-right"><?php echo _l('lead_add_edit_add_note'); ?></button>
          <?php echo form_close(); ?>
-         <div class="clearfix"></div>
          <hr />
-         <div class="panel_s no-shadow">
+         <div class="panel_s mtop20 no-shadow">
             <?php
                $len = count($notes);
                $i = 0;
@@ -342,4 +342,4 @@
      </div>
   </div>
 </div>
-<?php hooks()->do_action('lead_modal_profile_bottom',(isset($lead) ? $lead->id : '')); ?>
+<?php do_action('lead_modal_profile_bottom',(isset($lead) ? $lead->id : '')); ?>

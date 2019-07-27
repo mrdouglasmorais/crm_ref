@@ -31,7 +31,6 @@ class WebhookNotification extends Base
     const IDEAL_PAYMENT_COMPLETE = 'ideal_payment_complete';
     const IDEAL_PAYMENT_FAILED = 'ideal_payment_failed';
     const GRANTED_PAYMENT_INSTRUMENT_UPDATE = 'granted_payment_instrument_update';
-    const GRANTED_PAYMENT_METHOD_REVOKED = 'granted_payment_method_revoked';
     const LOCAL_PAYMENT_COMPLETED = "local_payment_completed";
 
     public static function parse($signature, $payload) {
@@ -109,10 +108,6 @@ class WebhookNotification extends Base
 
         if (isset($wrapperNode['grantedPaymentInstrumentUpdate'])) {
             $this->_set('grantedPaymentInstrumentUpdate', GrantedPaymentInstrumentUpdate::factory($wrapperNode['grantedPaymentInstrumentUpdate']));
-        }
-
-        if ($attributes['kind'] == self::GRANTED_PAYMENT_METHOD_REVOKED) {
-            $this->_set('revokedPaymentMethodMetadata', RevokedPaymentMethodMetadata::factory($wrapperNode));
         }
 
         if (isset($wrapperNode['localPayment'])) {

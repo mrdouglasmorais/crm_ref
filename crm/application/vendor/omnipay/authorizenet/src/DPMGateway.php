@@ -14,8 +14,6 @@ class DPMGateway extends SIMGateway
 
     /**
      * Helper to generate the authorize direct-post form.
-     * @param array $parameters
-     * @return \Omnipay\Common\Message\AbstractRequest
      */
     public function authorize(array $parameters = array())
     {

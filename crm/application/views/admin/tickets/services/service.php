@@ -28,7 +28,7 @@
 </div><!-- /.modal -->
 <script>
     window.addEventListener('load',function(){
-        appValidateForm($('#ticket-service-form'),{name:'required'},manage_ticket_services);
+        _validate_form($('#ticket-service-form'),{name:'required'},manage_ticket_services);
         $('#ticket-service-modal').on('hidden.bs.modal', function(event) {
             $('#additional').html('');
             $('#ticket-service-modal input[name="name"]').val('');

@@ -31,7 +31,7 @@
                             <i class="fa fa-filter" aria-hidden="true"></i>
                         </button>
                         <ul class="dropdown-menu dropdown-menu-left width300 height500">
-                            <li class="active filter-group" data-filter-group="trash">
+                            <li class="active">
                                 <a href="#" data-cview="exclude_trashed_contracts" onclick="dt_custom_view('exclude_trashed_contracts','.table-contracts','exclude_trashed_contracts'); return false;">
                                     <?php echo _l('contracts_view_exclude_trashed'); ?>
                                 </a>
@@ -41,17 +41,17 @@
                                     <?php echo _l('contracts_view_all'); ?>
                                 </a>
                             </li>
-                            <li class="filter-group" data-filter-group="date">
+                            <li>
                                 <a href="#" data-cview="expired"  onclick="dt_custom_view('expired','.table-contracts','expired'); return false;">
                                     <?php echo _l('contracts_view_expired'); ?>
                                 </a>
                             </li>
-                            <li class="filter-group" data-filter-group="date">
+                            <li>
                                 <a href="#" data-cview="without_dateend"  onclick="dt_custom_view('without_dateend','.table-contracts','without_dateend'); return false;">
                                     <?php echo _l('contracts_view_without_dateend'); ?>
                                 </a>
                             </li>
-                            <li class="filter-group" data-filter-group="trash">
+                            <li>
                                 <a href="#" data-cview="trash"  onclick="dt_custom_view('trash','.table-contracts','trash'); return false;">
                                     <?php echo _l('contracts_view_trash'); ?>
                                 </a>
@@ -104,27 +104,27 @@
                         </div>
                         <div class="col-md-2 col-xs-6 border-right">
                             <h3 class="bold">
-                            <?php echo total_rows(db_prefix().'contracts','(DATE(dateend) >"'.date('Y-m-d').'" AND trash=0' . (count($where_own) > 0 ? ' AND addedfrom='.get_staff_user_id() : '').') OR (DATE(dateend) IS NULL AND trash=0'.(count($where_own) > 0 ? ' AND addedfrom='.get_staff_user_id() : '').')'); ?>
+                            <?php echo total_rows('tblcontracts','(DATE(dateend) >"'.date('Y-m-d').'" AND trash=0' . (count($where_own) > 0 ? ' AND addedfrom='.get_staff_user_id() : '').') OR (DATE(dateend) IS NULL AND trash=0'.(count($where_own) > 0 ? ' AND addedfrom='.get_staff_user_id() : '').')'); ?>
                             </h3>
                             <span class="text-info"><?php echo _l('contract_summary_active'); ?></span>
                         </div>
                         <div class="col-md-2 col-xs-6 border-right">
-                            <h3 class="bold"><?php echo total_rows(db_prefix().'contracts',array_merge(array('DATE(dateend) <'=>date('Y-m-d'),'trash'=>0),$where_own)); ?></h3>
+                            <h3 class="bold"><?php echo total_rows('tblcontracts',array_merge(array('DATE(dateend) <'=>date('Y-m-d'),'trash'=>0),$where_own)); ?></h3>
                             <span class="text-danger"><?php echo _l('contract_summary_expired'); ?></span>
                         </div>
                         <div class="col-md-2 col-xs-6 border-right">
                             <h3 class="bold"><?php
                                 echo total_rows(
-                                db_prefix().'contracts','dateend BETWEEN "'.$minus_7_days.'" AND "'.$plus_7_days.'" AND trash=0 AND dateend is NOT NULL AND dateend >"'.date('Y-m-d').'"' . (count($where_own) > 0 ? ' AND addedfrom='.get_staff_user_id() : '')); ?></h3>
+                                'tblcontracts','dateend BETWEEN "'.$minus_7_days.'" AND "'.$plus_7_days.'" AND trash=0 AND dateend is NOT NULL AND dateend >"'.date('Y-m-d').'"' . (count($where_own) > 0 ? ' AND addedfrom='.get_staff_user_id() : '')); ?></h3>
                                 <span class="text-warning"><?php echo _l('contract_summary_about_to_expire'); ?></span>
                             </div>
                             <div class="col-md-2 col-xs-6 border-right">
                                 <h3 class="bold"><?php
-                                    echo total_rows(db_prefix().'contracts','dateadded BETWEEN "'.$minus_7_days.'" AND "'.$plus_7_days.'" AND trash=0' . (count($where_own) > 0 ? ' AND addedfrom='.get_staff_user_id() : '')); ?></h3>
+                                    echo total_rows('tblcontracts','dateadded BETWEEN "'.$minus_7_days.'" AND "'.$plus_7_days.'" AND trash=0' . (count($where_own) > 0 ? ' AND addedfrom='.get_staff_user_id() : '')); ?></h3>
                                     <span class="text-success"><?php echo _l('contract_summary_recently_added'); ?></span>
                                 </div>
                                 <div class="col-md-2 col-xs-6">
-                                    <h3 class="bold"><?php echo total_rows(db_prefix().'contracts',array_merge(array('trash'=>1),$where_own)); ?></h3>
+                                    <h3 class="bold"><?php echo total_rows('tblcontracts',array_merge(array('trash'=>1),$where_own)); ?></h3>
                                     <span class="text-muted"><?php echo _l('contract_summary_trash'); ?></span>
                                 </div>
                                 <div class="clearfix"></div>
@@ -163,7 +163,7 @@
             ContractsServerParams[$(this).attr('name')] = '[name="'+$(this).attr('name')+'"]';
         });
 
-        initDataTable('.table-contracts', admin_url+'contracts/table', undefined, undefined, ContractsServerParams,<?php echo hooks()->apply_filters('contracts_table_default_order', json_encode(array(6,'asc'))); ?>);
+        initDataTable('.table-contracts', admin_url+'contracts/table', undefined, undefined, ContractsServerParams,<?php echo do_action('contracts_table_default_order',json_encode(array(6,'asc'))); ?>);
 
         new Chart($('#contracts-by-type-chart'), {
             type: 'bar',

@@ -699,12 +699,12 @@
     'minorUnit' => 2,
     'numericCode' => 462,
   ),
-  'MRU' => 
+  'MRO' => 
   array (
-    'alphabeticCode' => 'MRU',
+    'alphabeticCode' => 'MRO',
     'currency' => 'Ouguiya',
     'minorUnit' => 2,
-    'numericCode' => 929,
+    'numericCode' => 478,
   ),
   'MUR' => 
   array (
@@ -842,7 +842,7 @@
   'PHP' => 
   array (
     'alphabeticCode' => 'PHP',
-    'currency' => 'Philippine Piso',
+    'currency' => 'Philippine Peso',
     'minorUnit' => 2,
     'numericCode' => 608,
   ),
@@ -895,12 +895,12 @@
     'minorUnit' => 2,
     'numericCode' => 882,
   ),
-  'STN' => 
+  'STD' => 
   array (
-    'alphabeticCode' => 'STN',
+    'alphabeticCode' => 'STD',
     'currency' => 'Dobra',
     'minorUnit' => 2,
-    'numericCode' => 930,
+    'numericCode' => 678,
   ),
   'SAR' => 
   array (

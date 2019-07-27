@@ -701,7 +701,7 @@ abstract class App_import
                                         'value'   => trim($row[$fieldNumber]),
                                         'fieldto' => $customFieldTo,
                                     ];
-                $this->ci->db->insert(db_prefix().'customfieldsvalues', $customFieldData);
+                $this->ci->db->insert('tblcustomfieldsvalues', $customFieldData);
             }
             $fieldNumber++;
         }
@@ -709,7 +709,7 @@ abstract class App_import
 
     private function setDefaultImportGuidelinesInfo()
     {
-        $this->addImportGuidelinesInfo('If the column <b>you are trying to import is date make sure that is formatted in format Y-m-d (' . date('Y-m-d') . ').</b>');
+        $this->addImportGuidelinesInfo('If the column <b>you are trying to import is date</b> make sure that is formatted in format Y-m-d (' . date('Y-m-d') . ').');
 
         $this->addImportGuidelinesInfo('Your CSV data should be in the format below. The first line of your CSV file should be the column headers as in the table example. Also make sure that your file is <b>UTF-8</b> to avoid unnecessary <b>encoding problems</b>.');
     }

@@ -2,14 +2,14 @@
 
 defined('BASEPATH') or exit('No direct script access allowed');
 
-class Invoice extends ClientsController
+class Invoice extends Clients_controller
 {
     public function index($id, $hash)
     {
         check_invoice_restrictions($id, $hash);
         $invoice = $this->invoices_model->get($id);
 
-        $invoice = hooks()->apply_filters('before_client_view_invoice', $invoice);
+        $invoice = do_action('before_client_view_invoice', $invoice);
 
         if (!is_client_logged_in()) {
             load_client_language($invoice->clientid);
@@ -51,24 +51,23 @@ class Invoice extends ClientsController
             $paymentpdf->Output(mb_strtoupper(slug_it(_l('payment') . '-' . $payment->paymentid), 'UTF-8') . '.pdf', 'D');
             die;
         }
-        $this->app_scripts->theme('sticky-js','assets/plugins/sticky/sticky.js');
-        $this->load->library('app_number_to_word', [
+        $this->load->library('numberword', [
             'clientid' => $invoice->clientid,
-        ],'numberword');
+        ]);
         $this->load->model('payment_modes_model');
         $this->load->model('payments_model');
         $data['payments']      = $this->payments_model->get_invoice_payments($id);
         $data['payment_modes'] = $this->payment_modes_model->get();
         $data['title']         = format_invoice_number($invoice->id);
-        $this->disableNavigation();
-        $this->disableSubMenu();
+        $this->use_navigation  = false;
+        $this->use_submenu     = false;
         $data['hash']          = $hash;
-        $data['invoice']       = hooks()->apply_filters('invoice_html_pdf_data', $invoice);
+        $data['invoice']       = do_action('invoice_html_pdf_data', $invoice);
         $data['bodyclass']     = 'viewinvoice';
-        $this->data($data);
-        $this->view('invoicehtml');
+        $this->data            = $data;
+        $this->view            = 'invoicehtml';
         add_views_tracking('invoice', $id);
-        hooks()->do_action('invoice_html_viewed', $id);
+        do_action('invoice_html_viewed', $id);
         no_index_customers_area();
         $this->layout();
     }

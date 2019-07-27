@@ -23,7 +23,7 @@
                   <a href="#tab_reminders" onclick="initDataTable('.table-reminders', admin_url + 'misc/get_reminders/' + <?php echo $proposal->id ;?> + '/' + 'proposal', undefined, undefined, undefined,[1,'asc']); return false;" aria-controls="tab_reminders" role="tab" data-toggle="tab">
                   <?php echo _l('estimate_reminders'); ?>
                   <?php
-                     $total_reminders = total_rows(db_prefix().'reminders',
+                     $total_reminders = total_rows('tblreminders',
                       array(
                        'isnotified'=>0,
                        'staff'=>get_staff_user_id(),
@@ -108,7 +108,6 @@
                   <li>
                      <a href="<?php echo site_url('proposal/'.$proposal->id .'/'.$proposal->hash); ?>" target="_blank"><?php echo _l('proposal_view'); ?></a>
                   </li>
-                  <?php hooks()->do_action('after_proposal_view_as_client_link', $proposal); ?>
                   <?php if(!empty($proposal->open_till) && date('Y-m-d') < $proposal->open_till && ($proposal->status == 4 || $proposal->status == 1) && is_proposals_expiry_reminders_enabled()) { ?>
                   <li>
                      <a href="<?php echo admin_url('proposals/send_expiry_reminder/'.$proposal->id); ?>"><?php echo _l('send_expiry_reminder'); ?></a>
@@ -149,7 +148,7 @@
             <?php if($proposal->estimate_id == NULL && $proposal->invoice_id == NULL){ ?>
             <?php if(has_permission('estimates','','create') || has_permission('invoices','','create')){ ?>
             <div class="btn-group">
-               <button type="button" class="btn btn-success dropdown-toggle<?php if($proposal->rel_type == 'customer' && total_rows(db_prefix().'clients',array('active'=>0,'userid'=>$proposal->rel_id)) > 0){echo ' disabled';} ?>" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+               <button type="button" class="btn btn-success dropdown-toggle<?php if($proposal->rel_type == 'customer' && total_rows('tblclients',array('active'=>0,'userid'=>$proposal->rel_id)) > 0){echo ' disabled';} ?>" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                <?php echo _l('proposal_convert'); ?> <span class="caret"></span>
                </button>
                <ul class="dropdown-menu dropdown-menu-right">
@@ -158,7 +157,7 @@
                      $not_related = false;
 
                      if($proposal->rel_type == 'lead'){
-                      if(total_rows(db_prefix().'clients',array('leadid'=>$proposal->rel_id)) == 0){
+                      if(total_rows('tblclients',array('leadid'=>$proposal->rel_id)) == 0){
                        $disable_convert = true;
                        $help_text = 'proposal_convert_to_lead_disabled_help';
                      }
@@ -209,7 +208,7 @@
                            <?php
                               $tags = get_tags_in($proposal->id,'proposal');
                               if(count($tags) > 0){
-                               echo '<i class="fa fa-tag" aria-hidden="true" data-toggle="tooltip" data-title="'.html_escape(implode(', ',$tags)).'"></i>';
+                               echo '<i class="fa fa-tag" aria-hidden="true" data-toggle="tooltip" data-title="'.implode(', ',$tags).'"></i>';
                               }
                               ?>
                            <a href="<?php echo admin_url('proposals/proposal/'.$proposal->id); ?>">
@@ -272,13 +271,13 @@
                      <div class="row">
                         <div class="col-md-12">
                            <ul class="list-group">
-                              <?php
-                                 foreach($proposal_merge_fields as $field){
-                                    foreach($field as $f){
-                                      echo '<li class="list-group-item"><b>'.$f['name'].'</b> <a href="#" class="pull-right" onclick="insert_proposal_merge_field(this); return false;">'.$f['key'].'</a></li>';
-                                   }
-                                }
-                             ?>
+                              <?php foreach($proposal_merge_fields as $field){
+                                 foreach($field as $f){
+                                 if($f['key'] != '{email_signature}'){
+                                   echo '<li class="list-group-item"><b>'.$f['name'].'</b> <a href="#" class="pull-right" onclick="insert_proposal_merge_field(this); return false;">'.$f['key'].'</a></li>';
+                                 }
+                                 }
+                                 } ?>
                            </ul>
                         </div>
                      </div>

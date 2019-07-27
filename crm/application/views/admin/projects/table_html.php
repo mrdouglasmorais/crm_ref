@@ -19,7 +19,7 @@ foreach ($custom_fields as $field) {
     array_push($table_data, $field['name']);
 }
 
-$table_data = hooks()->apply_filters('projects_table_columns', $table_data);
+$table_data = do_action('projects_table_columns', $table_data);
 
 render_datatable($table_data, isset($class) ?  $class : 'projects', [], [
   'data-last-order-identifier' => 'projects',

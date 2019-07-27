@@ -85,7 +85,7 @@
                   saveProjectExternalFile(files, 'dropbox');
               },
               linkType: "preview",
-              extensions: app.options.allowed_files.split(','),
+              extensions: app_allowed_files.split(','),
           }));
       }
 
@@ -111,7 +111,7 @@
       });
 
       if ($('#project-files-upload').length > 0) {
-          new Dropzone('#project-files-upload', appCreateDropzoneOptions({
+          new Dropzone('#project-files-upload', $.extend({}, _dropzone_defaults(), {
               paramName: "file",
               uploadMultiple: true,
               parallelUploads: 20,
@@ -131,7 +131,7 @@
       }
 
       if ($('#project-expense-form').length > 0) {
-          expenseDropzone = new Dropzone("#project-expense-form", appCreateDropzoneOptions({
+          expenseDropzone = new Dropzone("#project-expense-form", $.extend({}, _dropzone_defaults(), {
               autoProcessQueue: false,
               clickable: '#dropzoneDragArea',
               previewsContainer: '.dropzone-previews',
@@ -145,7 +145,7 @@
           }));
       }
 
-      appValidateForm($('#project-expense-form'), {
+      _validate_form($('#project-expense-form'), {
           category: 'required',
           date: 'required',
           amount: 'required',
@@ -155,7 +155,7 @@
       gantt = $("#gantt").gantt({
           source: gantt_data,
           itemsPerPage: 25,
-          months: app.months_json,
+          months: JSON.parse(monthsJSON),
           navigate: 'scroll',
           onRender: function() {
               $('#gantt .leftPanel .name .fn-label:empty').parents('.name').css('background', 'initial');
@@ -170,7 +170,7 @@
           onAddClick: function(dt, rowId) {
               var fmt = new DateFormatter();
               var d0 = new Date(+dt);
-              var d1 = fmt.formatDate(d0, app.options.date_format);
+              var d1 = fmt.formatDate(d0, app_date_format);
               new_task(admin_url + 'tasks/task?rel_type=project&rel_id=' + project_id + '&start_date=' + d1);
           }
       });
@@ -197,12 +197,12 @@
       initDataTable('.table-timesheets', admin_url + 'projects/timesheets/' + project_id, [8], [8], Timesheets_ServerParams, [3, 'desc']);
       initDataTable('.table-project-discussions', admin_url + 'projects/discussions/' + project_id, undefined, undefined, 'undefined', [1, 'desc']);
 
-      appValidateForm($('#milestone_form'), {
+      _validate_form($('#milestone_form'), {
           name: 'required',
           due_date: 'required'
       });
 
-      appValidateForm($('#discussion_form'), {
+      _validate_form($('#discussion_form'), {
           subject: 'required',
       }, manage_discussion);
 
@@ -239,7 +239,7 @@
               }
           }
       }
-      appValidateForm($('#timesheet_form'), timesheet_rules, manage_timesheets);
+      _validate_form($('#timesheet_form'), timesheet_rules, manage_timesheets);
 
       $('#discussion').on('hidden.bs.modal', function(event) {
           var $d = $('#discussion');

@@ -1,8 +1,13 @@
 <?php
 defined('BASEPATH') or exit('No direct script access allowed');
 
-class Two_checkout extends App_Controller
+class Two_checkout extends CRM_Controller
 {
+    public function __construct()
+    {
+        parent::__construct();
+    }
+
     public function complete_purchase()
     {
         if ($this->input->post()) {
@@ -95,18 +100,12 @@ class Two_checkout extends App_Controller
                  <div class="row">
                     <div class="panel_s">
                        <div class="panel-body">
-                          <h3 class="no-margin">
-                             <b><?php echo _l('payment_for_invoice'); ?></b>
-                             <a href="<?php echo site_url('invoice/' . $data['invoice']->id . '/' . $data['invoice']->hash); ?>">
-                              <b><?php echo format_invoice_number($data['invoice']->id); ?></b>
-                            </a>
-                          </h3>
-                          <h4><?php echo _l('payment_total', app_format_money($data['total'], $data['invoice']->currency_name)); ?></h4>
+                          <h4 class="no-margin">
+                             <?php echo _l('payment_for_invoice'); ?> <a href="<?php echo site_url('invoice/' . $data['invoice']->id . '/' . $data['invoice']->hash); ?>"><?php echo format_invoice_number($data['invoice']->id); ?></a>
+                          </h4>
                           <hr />
-                          <p class="text-info">
-                            <b><?php echo _l('2checkout_notice_payment'); ?></b>
-                          </p>
-                          <hr />
+                          <p class="text-info"><?php echo _l('2checkout_notice_payment'); ?></p>
+                          <p><span class="bold"><?php echo _l('payment_total', format_money($data['total'], $data['invoice']->symbol)); ?></span></p>
                           <?php echo form_open(site_url('gateways/two_checkout/complete_purchase'), ['id' => '2checkout_form', 'novalidate' => true]); ?>
                           <?php echo form_hidden('invoiceid', $data['invoice']->id); ?>
                           <?php echo form_hidden('total', $data['total']); ?>

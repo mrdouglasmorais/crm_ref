@@ -13,7 +13,7 @@ function is_rtl($client_area = false)
 {
     $CI = & get_instance();
     if (is_client_logged_in()) {
-        $CI->db->select('direction')->from(db_prefix() . 'contacts')->where('id', get_contact_user_id());
+        $CI->db->select('direction')->from('tblcontacts')->where('id', get_contact_user_id());
         $direction = $CI->db->get()->row()->direction;
 
         if ($direction == 'rtl') {
@@ -36,7 +36,7 @@ function is_rtl($client_area = false)
         if (isset($GLOBALS['current_user'])) {
             $direction = $GLOBALS['current_user']->direction;
         } else {
-            $CI->db->select('direction')->from(db_prefix() . 'staff')->where('staffid', get_staff_user_id());
+            $CI->db->select('direction')->from('tblstaff')->where('staffid', get_staff_user_id());
             $direction = $CI->db->get()->row()->direction;
         }
 
@@ -59,21 +59,6 @@ function is_rtl($client_area = false)
 
     return false;
 }
-
-/**
- * Check whether the data is intended to be shown for the customer
- * For example this function is used for custom fields, pdf language loading etc...
- * @return boolean
- */
-function is_data_for_customer()
-{
-    return is_client_logged_in()
-            || (!is_staff_logged_in() && !is_client_logged_in())
-            || defined('SEND_MAIL_TEMPLATE')
-            || defined('CLIENTS_AREA')
-            || defined('GDPR_EXPORT');
-}
-
 /**
  * Generate encryption key for app-config.php
  * @return stirng
@@ -89,32 +74,13 @@ function generate_encryption_key()
 }
 
 /**
- * Return application version formatted
- * @return string
- */
-function get_app_version()
-{
-    $CI = &get_instance();
-    $CI->load->config('migration');
-
-    return wordwrap($CI->config->item('migration_version'), 1, '.', true);
-}
-
-/**
  * Set current full url to for user to be redirected after login
  * Check below function to see why is this
  */
 function redirect_after_login_to_current_url()
 {
-    $redirectTo = current_full_url();
-
-    // This can happen if at the time you received a notification but your session was expired the system stored this as last accessed URL so after login can redirect you to this URL.
-    if (strpos($redirectTo, 'notifications_check') !== false) {
-        return;
-    }
-
     get_instance()->session->set_userdata([
-        'red_url' => $redirectTo,
+        'red_url' => current_full_url(),
     ]);
 }
 /**
@@ -167,7 +133,13 @@ function get_current_date_format($php = false)
     $format = get_option('dateformat');
     $format = explode('|', $format);
 
-    $format = hooks()->apply_filters('get_current_date_format', $format, $php);
+    $hook_data = do_action('get_current_date_format', [
+        'format' => $format,
+        'php'    => $php,
+    ]);
+
+    $format = $hook_data['format'];
+    $php    = $php;
 
     if ($php == false) {
         return $format[1];
@@ -176,12 +148,40 @@ function get_current_date_format($php = false)
     return $format[0];
 }
 /**
+ * Check if current user is admin
+ * @param  mixed $staffid
+ * @return boolean if user is not admin
+ */
+function is_admin($staffid = '')
+{
+    /**
+     * Checking for current user?
+     */
+    if (!is_numeric($staffid)) {
+        if (isset($GLOBALS['current_user'])) {
+            return $GLOBALS['current_user']->admin === '1';
+        }
+        $staffid = get_staff_user_id();
+    }
+
+    $CI = & get_instance();
+    $CI->db->select('1')
+    ->where('admin', 1)
+    ->where('staffid', $staffid);
+
+    return $CI->db->count_all_results('tblstaff') > 0 ? true : false;
+}
+/**
  * Is user logged in
  * @return boolean
  */
 function is_logged_in()
 {
-    return (is_client_logged_in() || is_staff_logged_in());
+    if (!is_client_logged_in() && !is_staff_logged_in()) {
+        return false;
+    }
+
+    return true;
 }
 /**
  * Is client logged in
@@ -189,7 +189,12 @@ function is_logged_in()
  */
 function is_client_logged_in()
 {
-    return get_instance()->session->has_userdata('client_logged_in');
+    $CI = & get_instance();
+    if ($CI->session->has_userdata('client_logged_in')) {
+        return true;
+    }
+
+    return false;
 }
 /**
  * Is staff logged in
@@ -197,7 +202,12 @@ function is_client_logged_in()
  */
 function is_staff_logged_in()
 {
-    return get_instance()->session->has_userdata('staff_logged_in');
+    $CI = & get_instance();
+    if ($CI->session->has_userdata('staff_logged_in')) {
+        return true;
+    }
+
+    return false;
 }
 /**
  * Return logged staff User ID from session
@@ -206,23 +216,7 @@ function is_staff_logged_in()
 function get_staff_user_id()
 {
     $CI = & get_instance();
-
-    if (defined('API')) {
-        $CI->load->config('rest');
-
-        $api_key_variable = $CI->config->item('rest_key_name');
-        $key_name         = 'HTTP_' . strtoupper(str_replace('-', '_', $api_key_variable));
-
-        if ($key = $CI->input->server($key_name)) {
-            $CI->db->where('key', $key);
-            $key = $CI->db->get($CI->config->item('rest_keys_table'))->row();
-            if ($key) {
-                return $key->user_id;
-            }
-        }
-    }
-
-    if (!is_staff_logged_in()) {
+    if (!$CI->session->has_userdata('staff_logged_in')) {
         return false;
     }
 
@@ -234,11 +228,12 @@ function get_staff_user_id()
  */
 function get_client_user_id()
 {
-    if (!is_client_logged_in()) {
+    $CI = & get_instance();
+    if (!$CI->session->has_userdata('client_logged_in')) {
         return false;
     }
 
-    return get_instance()->session->userdata('client_user_id');
+    return $CI->session->userdata('client_user_id');
 }
 
 /**
@@ -260,7 +255,19 @@ function get_contact_user_id()
  */
 function get_timezones_list()
 {
-    return app\services\Timezones::get();
+    return [
+        'EUROPE'     => DateTimeZone::listIdentifiers(DateTimeZone::EUROPE),
+        'AMERICA'    => DateTimeZone::listIdentifiers(DateTimeZone::AMERICA),
+        'INDIAN'     => DateTimeZone::listIdentifiers(DateTimeZone::INDIAN),
+        'AUSTRALIA'  => DateTimeZone::listIdentifiers(DateTimeZone::AUSTRALIA),
+        'ASIA'       => DateTimeZone::listIdentifiers(DateTimeZone::ASIA),
+        'AFRICA'     => DateTimeZone::listIdentifiers(DateTimeZone::AFRICA),
+        'ANTARCTICA' => DateTimeZone::listIdentifiers(DateTimeZone::ANTARCTICA),
+        'ARCTIC'     => DateTimeZone::listIdentifiers(DateTimeZone::ARCTIC),
+        'ATLANTIC'   => DateTimeZone::listIdentifiers(DateTimeZone::ATLANTIC),
+        'PACIFIC'    => DateTimeZone::listIdentifiers(DateTimeZone::PACIFIC),
+        'UTC'        => DateTimeZone::listIdentifiers(DateTimeZone::UTC),
+    ];
 }
 
 /**
@@ -269,7 +276,9 @@ function get_timezones_list()
  */
 function is_mobile()
 {
-    if (get_instance()->agent->is_mobile()) {
+    $CI = & get_instance();
+
+    if ($CI->agent->is_mobile()) {
         return true;
     }
 
@@ -282,10 +291,11 @@ function is_mobile()
  */
 function set_alert($type, $message)
 {
-    get_instance()->session->set_flashdata('message-' . $type, $message);
+    $CI = & get_instance();
+    $CI->session->set_flashdata('message-' . $type, $message);
 }
 /**
- * Redirect to blank admin page
+ * Redirect to blank page
  * @param  string $message Alert message
  * @param  string $alert   Alert type
  */
@@ -302,7 +312,7 @@ function access_denied($permission = '')
 {
     set_alert('danger', _l('access_denied'));
 
-    log_activity('Tried to access page where don\'t have permission' . ($permission != '' ? ' [' . $permission . ']' : ''));
+    logActivity('Tried to access page where don\'t have permission' . ($permission != '' ? ' [' . $permission . ']' : ''));
 
     if (isset($_SERVER['HTTP_REFERER']) && !empty($_SERVER['HTTP_REFERER'])) {
         redirect($_SERVER['HTTP_REFERER']);
@@ -364,7 +374,7 @@ function get_available_date_formats()
         'd.m.Y|%d.%m.%Y' => 'd.m.Y',
     ];
 
-    return hooks()->apply_filters('available_date_formats', $date_formats);
+    return do_action('get_available_date_formats', $date_formats);
 }
 /**
  * Get weekdays as array
@@ -400,20 +410,48 @@ function get_weekdays_original()
     ];
 }
 /**
+ * Get admin url
+ * @param string url to append (Optional)
+ * @return string admin url
+ */
+function admin_url($url = '')
+{
+    $adminURI = get_admin_uri();
+
+    if ($url == '' || $url == '/') {
+        if ($url == '/') {
+            $url = '';
+        }
+
+        return site_url($adminURI) . '/';
+    }
+
+    return site_url($adminURI . '/' . $url);
+}
+/**
+ * Return admin URI
+ * CUSTOM_ADMIN_URL is not yet tested well, don't define it
+ * @return string
+ */
+function get_admin_uri()
+{
+    return do_action('admin_uri', DEFINED('CUSTOM_ADMIN_URL') ? CUSTOM_ADMIN_URL : ADMIN_URL);
+}
+
+/**
  * Outputs language string based on passed line
  * @since  Version 1.0.1
- * @param  string $line   language line key
- * @param  mixed $label   sprint_f label
- * @return string         language text
+ * @param  string $line  language line string
+ * @param  string $label sprint_f label
+ * @return string        formatted language
  */
 function _l($line, $label = '', $log_errors = true)
 {
     $CI = & get_instance();
 
-    $hook_data = hooks()->apply_filters('before_get_language_text', ['line' => $line, 'label' => $label]);
-
-    $line  = $hook_data['line'];
-    $label = $hook_data['label'];
+    $hook_data = do_action('before_get_language_text', ['line' => $line, 'label' => $label]);
+    $line      = $hook_data['line'];
+    $label     = $hook_data['label'];
 
     if (is_array($label) && count($label) > 0) {
         $_line = vsprintf($CI->lang->line(trim($line), $log_errors), $label);
@@ -421,14 +459,13 @@ function _l($line, $label = '', $log_errors = true)
         $_line = @sprintf($CI->lang->line(trim($line), $log_errors), $label);
     }
 
-    $hook_data = hooks()->apply_filters('after_get_language_text', ['line' => $line, 'formatted_line' => $_line]);
-
-    $_line = $hook_data['formatted_line'];
-    $line  = $hook_data['line'];
+    $hook_data = do_action('after_get_language_text', ['line' => $line, 'label' => $label, 'formatted_line' => $_line]);
+    $_line     = $hook_data['formatted_line'];
+    $line      = $hook_data['line'];
 
     if ($_line != '') {
         if (preg_match('/"/', $_line) && !is_html($_line)) {
-            $_line = html_escape($_line);
+            $_line = htmlspecialchars($_line, ENT_COMPAT);
         }
 
         return ForceUTF8\Encoding::toUTF8($_line);
@@ -448,20 +485,16 @@ function _l($line, $label = '', $log_errors = true)
  */
 function _d($date)
 {
-    $formatted = '';
-
     if ($date == '' || is_null($date) || $date == '0000-00-00') {
-        return $formatted;
+        return '';
     }
-
     if (strpos($date, ' ') !== false) {
         return _dt($date);
     }
+    $format = get_current_date_format();
+    $date   = strftime($format, strtotime($date));
 
-    $format    = get_current_date_format();
-    $formatted = strftime($format, strtotime($date));
-
-    return hooks()->apply_filters('after_format_date', $formatted, $date);
+    return do_action('after_format_date', $date);
 }
 
 /**
@@ -471,12 +504,9 @@ function _d($date)
  */
 function _dt($date, $is_timesheet = false)
 {
-    $original = $date;
-
     if ($date == '' || is_null($date) || $date == '0000-00-00 00:00:00') {
         return '';
     }
-
     $format = get_current_date_format();
     $hour12 = (get_option('time_format') == 24 ? false : true);
 
@@ -494,7 +524,7 @@ function _dt($date, $is_timesheet = false)
         $date = date(get_current_date_format(true) . ' g:i A', $date);
     }
 
-    return hooks()->apply_filters('after_format_datetime', $date, ['original' => $original, 'is_timesheet' => $is_timesheet]);
+    return do_action('after_format_datetime', $date);
 }
 
 /**
@@ -511,15 +541,19 @@ function to_sql_date($date, $datetime = false)
     $to_date     = 'Y-m-d';
     $from_format = get_current_date_format(true);
 
-    $date = hooks()->apply_filters('before_sql_date_format', $date, [
-        'from_format' => $from_format,
-        'is_datetime' => $datetime,
-    ]);
+
+    $hook_data['date']        = $date;
+    $hook_data['from_format'] = $from_format;
+    $hook_data['datetime']    = $datetime;
+
+    $hook_data = do_action('before_sql_date_format', $hook_data);
+
+    $date        = $hook_data['date'];
+    $from_format = $hook_data['from_format'];
 
     if ($datetime == false) {
-        return hooks()->apply_filters('to_sql_date_formatted', date_format(date_create_from_format($from_format, $date), $to_date));
+        return date_format(date_create_from_format($from_format, $date), $to_date);
     }
-
     if (strpos($date, ' ') === false) {
         $date .= ' 00:00:00';
     } else {
@@ -541,7 +575,7 @@ function to_sql_date($date, $datetime = false)
     $date = _simplify_date_fix($date, $from_format);
     $d    = strftime('%Y-%m-%d %H:%M:%S', strtotime($date));
 
-    return hooks()->apply_filters('to_sql_date_formatted', $d);
+    return do_action('to_sql_date_formatted', $d);
 }
 
 /**
@@ -579,27 +613,159 @@ function is_date($date)
     return (bool) strtotime($date);
 }
 /**
- * Get available locaes predefined for the system
- * If you add a language and the locale do not exist in this array you can use action hook to add new locale
- * @return array
- */
-function get_locales()
-{
-    $locales = \app\services\utilities\Locale::app();
-
-    return hooks()->apply_filters('before_get_locales', $locales);
-}
-/**
  * Get locale key by system language
  * @param  string $language language name from (application/languages) folder name
  * @return string
  */
 function get_locale_key($language = 'english')
 {
-    $locale = \app\services\utilities\Locale::getByLanguage($language);
+    $locale = 'en';
+    if ($language == '') {
+        return $locale;
+    }
 
-    return hooks()->apply_filters('before_get_locale', $locale);
+    $locales = get_locales();
+
+    if (isset($locales[$language])) {
+        $locale = $locales[$language];
+    } elseif (isset($locales[ucfirst($language)])) {
+        $locale = $locales[ucfirst($language)];
+    } else {
+        foreach ($locales as $key => $val) {
+            $key      = strtolower($key);
+            $language = strtolower($language);
+            if (strpos($key, $language) !== false) {
+                $locale = $val;
+            // In case $language is bigger string then $key
+            } elseif (strpos($language, $key) !== false) {
+                $locale = $val;
+            }
+        }
+    }
+
+    $locale = do_action('before_get_locale', $locale);
+
+    return $locale;
 }
+/**
+ * Check if staff user has permission
+ * @param  string  $permission permission shortname
+ * @param  mixed  $staffid if you want to check for particular staff
+ * @return boolean
+ */
+function has_permission($permission, $staffid = '', $can = '')
+{
+    $CI = & get_instance();
+
+    /**
+     * Maybe permission is function?
+     * Example is_admin or is_staff_member
+     */
+    if (function_exists($permission) && is_callable($permission)) {
+        return call_user_func($permission, $staffid);
+    }
+
+    /**
+     * If user is admin return true
+     * Admin have all permissions
+     */
+    if (is_admin($staffid)) {
+        return true;
+    }
+
+    $staffid     = ($staffid == '' ? get_staff_user_id() : $staffid);
+    $can         = ($can == '' ? 'view' : $can);
+    $permissions = null;
+
+    /**
+     * Stop making query if we are doing checking for current user
+     * Current user is stored in $GLOBALS including the permissions
+     */
+    if ((string) $staffid === (string) get_staff_user_id() && isset($GLOBALS['current_user'])) {
+        $permissions = $GLOBALS['current_user']->permissions;
+    }
+
+    /**
+     * Not current user?
+     * Get permissions for this staff
+     * Permissions will be cached in object cache upon first request
+     */
+    if (!$permissions) {
+        if (!class_exists('staff_model')) {
+            $CI->load->model('staff_model');
+        }
+        $permissions = $CI->staff_model->get_staff_permissions($staffid);
+    }
+
+    $hasPermission = false;
+    /**
+     * Based on permissions staff object check if user have permission
+     */
+    foreach ($permissions as $permObject) {
+        if ($permObject->permission_name == $permission
+            && $permObject->{'can_' . $can} == '1') {
+            $hasPermission = true;
+
+            break;
+        }
+    }
+
+    return $hasPermission;
+}
+/**
+ * Check if user is staff member
+ * In the staff profile there is option to check IS NOT STAFF MEMBER eq like contractor
+ * Some features are disabled when user is not staff member
+ * @param  string  $staff_id staff id
+ * @return boolean
+ */
+function is_staff_member($staff_id = '')
+{
+    $CI = & get_instance();
+    if ($staff_id == '') {
+        if (isset($GLOBALS['current_user'])) {
+            return $GLOBALS['current_user']->is_not_staff === '0';
+        }
+        $staff_id = get_staff_user_id();
+    }
+
+    $CI->db->where('staffid', $staff_id)
+    ->where('is_not_staff', 0);
+
+    return $CI->db->count_all_results('tblstaff') > 0 ? true : false;
+}
+/**
+ * Load language in admin area
+ * @param  string $staff_id
+ * @return string return loaded language
+ */
+function load_admin_language($staff_id = '')
+{
+    $CI = & get_instance();
+
+    $CI->lang->is_loaded = [];
+    $CI->lang->language  = [];
+
+    $language = get_option('active_language');
+    if (is_staff_logged_in() || $staff_id != '') {
+        $staff_language = get_staff_default_language($staff_id);
+        if (!empty($staff_language)) {
+            if (file_exists(APPPATH . 'language/' . $staff_language)) {
+                $language = $staff_language;
+            }
+        }
+    }
+
+    $CI->lang->load($language . '_lang', $language);
+    if (file_exists(APPPATH . 'language/' . $language . '/custom_lang.php')) {
+        $CI->lang->load('custom_lang', $language);
+    }
+
+    $language = do_action('after_load_admin_language', $language);
+
+    return $language;
+}
+
 /**
  * Get current url with query vars
  * @return string
@@ -622,9 +788,34 @@ function pusher_trigger_notification($users = [])
         return false;
     }
 
-    if (!is_array($users) || count($users) == 0) {
+    if (!is_array($users)) {
         return false;
     }
+
+    if (count($users) == 0) {
+        return false;
+    }
+
+    $app_key    = get_option('pusher_app_key');
+    $app_secret = get_option('pusher_app_secret');
+    $app_id     = get_option('pusher_app_id');
+
+    if ($app_key == '' || $app_secret == '' || $app_id == '') {
+        return false;
+    }
+
+    $pusher_options = do_action('pusher_options', []);
+
+    if (!isset($pusher_options['cluster']) && get_option('pusher_cluster') != '') {
+        $pusher_options['cluster'] = get_option('pusher_cluster');
+    }
+
+    $pusher = new Pusher\Pusher(
+        $app_key,
+        $app_secret,
+        $app_id,
+        $pusher_options
+    );
 
     $channels = [];
     foreach ($users as $id) {
@@ -633,13 +824,15 @@ function pusher_trigger_notification($users = [])
 
     $channels = array_unique($channels);
 
-    $CI = &get_instance();
-
-    $CI->load->library('app_pusher');
-
-    $CI->app_pusher->trigger($channels, 'notification', []);
+    $pusher->trigger($channels, 'notification', []);
 }
 
+if (defined('APP_CSRF_PROTECTION') && APP_CSRF_PROTECTION) {
+    add_action('app_admin_head', 'csrf_jquery_token');
+    add_action('app_customers_head', 'csrf_jquery_token');
+    add_action('app_external_form_head', 'csrf_jquery_token');
+    add_action('elfinder_tinymce_head', 'csrf_jquery_token');
+}
 
 /**
  * Generate md5 hash
@@ -651,27 +844,15 @@ function app_generate_hash()
 }
 
 /**
- * @since  2.3.2
- * Get CSRF formatter for AJAX usage
- * @return array
- */
-function get_csrf_for_ajax()
-{
-    $csrf               = [];
-    $csrf['formatted']  = [get_instance()->security->get_csrf_token_name() => get_instance()->security->get_csrf_hash()];
-    $csrf['token_name'] = get_instance()->security->get_csrf_token_name();
-    $csrf['hash']       = get_instance()->security->get_csrf_hash();
-
-    return $csrf;
-}
-
-/**
  * If user have enabled CSRF proctection this function will take care of the ajax requests and append custom header for CSRF
  * @return mixed
  */
 function csrf_jquery_token()
 {
-    ?>
+    $csrf               = [];
+    $csrf['formatted']  = [get_instance()->security->get_csrf_token_name() => get_instance()->security->get_csrf_hash()];
+    $csrf['token_name'] = get_instance()->security->get_csrf_token_name();
+    $csrf['hash']       = get_instance()->security->get_csrf_hash(); ?>
     <script>
         if (typeof (jQuery) === 'undefined' && !window.deferAfterjQueryLoaded) {
             window.deferAfterjQueryLoaded = [];
@@ -690,23 +871,24 @@ function csrf_jquery_token()
             });
         }
 
-        var csrfData = <?php echo json_encode(get_csrf_for_ajax()); ?>;
+        var csrfData = <?php echo json_encode($csrf); ?>;
 
         if (typeof(jQuery) == 'undefined') {
+
             window.deferAfterjQueryLoaded.push(function () {
                 csrf_jquery_ajax_setup();
             });
             window.addEventListener('load',function(){
                 csrf_jquery_ajax_setup();
-            }, true);
+            },true);
         } else {
             csrf_jquery_ajax_setup();
         }
 
         function csrf_jquery_ajax_setup() {
-            $.ajaxSetup({
-                data: csrfData.formatted
-            });
+                $.ajaxSetup({
+                    data: csrfData.formatted
+                });
         }
  </script>
  <?php
@@ -719,18 +901,14 @@ function csrf_jquery_token()
  */
 function app_happy_text($text)
 {
-    $regex = hooks()->apply_filters('app_happy_text_regex', 'congratulations!?|congrats!?|happy!?|feel happy!?|awesome!?|yay!?');
+    $regex = do_action('app_happy_regex', 'congratulations!?|congrats!?|happy!?|feel happy!?|awesome!?|yay!?');
     $re    = '/' . $regex . '/i';
 
-    $app_happy_color = hooks()->apply_filters('app_happy_text_color', 'rgb(255, 59, 0)');
+    $app_happy_color = do_action('app_happy_color', 'rgb(255, 59, 0)');
 
     preg_match_all($re, $text, $matches, PREG_SET_ORDER, 0);
     foreach ($matches as $match) {
-        $text = preg_replace(
-            '/' . $match[0] . '/i',
-            '<span style="color:' . $app_happy_color . ';font-weight:bold;">' . $match[0] . '</span>',
-            $text
-        );
+        $text = preg_replace('/' . $match[0] . '/i', '<span style="color:' . $app_happy_color . ';font-weight:bold;">' . $match[0] . '</span>', $text);
     }
 
     return $text;
@@ -754,42 +932,12 @@ function get_temp_dir()
         return rtrim($temp, '/\\') . '/';
     }
 
-    $temp = app_temp_dir();
-
+    $temp = TEMP_FOLDER;
     if (is_dir($temp) && is_writable($temp)) {
         return $temp;
     }
 
     return '/tmp/';
-}
-
-/**
- * Creates instance of phpass
- * @since  2.3.1
- * @return object PasswordHash class
- */
-function app_hasher()
-{
-    global $app_hasher;
-
-    if (empty($app_hasher)) {
-        require_once(APPPATH . 'third_party/phpass.php');
-        // By default, use the portable hash from phpass
-        $app_hasher = new PasswordHash(PHPASS_HASH_STRENGTH, PHPASS_HASH_PORTABLE);
-    }
-
-    return $app_hasher;
-}
-
-/**
- * Hashes password for user
- * @since  2.3.1
- * @param  string $password plain password
- * @return string
- */
-function app_hash_password($password)
-{
-    return app_hasher()->HashPassword($password);
 }
 
 // TODO
@@ -844,21 +992,4 @@ function roundToNearestMinuteInterval($dateTime, $minuteInterval = 10)
         round($dateTime->format('i') / $minuteInterval) * $minuteInterval,
         0
     );
-}
-
-/**
- * @since  2.3.2
- * Get last upgrade copy data if exists
- * @return mixed
- */
-function get_last_upgrade_copy_data()
-{
-    $lastUpgradeCopyData = get_option('last_upgrade_copy_data');
-    if ($lastUpgradeCopyData !== '') {
-        $lastUpgradeCopyData = json_decode($lastUpgradeCopyData);
-
-        return is_object($lastUpgradeCopyData) ? $lastUpgradeCopyData : false;
-    }
-
-    return false;
 }

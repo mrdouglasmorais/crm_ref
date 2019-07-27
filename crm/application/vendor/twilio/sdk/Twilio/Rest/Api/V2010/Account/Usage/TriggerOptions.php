@@ -14,9 +14,10 @@ use Twilio\Values;
 
 abstract class TriggerOptions {
     /**
-     * @param string $callbackMethod The HTTP method to use to call callback_url
-     * @param string $callbackUrl The URL we call when the trigger fires
-     * @param string $friendlyName A string to describe the resource
+     * @param string $callbackMethod HTTP method to use with callback_url
+     * @param string $callbackUrl URL Twilio will request when the trigger fires
+     * @param string $friendlyName A user-specified, human-readable name for the
+     *                             trigger.
      * @return UpdateTriggerOptions Options builder
      */
     public static function update($callbackMethod = Values::NONE, $callbackUrl = Values::NONE, $friendlyName = Values::NONE) {
@@ -24,11 +25,11 @@ abstract class TriggerOptions {
     }
 
     /**
-     * @param string $callbackMethod The HTTP method to use to call callback_url
-     * @param string $friendlyName A string to describe the resource
-     * @param string $recurring The frequency of a recurring UsageTrigger
-     * @param string $triggerBy The field in the UsageRecord resource that fires
-     *                          the trigger
+     * @param string $callbackMethod HTTP method to use with callback_url
+     * @param string $friendlyName A user-specified, human-readable name for the
+     *                             trigger.
+     * @param string $recurring How this trigger recurs
+     * @param string $triggerBy The field in the UsageRecord that fires the trigger
      * @return CreateTriggerOptions Options builder
      */
     public static function create($callbackMethod = Values::NONE, $friendlyName = Values::NONE, $recurring = Values::NONE, $triggerBy = Values::NONE) {
@@ -36,9 +37,9 @@ abstract class TriggerOptions {
     }
 
     /**
-     * @param string $recurring The frequency of recurring UsageTriggers to read
-     * @param string $triggerBy The trigger field of the UsageTriggers to read
-     * @param string $usageCategory The usage category of the UsageTriggers to read
+     * @param string $recurring Filter by recurring
+     * @param string $triggerBy Filter by trigger by
+     * @param string $usageCategory Filter by Usage Category
      * @return ReadTriggerOptions Options builder
      */
     public static function read($recurring = Values::NONE, $triggerBy = Values::NONE, $usageCategory = Values::NONE) {
@@ -48,9 +49,10 @@ abstract class TriggerOptions {
 
 class UpdateTriggerOptions extends Options {
     /**
-     * @param string $callbackMethod The HTTP method to use to call callback_url
-     * @param string $callbackUrl The URL we call when the trigger fires
-     * @param string $friendlyName A string to describe the resource
+     * @param string $callbackMethod HTTP method to use with callback_url
+     * @param string $callbackUrl URL Twilio will request when the trigger fires
+     * @param string $friendlyName A user-specified, human-readable name for the
+     *                             trigger.
      */
     public function __construct($callbackMethod = Values::NONE, $callbackUrl = Values::NONE, $friendlyName = Values::NONE) {
         $this->options['callbackMethod'] = $callbackMethod;
@@ -59,9 +61,9 @@ class UpdateTriggerOptions extends Options {
     }
 
     /**
-     * The HTTP method we should use to call `callback_url`. Can be: `GET` or `POST` and the default is `POST`.
+     * The HTTP method Twilio will use when making a request to the CallbackUrl.  `GET` or `POST`.
      * 
-     * @param string $callbackMethod The HTTP method to use to call callback_url
+     * @param string $callbackMethod HTTP method to use with callback_url
      * @return $this Fluent Builder
      */
     public function setCallbackMethod($callbackMethod) {
@@ -70,9 +72,9 @@ class UpdateTriggerOptions extends Options {
     }
 
     /**
-     * The URL we should call using `callback_method` when the trigger fires.
+     * Twilio will make a request to this url when the trigger fires.
      * 
-     * @param string $callbackUrl The URL we call when the trigger fires
+     * @param string $callbackUrl URL Twilio will request when the trigger fires
      * @return $this Fluent Builder
      */
     public function setCallbackUrl($callbackUrl) {
@@ -81,9 +83,10 @@ class UpdateTriggerOptions extends Options {
     }
 
     /**
-     * A descriptive string that you create to describe the resource. It can be up to 64 characters long.
+     * A user-specified, human-readable name for the trigger.
      * 
-     * @param string $friendlyName A string to describe the resource
+     * @param string $friendlyName A user-specified, human-readable name for the
+     *                             trigger.
      * @return $this Fluent Builder
      */
     public function setFriendlyName($friendlyName) {
@@ -109,11 +112,11 @@ class UpdateTriggerOptions extends Options {
 
 class CreateTriggerOptions extends Options {
     /**
-     * @param string $callbackMethod The HTTP method to use to call callback_url
-     * @param string $friendlyName A string to describe the resource
-     * @param string $recurring The frequency of a recurring UsageTrigger
-     * @param string $triggerBy The field in the UsageRecord resource that fires
-     *                          the trigger
+     * @param string $callbackMethod HTTP method to use with callback_url
+     * @param string $friendlyName A user-specified, human-readable name for the
+     *                             trigger.
+     * @param string $recurring How this trigger recurs
+     * @param string $triggerBy The field in the UsageRecord that fires the trigger
      */
     public function __construct($callbackMethod = Values::NONE, $friendlyName = Values::NONE, $recurring = Values::NONE, $triggerBy = Values::NONE) {
         $this->options['callbackMethod'] = $callbackMethod;
@@ -123,9 +126,9 @@ class CreateTriggerOptions extends Options {
     }
 
     /**
-     * The HTTP method we should use to call `callback_url`. Can be: `GET` or `POST` and the default is `POST`.
+     * Twilio will use this HTTP method when making a request to the CallbackUrl.  `GET` or `POST`.  The default is `POST`.
      * 
-     * @param string $callbackMethod The HTTP method to use to call callback_url
+     * @param string $callbackMethod HTTP method to use with callback_url
      * @return $this Fluent Builder
      */
     public function setCallbackMethod($callbackMethod) {
@@ -134,9 +137,10 @@ class CreateTriggerOptions extends Options {
     }
 
     /**
-     * A descriptive string that you create to describe the resource. It can be up to 64 characters long.
+     * A human readable description of the new trigger.  Maximum 64 characters.
      * 
-     * @param string $friendlyName A string to describe the resource
+     * @param string $friendlyName A user-specified, human-readable name for the
+     *                             trigger.
      * @return $this Fluent Builder
      */
     public function setFriendlyName($friendlyName) {
@@ -145,9 +149,9 @@ class CreateTriggerOptions extends Options {
     }
 
     /**
-     * The frequency of a recurring UsageTrigger.  Can be: `daily`, `monthly`, or `yearly` for recurring triggers or empty for non-recurring triggers. A trigger will only fire once during each period. Recurring times are in GMT.
+     * How this trigger recurs. Empty for non-recurring triggers. One of `daily`, `monthly`, or `yearly` for recurring triggers.  A trigger will only fire once during each recurring period.  Recurring periods are in GMT.
      * 
-     * @param string $recurring The frequency of a recurring UsageTrigger
+     * @param string $recurring How this trigger recurs
      * @return $this Fluent Builder
      */
     public function setRecurring($recurring) {
@@ -156,10 +160,9 @@ class CreateTriggerOptions extends Options {
     }
 
     /**
-     * The field in the [UsageRecord](https://www.twilio.com/docs/api/rest/usage-records) resource that should fire the trigger.  Can be: `count`, `usage`, or `price` as described in the [UsageRecords documentation](https://www.twilio.com/docs/api/rest/usage-records#usage-count-price).  The default is `usage`.
+     * The field in the [UsageRecord](https://www.twilio.com/docs/api/rest/usage-records) that will fire the trigger.  One of `count`, `usage`, or `price` as described in the [UsageRecords documentation](https://www.twilio.com/docs/api/rest/usage-records#usage-count-price).  The default is `usage`.
      * 
-     * @param string $triggerBy The field in the UsageRecord resource that fires
-     *                          the trigger
+     * @param string $triggerBy The field in the UsageRecord that fires the trigger
      * @return $this Fluent Builder
      */
     public function setTriggerBy($triggerBy) {
@@ -185,9 +188,9 @@ class CreateTriggerOptions extends Options {
 
 class ReadTriggerOptions extends Options {
     /**
-     * @param string $recurring The frequency of recurring UsageTriggers to read
-     * @param string $triggerBy The trigger field of the UsageTriggers to read
-     * @param string $usageCategory The usage category of the UsageTriggers to read
+     * @param string $recurring Filter by recurring
+     * @param string $triggerBy Filter by trigger by
+     * @param string $usageCategory Filter by Usage Category
      */
     public function __construct($recurring = Values::NONE, $triggerBy = Values::NONE, $usageCategory = Values::NONE) {
         $this->options['recurring'] = $recurring;
@@ -196,9 +199,9 @@ class ReadTriggerOptions extends Options {
     }
 
     /**
-     * The frequency of recurring UsageTriggers to read. Can be: `daily`, `monthly`, or `yearly` to read recurring UsageTriggers. An empty value or a value of `alltime` reads non-recurring UsageTriggers.
+     * Only show UsageTriggers that count over this interval.  One of `daily`, `monthly`, or `yearly`.  To retrieve non-recurring triggers, leave this empty or use `alltime`.
      * 
-     * @param string $recurring The frequency of recurring UsageTriggers to read
+     * @param string $recurring Filter by recurring
      * @return $this Fluent Builder
      */
     public function setRecurring($recurring) {
@@ -207,9 +210,9 @@ class ReadTriggerOptions extends Options {
     }
 
     /**
-     * The trigger field of the UsageTriggers to read.  Can be: `count`, `usage`, or `price` as described in the [UsageRecords documentation](https://www.twilio.com/docs/api/rest/usage-records#usage-count-price).
+     * Only show UsageTriggers that trigger by this field in the UsageRecord.  Must be one of: `count`, `usage`, or `price` as described in the [UsageRecords documentation](https://www.twilio.com/docs/api/rest/usage-records#usage-count-price).
      * 
-     * @param string $triggerBy The trigger field of the UsageTriggers to read
+     * @param string $triggerBy Filter by trigger by
      * @return $this Fluent Builder
      */
     public function setTriggerBy($triggerBy) {
@@ -218,9 +221,9 @@ class ReadTriggerOptions extends Options {
     }
 
     /**
-     * The usage category of the UsageTriggers to read. Must be a supported [usage categories](https://www.twilio.com/docs/api/rest/usage-records#usage-categories).
+     * Only show UsageTriggers that watch this usage category.  Must be one of the supported [usage categories](https://www.twilio.com/docs/api/rest/usage-records#usage-categories).
      * 
-     * @param string $usageCategory The usage category of the UsageTriggers to read
+     * @param string $usageCategory Filter by Usage Category
      * @return $this Fluent Builder
      */
     public function setUsageCategory($usageCategory) {

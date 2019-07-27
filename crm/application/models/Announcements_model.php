@@ -2,7 +2,7 @@
 
 defined('BASEPATH') or exit('No direct script access allowed');
 
-class Announcements_model extends App_Model
+class Announcements_model extends CRM_Model
 {
     public function __construct()
     {
@@ -23,15 +23,15 @@ class Announcements_model extends App_Model
         if (is_numeric($id)) {
             $this->db->where('announcementid', $id);
 
-            return $this->db->get(db_prefix() . 'announcements')->row();
+            return $this->db->get('tblannouncements')->row();
         }
 
         if (count($where) == 0 && $limit == '') {
-            $announcements = $this->app_object_cache->get('all-user-announcements');
+            $announcements = $this->object_cache->get('all-user-announcements');
             if (!$announcements && !is_array($announcements)) {
                 $this->_annoucements_query();
-                $announcements = $this->db->get(db_prefix() . 'announcements')->result_array();
-                $this->app_object_cache->add('all-user-announcements', $announcements);
+                $announcements = $this->db->get('tblannouncements')->result_array();
+                $this->object_cache->add('all-user-announcements', $announcements);
             }
         } else {
             $this->_annoucements_query();
@@ -40,7 +40,7 @@ class Announcements_model extends App_Model
                 $this->db->limit($limit);
             }
 
-            $announcements = $this->db->get(db_prefix() . 'announcements')->result_array();
+            $announcements = $this->db->get('tblannouncements')->result_array();
         }
 
         return $announcements;
@@ -59,7 +59,7 @@ class Announcements_model extends App_Model
         $staff  = is_client_logged_in() ? 0 : 1;
         $userid = is_client_logged_in() ? get_client_user_id() : get_staff_user_id();
 
-        $sql = 'SELECT COUNT(*) as total_undismissed FROM ' . db_prefix() . 'announcements WHERE announcementid NOT IN (SELECT announcementid FROM ' . db_prefix() . 'dismissed_announcements WHERE staff=' . $staff . ' AND userid=' . $userid . ')';
+        $sql = 'SELECT COUNT(*) as total_undismissed FROM tblannouncements WHERE announcementid NOT IN (SELECT announcementid FROM tbldismissedannouncements WHERE staff=' . $staff . ' AND userid=' . $userid . ')';
         if ($staff == 1) {
             $sql .= ' AND showtostaff=1';
         } else {
@@ -95,15 +95,11 @@ class Announcements_model extends App_Model
         }
         $data['message'] = $data['message'];
         $data['userid']  = get_staff_full_name(get_staff_user_id());
-
-        $data = hooks()->apply_filters('before_announcement_added', $data);
-
-        $this->db->insert(db_prefix() . 'announcements', $data);
+        $data            = do_action('before_announcement_added', $data);
+        $this->db->insert('tblannouncements', $data);
         $insert_id = $this->db->insert_id();
-
-        hooks()->do_action('announcement_created', $insert_id);
-
-        log_activity('New Announcement Added [' . $data['name'] . ']');
+        do_action('after_announcement_added', $insert_id);
+        logActivity('New Announcement Added [' . $data['name'] . ']');
 
         return $insert_id;
     }
@@ -116,20 +112,32 @@ class Announcements_model extends App_Model
      */
     public function update($data, $id)
     {
-        $data['showname']    = isset($data['showname']) ? 1 : 0;
-        $data['showtostaff'] = isset($data['showtostaff']) ? 1 : 0;
-        $data['showtousers'] = isset($data['showtousers']) ? 1 : 0;
-
+        if (isset($data['showname'])) {
+            $data['showname'] = 1;
+        } else {
+            $data['showname'] = 0;
+        }
+        if (isset($data['showtostaff'])) {
+            $data['showtostaff'] = 1;
+        } else {
+            $data['showtostaff'] = 0;
+        }
+        if (isset($data['showtousers'])) {
+            $data['showtousers'] = 1;
+        } else {
+            $data['showtousers'] = 0;
+        }
         $data['message'] = $data['message'];
-
-        $data = hooks()->apply_filters('before_announcement_updated', $data, $id);
-
+        $_data           = do_action('before_announcement_updated', [
+            'data' => $data,
+            'id'   => $id,
+        ]);
+        $data = $_data['data'];
         $this->db->where('announcementid', $id);
-        $this->db->update(db_prefix() . 'announcements', $data);
+        $this->db->update('tblannouncements', $data);
         if ($this->db->affected_rows() > 0) {
-            hooks()->do_action('announcement_updated', $id);
-
-            log_activity('Announcement Updated [' . $data['name'] . ']');
+            do_action('after_announcement_updated', $id);
+            logActivity('Announcement Updated [' . $data['name'] . ']');
 
             return true;
         }
@@ -145,43 +153,19 @@ class Announcements_model extends App_Model
      */
     public function delete($id)
     {
-        hooks()->do_action('before_delete_announcement', $id);
-
+        do_action('before_announcement_deleted', $id);
         $this->db->where('announcementid', $id);
-        $this->db->delete(db_prefix() . 'announcements');
+        $this->db->delete('tblannouncements');
         if ($this->db->affected_rows() > 0) {
             $this->db->where('announcementid', $id);
-            $this->db->delete(db_prefix() . 'dismissed_announcements');
+            $this->db->delete('tbldismissedannouncements');
 
-            hooks()->do_action('announcement_deleted', $id);
-
-            log_activity('Announcement Deleted [' . $id . ']');
+            logActivity('Announcement Deleted [' . $id . ']');
 
             return true;
         }
 
         return false;
-    }
-
-    public function set_announcements_as_read_except_last_one($user_id, $staff = false)
-    {
-        $lastAnnouncement = $this->db->query('SELECT announcementid FROM ' . db_prefix() . 'announcements WHERE ' . (!$staff ? 'showtousers' : 'showtostaff') . ' = 1 AND announcementid = (SELECT MAX(announcementid) FROM ' . db_prefix() . 'announcements)')->row();
-        if ($lastAnnouncement) {
-            // Get all announcements and set it to read.
-            $this->db->select('announcementid')
-                ->from(db_prefix() . 'announcements')
-                ->where((!$staff ? 'showtousers' : 'showtostaff'), 1)
-                ->where('announcementid !=', $lastAnnouncement->announcementid);
-
-            $announcements = $this->db->get()->result_array();
-            foreach ($announcements as $announcement) {
-                $this->db->insert(db_prefix() . 'dismissed_announcements', [
-                        'announcementid' => $announcement['announcementid'],
-                        'staff'          => (bool) $staff,
-                        'userid'         => $user_id,
-                    ]);
-            }
-        }
     }
 
     private function _annoucements_query()

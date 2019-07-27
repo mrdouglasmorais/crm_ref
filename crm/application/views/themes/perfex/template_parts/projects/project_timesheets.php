@@ -1,5 +1,5 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
-<table class="table dt-table table-timesheets" data-order-col="3" data-order-type="desc">
+<table class="table dt-table" data-order-col="3" data-order-type="desc">
     <thead>
         <tr>
             <th><?php echo _l('project_timesheet_user'); ?></th>

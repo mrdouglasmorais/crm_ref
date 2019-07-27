@@ -6,7 +6,7 @@ $v = $this->ci->db->query('SELECT VERSION() as version')->row();
 // 5.6 mysql version don't have the ANY_VALUE function implemented.
 
   $additionalSelect = [
-    db_prefix() . 'taskstimers.id',
+    'tbltaskstimers.id',
     'task_id',
     'rel_type',
     'rel_id',
@@ -26,7 +26,7 @@ if ($v && strpos($v->version, '5.7') !== false) {
     }
     $aColumns = [
         'ANY_VALUE(name) as name',
-        'ANY_VALUE((SELECT GROUP_CONCAT(name SEPARATOR ",") FROM ' . db_prefix() . 'taggables JOIN ' . db_prefix() . 'tags ON ' . db_prefix() . 'taggables.tag_id = ' . db_prefix() . 'tags.id WHERE rel_id = ' . db_prefix() . 'taskstimers.id and rel_type="timesheet" ORDER by tag_order ASC)) as tags',
+        'ANY_VALUE((SELECT GROUP_CONCAT(name SEPARATOR ",") FROM tbltags_in JOIN tbltags ON tbltags_in.tag_id = tbltags.id WHERE rel_id = tbltaskstimers.id and rel_type="timesheet" ORDER by tag_order ASC)) as tags',
         'ANY_VALUE(start_time) as start_time',
         'ANY_VALUE(end_time) as end_time',
         'ANY_VALUE(note) as note',
@@ -39,7 +39,7 @@ if ($v && strpos($v->version, '5.7') !== false) {
 
     $aColumns = [
         'name as name',
-        '(SELECT GROUP_CONCAT(name SEPARATOR ",") FROM ' . db_prefix() . 'taggables JOIN ' . db_prefix() . 'tags ON ' . db_prefix() . 'taggables.tag_id = ' . db_prefix() . 'tags.id WHERE rel_id = ' . db_prefix() . 'taskstimers.id and rel_type="timesheet" ORDER by tag_order ASC) as tags',
+        '(SELECT GROUP_CONCAT(name SEPARATOR ",") FROM tbltags_in JOIN tbltags ON tbltags_in.tag_id = tbltags.id WHERE rel_id = tbltaskstimers.id and rel_type="timesheet" ORDER by tag_order ASC) as tags',
         'start_time as start_time',
         'end_time as end_time',
         'note as note',
@@ -70,10 +70,10 @@ if ($this->ci->input->post('group_by_task')) {
 }
 
 $sIndexColumn = 'id';
-$sTable       = db_prefix() . 'taskstimers';
+$sTable       = 'tbltaskstimers';
 
 $join = [
-    'LEFT JOIN ' . db_prefix() . 'tasks ON ' . db_prefix() . 'tasks.id = ' . db_prefix() . 'taskstimers.task_id',
+    'LEFT JOIN tblstafftasks ON tblstafftasks.id = tbltaskstimers.task_id',
 ];
 
 $where = [];
@@ -100,7 +100,7 @@ if ($project_ids && is_array($project_ids)) {
     });
 
     if (count($project_ids) > 0) {
-        array_push($where, 'AND task_id IN (SELECT id FROM ' . db_prefix() . 'tasks WHERE rel_type = "project" AND rel_id  IN (' . implode(',', $project_ids) . '))');
+        array_push($where, 'AND task_id IN (SELECT id FROM tblstafftasks WHERE rel_type = "project" AND rel_id  IN (' . implode(',', $project_ids) . '))');
     }
 }
 
@@ -108,21 +108,21 @@ if ($this->ci->input->post('clientid') && !$this->ci->input->post('project_id'))
     $customer_id = $this->ci->input->post('clientid');
 
     array_push($where, 'AND (
-                (rel_id IN (SELECT id FROM ' . db_prefix() . 'invoices WHERE clientid=' . $customer_id . ') AND rel_type="invoice")
+                (rel_id IN (SELECT id FROM tblinvoices WHERE clientid=' . $customer_id . ') AND rel_type="invoice")
                 OR
-                (rel_id IN (SELECT id FROM ' . db_prefix() . 'estimates WHERE clientid=' . $customer_id . ') AND rel_type="estimate")
+                (rel_id IN (SELECT id FROM tblestimates WHERE clientid=' . $customer_id . ') AND rel_type="estimate")
                 OR
-                (rel_id IN (SELECT id FROM ' . db_prefix() . 'contracts WHERE client=' . $customer_id . ') AND rel_type="contract")
+                (rel_id IN (SELECT id FROM tblcontracts WHERE client=' . $customer_id . ') AND rel_type="contract")
                 OR
-                ( rel_id IN (SELECT ticketid FROM ' . db_prefix() . 'tickets WHERE userid=' . $customer_id . ') AND rel_type="ticket")
+                ( rel_id IN (SELECT ticketid FROM tbltickets WHERE userid=' . $customer_id . ') AND rel_type="ticket")
                 OR
-                (rel_id IN (SELECT id FROM ' . db_prefix() . 'expenses WHERE clientid=' . $customer_id . ') AND rel_type="expense")
+                (rel_id IN (SELECT id FROM tblexpenses WHERE clientid=' . $customer_id . ') AND rel_type="expense")
                 OR
-                (rel_id IN (SELECT id FROM ' . db_prefix() . 'proposals WHERE rel_id=' . $customer_id . ' AND rel_type="customer") AND rel_type="proposal")
+                (rel_id IN (SELECT id FROM tblproposals WHERE rel_id=' . $customer_id . ' AND rel_type="customer") AND rel_type="proposal")
                 OR
-                (rel_id IN (SELECT userid FROM ' . db_prefix() . 'clients WHERE userid=' . $customer_id . ') AND rel_type="customer")
+                (rel_id IN (SELECT userid FROM tblclients WHERE userid=' . $customer_id . ') AND rel_type="customer")
                 OR
-                (rel_id IN (SELECT id FROM ' . db_prefix() . 'projects WHERE clientid=' . $customer_id . ') AND rel_type="project")
+                (rel_id IN (SELECT id FROM tblprojects WHERE clientid=' . $customer_id . ') AND rel_type="project")
                 )');
 }
 
@@ -235,7 +235,7 @@ $chartWhere = implode(' ', $where);
 $chartWhere = ltrim($chartWhere, 'AND ');
 
 $chartData = $this->ci->db->query('SELECT end_time - start_time logged_time_h,
-    end_time - start_time logged_time_d,start_time,end_time FROM ' . db_prefix() . 'taskstimers LEFT JOIN ' . db_prefix() . 'tasks ON ' . db_prefix() . 'tasks.id = ' . db_prefix() . 'taskstimers.task_id WHERE ' . trim($chartWhere))->result_array();
+    end_time - start_time logged_time_d,start_time,end_time FROM tbltaskstimers LEFT JOIN tblstafftasks ON tblstafftasks.id = tbltaskstimers.task_id WHERE ' . trim($chartWhere))->result_array();
 
 foreach ($chartData as $timer) {
     if ($timer['logged_time_h'] == null) {

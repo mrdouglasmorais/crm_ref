@@ -21,9 +21,8 @@ use Twilio\Version;
  * @property string actorType
  * @property string actorUrl
  * @property string description
- * @property array eventData
+ * @property string eventData
  * @property \DateTime eventDate
- * @property string eventDateMs
  * @property string eventType
  * @property string resourceSid
  * @property string resourceType
@@ -32,7 +31,6 @@ use Twilio\Version;
  * @property string source
  * @property string sourceIpAddress
  * @property string url
- * @property string workspaceSid
  */
 class EventInstance extends InstanceResource {
     /**
@@ -40,7 +38,7 @@ class EventInstance extends InstanceResource {
      * 
      * @param \Twilio\Version $version Version that contains the resource
      * @param mixed[] $payload The response payload
-     * @param string $workspaceSid The workspace_sid
+     * @param string $workspaceSid The unique ID of the Workspace
      * @param string $sid The sid
      * @return \Twilio\Rest\Taskrouter\V1\Workspace\EventInstance 
      */
@@ -56,7 +54,6 @@ class EventInstance extends InstanceResource {
             'description' => Values::array_get($payload, 'description'),
             'eventData' => Values::array_get($payload, 'event_data'),
             'eventDate' => Deserialize::dateTime(Values::array_get($payload, 'event_date')),
-            'eventDateMs' => Values::array_get($payload, 'event_date_ms'),
             'eventType' => Values::array_get($payload, 'event_type'),
             'resourceSid' => Values::array_get($payload, 'resource_sid'),
             'resourceType' => Values::array_get($payload, 'resource_type'),
@@ -65,7 +62,6 @@ class EventInstance extends InstanceResource {
             'source' => Values::array_get($payload, 'source'),
             'sourceIpAddress' => Values::array_get($payload, 'source_ip_address'),
             'url' => Values::array_get($payload, 'url'),
-            'workspaceSid' => Values::array_get($payload, 'workspace_sid'),
         );
 
         $this->solution = array('workspaceSid' => $workspaceSid, 'sid' => $sid ?: $this->properties['sid'], );

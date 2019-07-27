@@ -3,19 +3,19 @@
 defined('BASEPATH') or exit('No direct script access allowed');
 
 $aColumns = [
-    'CASE ' . db_prefix() . 'reminders.rel_type
-        WHEN \'customer\' THEN ' . db_prefix() . 'clients.company
-        WHEN \'lead\' THEN ' . db_prefix() . 'leads.name
-        WHEN \'estimate\' THEN ' . db_prefix() . 'estimates.id
-        WHEN \'invoice\' THEN ' . db_prefix() . 'invoices.id
-        WHEN \'proposal\' THEN ' . db_prefix() . 'proposals.subject
-        WHEN \'expense\' THEN ' . db_prefix() . 'expenses.id
-        WHEN \'credit_note\' THEN ' . db_prefix() . 'creditnotes.id
-        WHEN \'ticket\' THEN ' . db_prefix() . 'tickets.subject
-        WHEN \'task\' THEN ' . db_prefix() . 'tasks.name
-        ELSE ' . db_prefix() . 'reminders.rel_type END as rel_type_name',
-    db_prefix() . 'reminders.description',
-    db_prefix() . 'reminders.date',
+    'CASE tblreminders.rel_type
+        WHEN \'customer\' THEN tblclients.company
+        WHEN \'lead\' THEN tblleads.name
+        WHEN \'estimate\' THEN tblestimates.id
+        WHEN \'invoice\' THEN tblinvoices.id
+        WHEN \'proposal\' THEN tblproposals.subject
+        WHEN \'expense\' THEN tblexpenses.id
+        WHEN \'credit_note\' THEN tblcreditnotes.id
+        WHEN \'ticket\' THEN tbltickets.subject
+        WHEN \'task\' THEN tblstafftasks.name
+        ELSE tblreminders.rel_type END as rel_type_name',
+    'tblreminders.description',
+    'tblreminders.date',
     'CONCAT(firstname, " ", lastname) as full_name',
     'isnotified',
 
@@ -23,29 +23,29 @@ $aColumns = [
 
 $sIndexColumn = 'id';
 
-$sTable = db_prefix() . 'reminders';
+$sTable = 'tblreminders';
 $where  = [];
 if (!is_admin()) {
     $where = ['AND (staff = ' . get_staff_user_id() . ' OR creator=' . get_staff_user_id() . ')'];
 }
 $join = [
-    'JOIN ' . db_prefix() . 'staff ON ' . db_prefix() . 'staff.staffid = ' . db_prefix() . 'reminders.staff',
-    'LEFT JOIN ' . db_prefix() . 'clients ON ' . db_prefix() . 'clients.userid = ' . db_prefix() . 'reminders.rel_id AND ' . db_prefix() . 'reminders.rel_type="customer"',
-    'LEFT JOIN ' . db_prefix() . 'leads ON ' . db_prefix() . 'leads.id = ' . db_prefix() . 'reminders.rel_id AND ' . db_prefix() . 'reminders.rel_type="lead"',
-    'LEFT JOIN ' . db_prefix() . 'estimates ON ' . db_prefix() . 'estimates.id = ' . db_prefix() . 'reminders.rel_id AND ' . db_prefix() . 'reminders.rel_type="estimate"',
-    'LEFT JOIN ' . db_prefix() . 'invoices ON ' . db_prefix() . 'invoices.id = ' . db_prefix() . 'reminders.rel_id AND ' . db_prefix() . 'reminders.rel_type="invoice"',
-    'LEFT JOIN ' . db_prefix() . 'proposals ON ' . db_prefix() . 'proposals.id = ' . db_prefix() . 'reminders.rel_id AND ' . db_prefix() . 'reminders.rel_type="proposal"',
-    'LEFT JOIN ' . db_prefix() . 'expenses ON ' . db_prefix() . 'expenses.id = ' . db_prefix() . 'reminders.rel_id AND ' . db_prefix() . 'reminders.rel_type="expense"',
-    'LEFT JOIN ' . db_prefix() . 'creditnotes ON ' . db_prefix() . 'creditnotes.id = ' . db_prefix() . 'reminders.rel_id AND ' . db_prefix() . 'reminders.rel_type="credit_note"',
-    'LEFT JOIN ' . db_prefix() . 'tickets ON ' . db_prefix() . 'tickets.ticketid = ' . db_prefix() . 'reminders.rel_id AND ' . db_prefix() . 'reminders.rel_type="ticket"',
-    'LEFT JOIN ' . db_prefix() . 'tasks ON ' . db_prefix() . 'tasks.id = ' . db_prefix() . 'reminders.rel_id AND ' . db_prefix() . 'reminders.rel_type="task"',
+    'JOIN tblstaff ON tblstaff.staffid = tblreminders.staff',
+    'LEFT JOIN tblclients ON tblclients.userid = tblreminders.rel_id AND tblreminders.rel_type="customer"',
+    'LEFT JOIN tblleads ON tblleads.id = tblreminders.rel_id AND tblreminders.rel_type="lead"',
+    'LEFT JOIN tblestimates ON tblestimates.id = tblreminders.rel_id AND tblreminders.rel_type="estimate"',
+    'LEFT JOIN tblinvoices ON tblinvoices.id = tblreminders.rel_id AND tblreminders.rel_type="invoice"',
+    'LEFT JOIN tblproposals ON tblproposals.id = tblreminders.rel_id AND tblreminders.rel_type="proposal"',
+    'LEFT JOIN tblexpenses ON tblexpenses.id = tblreminders.rel_id AND tblreminders.rel_type="expense"',
+    'LEFT JOIN tblcreditnotes ON tblcreditnotes.id = tblreminders.rel_id AND tblreminders.rel_type="credit_note"',
+    'LEFT JOIN tbltickets ON tbltickets.ticketid = tblreminders.rel_id AND tblreminders.rel_type="ticket"',
+    'LEFT JOIN tblstafftasks ON tblstafftasks.id = tblreminders.rel_id AND tblreminders.rel_type="task"',
     ];
 
 $result = data_tables_init($aColumns, $sIndexColumn, $sTable, $join, $where, [
-    db_prefix() . 'reminders.id',
-    db_prefix() . 'reminders.creator',
-    db_prefix() . 'reminders.rel_type',
-    db_prefix() . 'reminders.rel_id',
+    'tblreminders.id',
+    'tblreminders.creator',
+    'tblreminders.rel_type',
+    'tblreminders.rel_id',
     ]);
 
 $output  = $result['output'];
@@ -59,7 +59,7 @@ foreach ($rResult as $aRow) {
             $_data = $aRow[$aColumns[$i]];
         }
 
-        if ($aColumns[$i] == db_prefix() . 'reminders.date') {
+        if ($aColumns[$i] == 'tblreminders.date') {
             $_data = _dt($_data);
         } elseif ($i == 0) {
             // rel type name

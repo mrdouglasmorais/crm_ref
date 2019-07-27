@@ -7,7 +7,7 @@ $aColumns = [
     'due_date',
     ];
 $sIndexColumn = 'id';
-$sTable       = db_prefix().'milestones';
+$sTable       = 'tblmilestones';
 $where        = [
     'AND project_id=' . $project_id,
     ];
@@ -35,7 +35,7 @@ foreach ($rResult as $aRow) {
             }
         } elseif ($aColumns[$i] == 'due_date') {
             $_data = _d($_data);
-            if (date('Y-m-d') > $aRow['due_date'] && total_rows(db_prefix().'tasks', [
+            if (date('Y-m-d') > $aRow['due_date'] && total_rows('tblstafftasks', [
                 'milestone' => $aRow['id'],
                 'status !=' => 5,
                 'rel_id' => $project_id,

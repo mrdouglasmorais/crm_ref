@@ -28,4 +28,4 @@ if(sizeof($_announcements) > 0 && isset($dashboard) && is_staff_member()){ ?>
 	</div>
 </div>
 <?php } ?>
-<?php hooks()->do_action('before_start_render_content'); ?>
+<?php do_action('before_start_render_content'); ?>

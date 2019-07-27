@@ -2,7 +2,7 @@
 
 defined('BASEPATH') or exit('No direct script access allowed');
 
-class Currencies_model extends App_Model
+class Currencies_model extends CRM_Model
 {
     public function __construct()
     {
@@ -19,39 +19,17 @@ class Currencies_model extends App_Model
         if (is_numeric($id)) {
             $this->db->where('id', $id);
 
-            $currency = $this->db->get(db_prefix() . 'currencies')->row();
-            $this->app_object_cache->set('currency-' . $currency->name, $currency);
-
-            return $currency;
+            return $this->db->get('tblcurrencies')->row();
         }
 
-        $currencies = $this->app_object_cache->get('currencies-data');
+        $currencies = $this->object_cache->get('currencies-data');
 
         if (!$currencies && !is_array($currencies)) {
-            $currencies = $this->db->get(db_prefix() . 'currencies')->result_array();
-            $this->app_object_cache->add('currencies-data', $currencies);
+            $currencies = $this->db->get('tblcurrencies')->result_array();
+            $this->object_cache->add('currencies-data', $currencies);
         }
 
         return $currencies;
-    }
-
-    /**
-     * Get currency by name/iso code
-     * @since  2.3.2
-     * @param  string $name currency name/iso code
-     * @return object
-     */
-    public function get_by_name($name)
-    {
-        $currency = $this->app_object_cache->get('currency-' . $name);
-        if (!$currency && !is_object($currency)) {
-            $this->db->where('name', $name);
-            $currency = $this->db->get(db_prefix() . 'currencies')->row();
-
-            $this->app_object_cache->add('currency-' . $name, $currency);
-        }
-
-        return $currency;
     }
 
     /**
@@ -62,10 +40,10 @@ class Currencies_model extends App_Model
     {
         unset($data['currencyid']);
         $data['name'] = strtoupper($data['name']);
-        $this->db->insert(db_prefix() . 'currencies', $data);
+        $this->db->insert('tblcurrencies', $data);
         $insert_id = $this->db->insert_id();
         if ($insert_id) {
-            log_activity('New Currency Added [ID: ' . $data['name'] . ']');
+            logActivity('New Currency Added [ID: ' . $data['name'] . ']');
 
             return true;
         }
@@ -84,9 +62,9 @@ class Currencies_model extends App_Model
         unset($data['currencyid']);
         $data['name'] = strtoupper($data['name']);
         $this->db->where('id', $currencyid);
-        $this->db->update(db_prefix() . 'currencies', $data);
+        $this->db->update('tblcurrencies', $data);
         if ($this->db->affected_rows() > 0) {
-            log_activity('Currency Updated [' . $data['name'] . ']');
+            logActivity('Currency Updated [' . $data['name'] . ']');
 
             return true;
         }
@@ -117,16 +95,16 @@ class Currencies_model extends App_Model
         }
 
         $this->db->where('id', $id);
-        $this->db->delete(db_prefix() . 'currencies');
+        $this->db->delete('tblcurrencies');
         if ($this->db->affected_rows() > 0) {
             $this->load->dbforge();
-            $columns = $this->db->list_fields(db_prefix() . 'items');
+            $columns = $this->db->list_fields('tblitems');
             foreach ($columns as $column) {
                 if ($column == 'rate_currency_' . $id) {
-                    $this->dbforge->drop_column('items', 'rate_currency_' . $id);
+                    $this->dbforge->drop_column('tblitems', 'rate_currency_' . $id);
                 }
             }
-            log_activity('Currency Deleted [' . $id . ']');
+            logActivity('Currency Deleted [' . $id . ']');
 
             return true;
         }
@@ -151,12 +129,12 @@ class Currencies_model extends App_Model
         }
 
         $this->db->where('id', $id);
-        $this->db->update(db_prefix() . 'currencies', [
+        $this->db->update('tblcurrencies', [
             'isdefault' => 1,
         ]);
         if ($this->db->affected_rows() > 0) {
             $this->db->where('id !=', $id);
-            $this->db->update(db_prefix() . 'currencies', [
+            $this->db->update('tblcurrencies', [
                 'isdefault' => 0,
             ]);
 
@@ -174,7 +152,7 @@ class Currencies_model extends App_Model
     {
         $this->db->where('isdefault', 1);
 
-        return $this->db->get(db_prefix() . 'currencies')->row();
+        return $this->db->get('tblcurrencies')->row();
     }
 
     /**
@@ -188,7 +166,7 @@ class Currencies_model extends App_Model
             $id = $this->get_base_currency()->id;
         }
 
-        $currencies = $this->app_object_cache->get('currencies-data');
+        $currencies = $this->object_cache->get('currencies-data');
         if ($currencies) {
             foreach ($currencies as $currency) {
                 if ($id == $currency['id']) {
@@ -198,7 +176,7 @@ class Currencies_model extends App_Model
         }
 
         $this->db->select('symbol');
-        $this->db->from(db_prefix() . 'currencies');
+        $this->db->from('tblcurrencies');
         $this->db->where('id', $id);
 
         return $this->db->get()->row()->symbol;

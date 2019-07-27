@@ -122,7 +122,7 @@
                                 array_push($table_data,$field['name']);
                              }
 
-                             $table_data = hooks()->apply_filters('proposals_table_columns', $table_data);
+                             $table_data = do_action('proposals_table_columns',$table_data);
                              render_datatable($table_data,'proposals',[],[
                                  'data-last-order-identifier' => 'proposals',
                                  'data-default-order'         => get_table_last_order('proposals'),

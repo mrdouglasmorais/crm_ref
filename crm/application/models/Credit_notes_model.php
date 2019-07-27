@@ -2,7 +2,7 @@
 
 defined('BASEPATH') or exit('No direct script access allowed');
 
-class Credit_notes_model extends App_Model
+class Credit_notes_model extends CRM_Model
 {
     private $shipping_fields = ['shipping_street', 'shipping_city', 'shipping_city', 'shipping_state', 'shipping_zip', 'shipping_country'];
 
@@ -14,7 +14,7 @@ class Credit_notes_model extends App_Model
 
     public function get_statuses()
     {
-        return hooks()->apply_filters('before_get_credit_notes_statuses', [
+        $statuses = [
             [
                 'id'             => 1,
                 'color'          => '#03a9f4',
@@ -36,7 +36,9 @@ class Credit_notes_model extends App_Model
                 'order'          => 3,
                 'filter_default' => false,
              ],
-        ]);
+        ];
+
+        return do_action('before_get_credit_notes_statuses', $statuses);
     }
 
     public function get_available_creditable_invoices($credit_note_id)
@@ -46,16 +48,16 @@ class Credit_notes_model extends App_Model
         $invoices_statuses_available_for_credits = invoices_statuses_available_for_credits();
         $this->db->select('clientid');
         $this->db->where('id', $credit_note_id);
-        $credit_note = $this->db->get(db_prefix() . 'creditnotes')->row();
+        $credit_note = $this->db->get('tblcreditnotes')->row();
 
-        $this->db->select('' . db_prefix() . 'invoices.id as id, status, total, date, '.db_prefix().'currencies.name as currency_name');
+        $this->db->select('tblinvoices.id as id, status, total, date, symbol');
         $this->db->where('clientid', $credit_note->clientid);
         $this->db->where('status IN (' . implode(', ', $invoices_statuses_available_for_credits) . ')');
         if (!$has_permission_view) {
             $this->db->where('addedfrom', get_staff_user_id());
         }
-        $this->db->join(db_prefix() . 'currencies', '' . db_prefix() . 'currencies.id = ' . db_prefix() . 'invoices.currency');
-        $invoices = $this->db->get(db_prefix() . 'invoices')->result_array();
+        $this->db->join('tblcurrencies', 'tblcurrencies.id = tblinvoices.currency');
+        $invoices = $this->db->get('tblinvoices')->result_array();
 
         foreach ($invoices as $key => $invoice) {
             $invoices[$key]['total_left_to_pay'] = get_invoice_total_left_to_pay($invoice['id'], $invoice['total']);
@@ -73,12 +75,17 @@ class Credit_notes_model extends App_Model
     */
     public function send_credit_note_to_client($id, $attachpdf = true, $cc = '', $manually = false)
     {
+        $this->load->model('emails_model');
+
+        $this->emails_model->set_rel_id($id);
+        $this->emails_model->set_rel_type('credit_note');
+
         $credit_note = $this->get($id);
+        $template    = 'credit-note-send-to-client';
         $number      = format_credit_note_number($credit_note->id);
 
         $sent    = false;
         $sent_to = $this->input->post('sent_to');
-
         if ($manually === true) {
             $sent_to  = [];
             $contacts = $this->clients_model->get_contacts($credit_note->clientid, ['active' => 1, 'credit_note_emails' => 1]);
@@ -89,28 +96,43 @@ class Credit_notes_model extends App_Model
 
         if (is_array($sent_to) && count($sent_to) > 0) {
             if ($attachpdf) {
-                set_mailing_constant();
                 $pdf    = credit_note_pdf($credit_note);
                 $attach = $pdf->Output($number . '.pdf', 'S');
             }
             $i = 0;
             foreach ($sent_to as $contact_id) {
                 if ($contact_id != '') {
-                    if (!empty($cc) && $i > 0) {
-                        $cc = '';
-                    }
-                    $contact = $this->clients_model->get_contact($contact_id);
-
-                    $template = mail_template('credit_note_send_to_customer', $credit_note, $contact, $cc);
-
                     if ($attachpdf) {
-                        $template->add_attachment([
+                        $this->emails_model->add_attachment([
                             'attachment' => $attach,
                             'filename'   => str_replace('/', '-', $number . '.pdf'),
                             'type'       => 'application/pdf',
                         ]);
                     }
-                    if ($template->send()) {
+
+                    $contact = $this->clients_model->get_contact($contact_id);
+
+                    if ($this->input->post('email_attachments')) {
+                        $_other_attachments = $this->input->post('email_attachments');
+                        foreach ($_other_attachments as $attachment) {
+                            $_attachment = $this->misc_model->get_file($attachment);
+                            $this->emails_model->add_attachment([
+                                'attachment' => get_upload_path_by_type('credit_note') . $id . '/' . $_attachment->file_name,
+                                'filename'   => $_attachment->file_name,
+                                'type'       => $_attachment->filetype,
+                                'read'       => true,
+                            ]);
+                        }
+                    }
+
+                    $merge_fields = [];
+                    $merge_fields = array_merge($merge_fields, get_client_contact_merge_fields($credit_note->clientid, $contact_id));
+                    $merge_fields = array_merge($merge_fields, get_credit_note_merge_fields($credit_note->id));
+                    // Send cc only for the first contact
+                    if (!empty($cc) && $i > 0) {
+                        $cc = '';
+                    }
+                    if ($this->emails_model->send_email_template($template, $contact->email, $merge_fields, '', $cc)) {
                         $sent = true;
                     }
                 }
@@ -121,7 +143,7 @@ class Credit_notes_model extends App_Model
         }
 
         if ($sent) {
-            hooks()->do_action('credit_note_sent', $id);
+            do_action('credit_note_sent', $id);
 
             return true;
         }
@@ -137,30 +159,25 @@ class Credit_notes_model extends App_Model
      */
     public function get($id = '', $where = [])
     {
-        $this->db->select('*,' . db_prefix() . 'currencies.id as currencyid, ' . db_prefix() . 'creditnotes.id as id, ' . db_prefix() . 'currencies.name as currency_name');
-        $this->db->from(db_prefix() . 'creditnotes');
-        $this->db->join(db_prefix() . 'currencies', '' . db_prefix() . 'currencies.id = ' . db_prefix() . 'creditnotes.currency', 'left');
+        $this->db->select('*,tblcurrencies.id as currencyid, tblcreditnotes.id as id, tblcurrencies.name as currency_name');
+        $this->db->from('tblcreditnotes');
+        $this->db->join('tblcurrencies', 'tblcurrencies.id = tblcreditnotes.currency', 'left');
         $this->db->where($where);
 
         if (is_numeric($id)) {
-            $this->db->where(db_prefix() . 'creditnotes.id', $id);
+            $this->db->where('tblcreditnotes.id', $id);
             $credit_note = $this->db->get()->row();
             if ($credit_note) {
-                $credit_note->refunds       = $this->get_refunds($id);
-                $credit_note->total_refunds = $this->total_refunds_by_credit_note($id);
-
                 $credit_note->applied_credits   = $this->get_applied_credits($id);
                 $credit_note->remaining_credits = $this->total_remaining_credits_by_credit_note($id);
                 $credit_note->credits_used      = $this->total_credits_used_by_credit_note($id);
-
-                $credit_note->items  = get_items_by_type('credit_note', $id);
-                $credit_note->client = $this->clients_model->get($credit_note->clientid);
-
-                if (!$credit_note->client) {
-                    $credit_note->client          = new stdClass();
+                $credit_note->items             = get_items_by_type('credit_note', $id);
+                $credit_note->client            = $this->clients_model->get($credit_note->clientid);
+                if(!$credit_note->client) {
+                    $credit_note->client = new stdClass();
                     $credit_note->client->company = $credit_note->deleted_customer_name;
                 }
-                $credit_note->attachments = $this->get_attachments($id);
+                $credit_note->attachments       = $this->get_attachments($id);
             }
 
             return $credit_note;
@@ -193,19 +210,19 @@ class Credit_notes_model extends App_Model
 
         $data = $this->map_shipping_columns($data);
 
-        $hook = hooks()->apply_filters('before_create_credit_note', ['data' => $data, 'items' => $items]);
+        $hook_data = do_action('before_create_credit_note', ['data' => $data, 'items' => $items]);
 
-        $data  = $hook['data'];
-        $items = $hook['items'];
+        $data  = $hook_data['data'];
+        $items = $hook_data['items'];
 
-        $this->db->insert(db_prefix() . 'creditnotes', $data);
+        $this->db->insert('tblcreditnotes', $data);
         $insert_id = $this->db->insert_id();
         if ($insert_id) {
 
             // Update next credit note number in settings
             $this->db->where('name', 'next_credit_note_number');
             $this->db->set('value', 'value+1', false);
-            $this->db->update(db_prefix() . 'options');
+            $this->db->update('tbloptions');
 
             if (isset($custom_fields)) {
                 handle_custom_fields_post($insert_id, $custom_fields);
@@ -217,11 +234,11 @@ class Credit_notes_model extends App_Model
                 }
             }
 
-            update_sales_total_tax_column($insert_id, 'credit_note', db_prefix() . 'creditnotes');
+            update_sales_total_tax_column($insert_id, 'credit_note', 'tblcreditnotes');
 
-            log_activity('Credit Note Created [ID: ' . $insert_id . ']');
+            logActivity('Credit Note Created [ID: ' . $insert_id . ']');
 
-            hooks()->do_action('after_create_credit_note', $insert_id);
+            do_action('after_create_credit_note', $insert_id);
 
             if ($save_and_send === true) {
                 $this->send_credit_note_to_client($insert_id, true, '', true);
@@ -266,17 +283,19 @@ class Credit_notes_model extends App_Model
 
         $data = $this->map_shipping_columns($data);
 
-        $hook = hooks()->apply_filters('before_update_credit_note', [
+        $hook_data = do_action('before_update_credit_note', [
             'data'          => $data,
+            'id'            => $id,
             'items'         => $items,
             'newitems'      => $newitems,
             'removed_items' => isset($data['removed_items']) ? $data['removed_items'] : [],
-        ], $id);
+        ]);
 
-        $data                  = $hook['data'];
-        $items                 = $hook['items'];
-        $newitems              = $hook['newitems'];
-        $data['removed_items'] = $hook['removed_items'];
+        $data                  = $hook_data['data'];
+        $data['removed_items'] = $hook_data['removed_items'];
+
+        $newitems = $hook_data['newitems'];
+        $items    = $hook_data['items'];
 
         // Delete items checked to be removed from database
         foreach ($data['removed_items'] as $remove_item_id) {
@@ -287,7 +306,7 @@ class Credit_notes_model extends App_Model
         unset($data['removed_items']);
 
         $this->db->where('id', $id);
-        $this->db->update(db_prefix() . 'creditnotes', $data);
+        $this->db->update('tblcreditnotes', $data);
 
         if ($this->db->affected_rows() > 0) {
             $affectedRows++;
@@ -319,7 +338,7 @@ class Credit_notes_model extends App_Model
                 foreach ($_item_taxes_names as $_item_tax) {
                     if (!in_array($_item_tax, $item['taxname'])) {
                         $this->db->where('id', $item_taxes[$i]['id'])
-                            ->delete(db_prefix() . 'item_tax');
+                            ->delete('tblitemstax');
                         if ($this->db->affected_rows() > 0) {
                             $affectedRows++;
                         }
@@ -345,12 +364,12 @@ class Credit_notes_model extends App_Model
 
         if ($affectedRows > 0) {
             $this->update_credit_note_status($id);
-            update_sales_total_tax_column($id, 'credit_note', db_prefix() . 'creditnotes');
+            update_sales_total_tax_column($id, 'credit_note', 'tblcreditnotes');
         }
 
         if ($affectedRows > 0) {
-            log_activity('Credit Note Updated [ID:' . $id . ']');
-            hooks()->do_action('after_update_credit_note', $id);
+            logActivity('Credit Note Updated [ID:' . $id . ']');
+            do_action('after_update_credit_note', $id);
 
             return true;
         }
@@ -373,10 +392,10 @@ class Credit_notes_model extends App_Model
                 unlink(get_upload_path_by_type('credit_note') . $attachment->rel_id . '/' . $attachment->file_name);
             }
             $this->db->where('id', $attachment->id);
-            $this->db->delete(db_prefix() . 'files');
+            $this->db->delete('tblfiles');
             if ($this->db->affected_rows() > 0) {
                 $deleted = true;
-                log_activity('Credit Note Attachment Deleted [Credite Note: ' . format_credit_note_number($attachment->rel_id) . ']');
+                logActivity('Credit Note Attachment Deleted [Credite Note: ' . format_credit_note_number($attachment->rel_id) . ']');
             }
             if (is_dir(get_upload_path_by_type('credit_note') . $attachment->rel_id)) {
                 // Check if no attachments left, so we can delete the folder also
@@ -396,7 +415,7 @@ class Credit_notes_model extends App_Model
         $this->db->where('rel_id', $credit_note_id);
         $this->db->where('rel_type', 'credit_note');
 
-        return $this->db->get(db_prefix() . 'files')->result_array();
+        return $this->db->get('tblfiles')->result_array();
     }
 
     /**
@@ -406,9 +425,9 @@ class Credit_notes_model extends App_Model
     */
     public function delete($id, $simpleDelete = false)
     {
-        hooks()->do_action('before_credit_note_deleted', $id);
+        do_action('before_credit_note_deleted', $id);
         $this->db->where('id', $id);
-        $this->db->delete(db_prefix() . 'creditnotes');
+        $this->db->delete('tblcreditnotes');
         if ($this->db->affected_rows() > 0) {
             $current_credit_note_number = get_option('next_credit_note_number');
 
@@ -416,33 +435,30 @@ class Credit_notes_model extends App_Model
                 // Decrement next credit note number
                 $this->db->where('name', 'next_credit_note_number');
                 $this->db->set('value', 'value-1', false);
-                $this->db->update(db_prefix() . 'options');
+                $this->db->update('tbloptions');
             }
 
             delete_tracked_emails($id, 'credit_note');
 
             // Delete the custom field values
-            $this->db->where('relid IN (SELECT id from ' . db_prefix() . 'itemable WHERE rel_type="credit_note" AND rel_id="' . $id . '")');
+            $this->db->where('relid IN (SELECT id from tblitems_in WHERE rel_type="credit_note" AND rel_id="' . $id . '")');
             $this->db->where('fieldto', 'items');
-            $this->db->delete(db_prefix() . 'customfieldsvalues');
+            $this->db->delete('tblcustomfieldsvalues');
 
             $this->db->where('relid', $id);
             $this->db->where('fieldto', 'credit_note');
-            $this->db->delete(db_prefix() . 'customfieldsvalues');
+            $this->db->delete('tblcustomfieldsvalues');
 
             $this->db->where('credit_id', $id);
-            $this->db->delete(db_prefix() . 'credits');
-
-            $this->db->where('credit_note_id', $id);
-            $this->db->delete(db_prefix() . 'creditnote_refunds');
+            $this->db->delete('tblcredits');
 
             $this->db->where('rel_id', $id);
             $this->db->where('rel_type', 'credit_note');
-            $this->db->delete(db_prefix() . 'itemable');
+            $this->db->delete('tblitems_in');
 
             $this->db->where('rel_id', $id);
             $this->db->where('rel_type', 'credit_note');
-            $this->db->delete(db_prefix() . 'item_tax');
+            $this->db->delete('tblitemstax');
 
             $attachments = $this->get_attachments($id);
             foreach ($attachments as $attachment) {
@@ -451,9 +467,9 @@ class Credit_notes_model extends App_Model
 
             $this->db->where('rel_type', 'credit_note');
             $this->db->where('rel_id', $id);
-            $this->db->delete(db_prefix() . 'reminders');
+            $this->db->delete('tblreminders');
 
-            hooks()->do_action('after_credit_note_deleted', $id);
+            do_action('after_credit_note_deleted', $id);
 
             return true;
         }
@@ -464,7 +480,7 @@ class Credit_notes_model extends App_Model
     public function mark($id, $status)
     {
         $this->db->where('id', $id);
-        $this->db->update(db_prefix() . 'creditnotes', ['status' => $status]);
+        $this->db->update('tblcreditnotes', ['status' => $status]);
 
         return $this->db->affected_rows() > 0 ? true : false;
     }
@@ -478,7 +494,7 @@ class Credit_notes_model extends App_Model
         if (!$has_permission_view) {
             $this->db->where('addedfrom', get_staff_user_id());
         }
-        $credits = $this->db->get(db_prefix() . 'creditnotes')->result_array();
+        $credits = $this->db->get('tblcreditnotes')->result_array();
 
         $total = $this->calc_remaining_credits($credits);
 
@@ -489,7 +505,7 @@ class Credit_notes_model extends App_Model
     {
         $this->db->select('total,id');
         $this->db->where('id', $credit_note_id);
-        $credits = $this->db->get(db_prefix() . 'creditnotes')->result_array();
+        $credits = $this->db->get('tblcreditnotes')->result_array();
 
         $total = $this->calc_remaining_credits($credits);
 
@@ -513,22 +529,13 @@ class Credit_notes_model extends App_Model
 
         if (count($credits_ids) > 0) {
             $this->db->where('credit_id IN (' . implode(', ', $credits_ids) . ')');
-            $applied_credits = $this->db->get(db_prefix() . 'credits')->result_array();
+            $applied_credits = $this->db->get('tblcredits')->result_array();
             $bcsub           = function_exists('bcsub');
             foreach ($applied_credits as $credit) {
                 if ($bcsub) {
                     $total = bcsub($total, $credit['amount'], get_decimal_places());
                 } else {
                     $total -= $credit['amount'];
-                }
-            }
-
-            foreach ($credits_ids as $credit_note_id) {
-                $total_refunds_by_credit_note = $this->total_refunds_by_credit_note($credit_note_id);
-                if ($bcsub) {
-                    $total = bcsub($total, $total_refunds_by_credit_note, get_decimal_places());
-                } else {
-                    $total -= $total_refunds_by_credit_note;
                 }
             }
         }
@@ -539,7 +546,7 @@ class Credit_notes_model extends App_Model
     public function delete_applied_credit($id, $credit_id, $invoice_id)
     {
         $this->db->where('id', $id);
-        $this->db->delete(db_prefix() . 'credits');
+        $this->db->delete('tblcredits');
         if ($this->db->affected_rows() > 0) {
             $this->update_credit_note_status($credit_id);
             update_invoice_status($invoice_id);
@@ -618,131 +625,14 @@ class Credit_notes_model extends App_Model
                 }
             }
 
-            log_activity('Created Credit Note From Invoice [Invoice: ' . format_invoice_number($_invoice->id) . ', Credit Note: ' . format_credit_note_number($id) . ']');
+            logActivity('Created Credit Note From Invoice [Invoice: ' . format_invoice_number($_invoice->id) . ', Credit Note: ' . format_credit_note_number($id) . ']');
 
-            hooks()->do_action('created_credit_note_from_invoice', ['invoice_id' => $invoice_id, 'credit_note_id' => $id]);
+            do_action('created_credit_note_from_invoice', ['invoice_id' => $invoice_id, 'credit_note_id' => $id]);
 
             return $id;
         }
 
         return false;
-    }
-
-    public function create_refund($id, $data)
-    {
-        if ($data['amount'] == 0) {
-            return false;
-        }
-
-        $data['note'] = trim($data['note']);
-
-        $this->db->insert(db_prefix() . 'creditnote_refunds', [
-            'created_at'     => date('Y-m-d H:i:s'),
-            'credit_note_id' => $id,
-            'staff_id'       => $data['staff_id'],
-            'refunded_on'    => $data['refunded_on'],
-            'payment_mode'   => $data['payment_mode'],
-            'amount'         => $data['amount'],
-            'note'           => nl2br($data['note']),
-        ]);
-
-        $insert_id = $this->db->insert_id();
-
-        if ($insert_id) {
-            $this->update_credit_note_status($id);
-
-            hooks()->do_action('credit_note_refund_created', ['data' => $data, 'credit_note_id' => $id]);
-        }
-
-        return $insert_id;
-    }
-
-    public function edit_refund($id, $data)
-    {
-        if ($data['amount'] == 0) {
-            return false;
-        }
-
-        $refund = $this->get_refund($id);
-
-        $data['note'] = trim($data['note']);
-
-        $this->db->where('id', $id);
-        $this->db->update(db_prefix() . 'creditnote_refunds', [
-            'refunded_on'  => $data['refunded_on'],
-            'payment_mode' => $data['payment_mode'],
-            'amount'       => $data['amount'],
-            'note'         => nl2br($data['note']),
-        ]);
-
-        $insert_id = $this->db->insert_id();
-
-        if ($this->db->affected_rows() > 0) {
-            $this->update_credit_note_status($refund->credit_note_id);
-
-            hooks()->do_action('credit_note_refund_updated', ['data' => $data, 'refund_id' => $refund->credit_note_id]);
-        }
-
-        return $insert_id;
-    }
-
-    public function get_refund($id)
-    {
-        $this->db->where('id', $id);
-
-        return $this->db->get(db_prefix() . 'creditnote_refunds')->row();
-    }
-
-    public function get_refunds($credit_note_id)
-    {
-        $this->db->select(prefixed_table_fields_array(db_prefix() . 'creditnote_refunds', true) . ',' . db_prefix() . 'payment_modes.id as payment_mode_id, ' . db_prefix() . 'payment_modes.name as payment_mode_name');
-        $this->db->where('credit_note_id', $credit_note_id);
-
-        $this->db->join(db_prefix() . 'payment_modes', db_prefix() . 'payment_modes.id = ' . db_prefix() . 'creditnote_refunds.payment_mode', 'left');
-
-        $this->db->order_by('refunded_on', 'desc');
-
-        $refunds = $this->db->get(db_prefix() . 'creditnote_refunds')->result_array();
-
-        $this->load->model('payment_modes_model');
-        $payment_gateways = $this->payment_modes_model->get_payment_gateways(true);
-        $i                = 0;
-
-        foreach ($refunds as $refund) {
-            if (is_null($refund['payment_mode_id'])) {
-                foreach ($payment_gateways as $gateway) {
-                    if ($refund['payment_mode'] == $gateway['id']) {
-                        $refunds[$i]['payment_mode_id']   = $gateway['id'];
-                        $refunds[$i]['payment_mode_name'] = $gateway['name'];
-                    }
-                }
-            }
-            $i++;
-        }
-
-        return $refunds;
-    }
-
-    public function delete_refund($refund_id, $credit_note_id)
-    {
-        $this->db->where('id', $refund_id);
-        $this->db->delete(db_prefix() . 'creditnote_refunds');
-        if ($this->db->affected_rows() > 0) {
-            $this->update_credit_note_status($credit_note_id);
-            hooks()->do_action('credit_note_refund_deleted', ['refund_id' => $refund_id, 'credit_note_id' => $credit_note_id]);
-
-            return true;
-        }
-
-        return false;
-    }
-
-    private function total_refunds_by_credit_note($id)
-    {
-        return sum_from_table(db_prefix() . 'creditnote_refunds', [
-                'field' => 'amount',
-                'where' => ['credit_note_id' => $id],
-            ]);
     }
 
     public function apply_credits($id, $data)
@@ -751,7 +641,7 @@ class Credit_notes_model extends App_Model
             return false;
         }
 
-        $this->db->insert(db_prefix() . 'credits', [
+        $this->db->insert('tblcredits', [
             'invoice_id'   => $data['invoice_id'],
             'credit_id'    => $id,
             'staff_id'     => get_staff_user_id(),
@@ -764,25 +654,21 @@ class Credit_notes_model extends App_Model
 
         if ($insert_id) {
             $this->update_credit_note_status($id);
+            $this->db->select('symbol');
+            $this->db->join('tblcurrencies', 'tblcurrencies.id = tblinvoices.currency');
+            $this->db->where('tblinvoices.id', $data['invoice_id']);
 
-            $this->db->select(db_prefix().'currencies.name as currency_name');
-            $this->db->join(db_prefix() . 'currencies', '' . db_prefix() . 'currencies.id = ' . db_prefix() . 'invoices.currency');
-            $this->db->where(db_prefix() . 'invoices.id', $data['invoice_id']);
-
-            $invoice = $this->db->get(db_prefix() . 'invoices')->row();
+            $invoice = $this->db->get('tblinvoices')->row();
 
             $inv_number         = format_invoice_number($data['invoice_id']);
             $credit_note_number = format_credit_note_number($id);
 
             $this->invoices_model->log_invoice_activity($data['invoice_id'], 'invoice_activity_applied_credits', false, serialize([
-                   app_format_money($data['amount'], $invoice->currency_name),
+                   format_money($data['amount'], $invoice->symbol),
                    $credit_note_number,
              ]));
-
-            hooks()->do_action('credits_applied', ['data' => $data, 'credit_note_id' => $id]);
-
-            log_activity('Credit Applied to Invoice [ Invoice: ' . $inv_number . ', Credit: ' . $credit_note_number . ' ]');
-
+            do_action('credits_applied', ['data' => $data, 'credit_note_id' => $id]);
+            logActivity('Credit Applied to Invoice [ Invoice: ' . $inv_number . ', Credit: ' . $credit_note_number . ' ]');
         }
 
         return $insert_id;
@@ -790,7 +676,7 @@ class Credit_notes_model extends App_Model
 
     private function total_credits_used_by_credit_note($id)
     {
-        return sum_from_table(db_prefix() . 'credits', [
+        return sum_from_table('tblcredits', [
                 'field' => 'amount',
                 'where' => ['credit_id' => $id],
             ]);
@@ -798,26 +684,25 @@ class Credit_notes_model extends App_Model
 
     public function update_credit_note_status($id)
     {
-        $total_refunds_by_credit_note = $this->total_refunds_by_credit_note($id);
-        $total_credits_used           = $this->total_credits_used_by_credit_note($id);
+        $applied_credits = $this->get_applied_credits($id);
+
+        $total_credits_used = $this->total_credits_used_by_credit_note($id);
 
         $status = 1;
 
         // sum from table returns null if nothing found
-        if ($total_credits_used || $total_refunds_by_credit_note) {
-            $compare = $total_credits_used + $total_refunds_by_credit_note;
-
+        if ($total_credits_used) {
             $this->db->select('total');
             $this->db->where('id', $id);
-            $credit = $this->db->get(db_prefix() . 'creditnotes')->row();
+            $credit = $this->db->get('tblcreditnotes')->row();
 
             if ($credit) {
                 if (function_exists('bccomp')) {
-                    if (bccomp($credit->total, $compare, get_decimal_places()) === 0) {
+                    if (bccomp($credit->total, $total_credits_used, get_decimal_places()) === 0) {
                         $status = 2;
                     }
                 } else {
-                    if ($credit->total == $compare) {
+                    if ($credit->total == $total_credits_used) {
                         $status = 2;
                     }
                 }
@@ -825,7 +710,7 @@ class Credit_notes_model extends App_Model
         }
 
         $this->db->where('id', $id);
-        $this->db->update(db_prefix() . 'creditnotes', ['status' => $status]);
+        $this->db->update('tblcreditnotes', ['status' => $status]);
 
         return $this->db->affected_rows() > 0 ? true : false;
     }
@@ -838,7 +723,7 @@ class Credit_notes_model extends App_Model
         if (!$has_permission_view) {
             $this->db->where('addedfrom', get_staff_user_id());
         }
-        $credits = $this->db->get(db_prefix() . 'creditnotes')->result_array();
+        $credits = $this->db->get('tblcreditnotes')->result_array();
 
         foreach ($credits as $key => $credit) {
             $credits[$key]['available_credits'] = $this->calculate_available_credits($credit['id'], $credit['total']);
@@ -852,7 +737,7 @@ class Credit_notes_model extends App_Model
         $this->db->order_by('date', 'desc');
         $this->db->where('invoice_id', $invoice_id);
 
-        return $this->db->get(db_prefix() . 'credits')->result_array();
+        return $this->db->get('tblcredits')->result_array();
     }
 
     public function get_applied_credits($credit_id)
@@ -860,14 +745,14 @@ class Credit_notes_model extends App_Model
         $this->db->where('credit_id', $credit_id);
         $this->db->order_by('date', 'desc');
 
-        return $this->db->get(db_prefix() . 'credits')->result_array();
+        return $this->db->get('tblcredits')->result_array();
     }
 
     private function calculate_available_credits($credit_id, $credit_amount = false)
     {
         if ($credit_amount === false) {
             $this->db->select('total')
-            ->from(db_prefix() . 'creditnotes')
+            ->from('tblcreditnotes')
             ->where('id', $credit_id);
 
             $credit_amount = $this->db->get()->row()->total;
@@ -878,7 +763,6 @@ class Credit_notes_model extends App_Model
         $bcsub           = function_exists('bcsub');
         $applied_credits = $this->get_applied_credits($credit_id);
 
-
         foreach ($applied_credits as $credit) {
             if ($bcsub) {
                 $available_total = bcsub($available_total, $credit['amount'], get_decimal_places());
@@ -887,22 +771,12 @@ class Credit_notes_model extends App_Model
             }
         }
 
-        $total_refunds = $this->total_refunds_by_credit_note($credit_id);
-
-        if ($total_refunds) {
-            if ($bcsub) {
-                $available_total = bcsub($available_total, $total_refunds, get_decimal_places());
-            } else {
-                $available_total -= $total_refunds;
-            }
-        }
-
         return $available_total;
     }
 
     public function get_credits_years()
     {
-        return $this->db->query('SELECT DISTINCT(YEAR(date)) as year FROM ' . db_prefix() . 'creditnotes ORDER BY year DESC')->result_array();
+        return $this->db->query('SELECT DISTINCT(YEAR(date)) as year FROM tblcreditnotes ORDER BY year DESC')->result_array();
     }
 
     private function map_shipping_columns($data)

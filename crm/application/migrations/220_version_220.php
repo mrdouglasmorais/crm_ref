@@ -16,7 +16,7 @@ class Migration_Version_220 extends CI_Migration
         add_option('show_ticket_reminders_on_calendar', 1);
 
         $this->db->where('date', '0000-00-00');
-        $this->db->update(db_prefix().'subscriptions', ['date' => null]);
+        $this->db->update('tblsubscriptions', ['date' => null]);
 
         $this->db->query('ALTER TABLE `tblsubscriptions` ADD `description_in_item` BOOLEAN NOT NULL DEFAULT FALSE AFTER `description`;');
 

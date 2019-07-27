@@ -33,13 +33,6 @@
             }
         });
 
-        // Read more for dashboard todo items
-        $('.read-more').readmore({
-            collapsedHeight:150,
-            moreLink: "<a href=\"#\"><?php echo _l('read_more'); ?></a>",
-            lessLink: "<a href=\"#\"><?php echo _l('show_less'); ?></a>",
-        });
-
         $('body').on('click','#viewWidgetableArea',function(e){
             e.preventDefault();
 
@@ -181,8 +174,8 @@
         });
     });
     function fix_user_data_widget_tabs(){
-        if((app.browser != 'firefox'
-                && isRTL == 'false' && is_mobile()) || (app.browser == 'firefox'
+        if((app_user_browser != 'firefox'
+                && isRTL == 'false' && is_mobile()) || (app_user_browser == 'firefox'
                 && isRTL == 'false' && is_mobile())){
                 $('.horizontal-scrollable-tabs ul.nav-tabs-horizontal').css('margin-bottom','26px');
         }

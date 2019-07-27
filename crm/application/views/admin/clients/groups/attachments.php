@@ -116,7 +116,7 @@
                             </div>
                             <?php if($type == 'customer' && $_att['visible_to_customer'] == 1){
                                 $file_visibility_message = '';
-                                $total_shares = total_rows(db_prefix().'shared_customer_files',array('file_id'=>$_att['id']));
+                                $total_shares = total_rows('tblcustomerfiles_shares',array('file_id'=>$_att['id']));
 
                                 if($total_shares == 0){
                                     $file_visibility_message = _l('file_share_visibility_notice');
@@ -126,7 +126,7 @@
                                         $file_visibility_message = _l('file_share_visibility_notice');
                                     }
                                 }
-                                echo '<span class="text-warning'.(empty($file_visibility_message) || total_rows(db_prefix().'contacts',array('userid'=>$client->userid)) == 0 ? ' hide': '').'">'.$file_visibility_message.'</span>';
+                                echo '<span class="text-warning'.(empty($file_visibility_message) || total_rows('tblcontacts',array('userid'=>$client->userid)) == 0 ? ' hide': '').'">'.$file_visibility_message.'</span>';
                                 if(isset($share_contacts_id) && count($share_contacts_id) > 0){
                                     $names = '';
                                     $contacts_selected = '';

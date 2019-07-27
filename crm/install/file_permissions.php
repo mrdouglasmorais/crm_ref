@@ -98,7 +98,7 @@ if (!is_writable('../application/config')){
 }
 if (!is_writable('../application/config/config.php')){
     $error = true;
-    $requirement15 = "<span class='label label-danger'>No (Make application/config/config.php writable) - Permissions 0644</span>";
+    $requirement15 = "<span class='label label-danger'>No (Make application/config/config.php writable) - Permissions 0755</span>";
 } else {
     $requirement15 = "<span class='label label-success'>Ok</span>";
 }

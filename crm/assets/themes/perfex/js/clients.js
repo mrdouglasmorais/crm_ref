@@ -1,19 +1,3 @@
-$.fn.dataTable.ext.type.order['task-status-pre'] = function(d) {
-    switch (d) {
-        case '2':
-            return 1;
-        case '4':
-            return 2;
-        case '3':
-            return 3;
-        case '1':
-            return 4;
-        case '5':
-            return 6;
-    }
-    return 5;
-};
-
 var project_id = $('input[name="project_id"]').val();
 var discussion_user_profile_image_url = $('input[name="discussion_user_profile_image_url"]').val();
 var discussion_id = $('input[name="discussion_id"]').val();
@@ -22,47 +6,44 @@ Dropzone.options.projectFilesUpload = false;
 Dropzone.options.taskFileUpload = false;
 Dropzone.options.filesUpload = false;
 
-if (app.options.enable_google_picker == '1') {
-    $.fn.googleDrivePicker.defaults.clientId = app.options.google_client_id;
-    $.fn.googleDrivePicker.defaults.developerKey = app.options.google_api;
+if (enable_google_picker == '1') {
+    $.fn.googleDrivePicker.defaults.clientId = google_client_id;
+    $.fn.googleDrivePicker.defaults.developerKey = google_api;
 }
 
 var salesChart;
-
 $(function() {
-
-    // Set moment locale
-    moment.locale(app.locale);
-    // Set timezone locale
-    moment().tz(app.options.timezone).format();
 
     fix_phases_height();
 
     initDataTable();
+    // Set moment locale
+    moment.locale(locale);
+    // Set timezone locale
+    moment().tz(timezone).format();
+
+    var file_id = get_url_param('file_id');
+    if (file_id) {
+        view_project_file(file_id, project_id);
+    }
+
+    $("a[href='#top']").on("click", function(e) {
+        e.preventDefault();
+        $("html,body").animate({ scrollTop: 0 }, 1000);
+        e.preventDefault();
+    });
+
+    $("a[href='#bot']").on("click", function(e) {
+        e.preventDefault();
+        $("html,body").animate({ scrollTop: $(document).height() }, 1000);
+        e.preventDefault();
+    });
 
     client_home_chart();
 
     $('select[name="currency"],select[name="payments_years"]').on('change', function() {
         client_home_chart();
     });
-
-    $('#open-new-ticket-form').appFormValidator();
-
-    $('#ticket-reply').appFormValidator();
-
-    $('#task-form').appFormValidator();
-
-    $('#discussion_form').appFormValidator({
-        rules: {
-            subject: 'required',
-        }
-    });
-
-    var file_id = get_url_param('file_id');
-
-    if (file_id) {
-        view_project_file(file_id, project_id);
-    }
 
     if (typeof(discussion_id != 'undefined')) {
         discussion_comments('#discussion-comments', discussion_id, 'regular');
@@ -79,7 +60,7 @@ $(function() {
                     taskExternalFileUpload(files, 'dropbox');
                 },
                 linkType: "preview",
-                extensions: app.options.allowed_files.split(','),
+                extensions: allowed_files.split(','),
             }));
         }
 
@@ -89,7 +70,7 @@ $(function() {
                     customerExternalFileUpload(files, 'dropbox');
                 },
                 linkType: "preview",
-                extensions: app.options.allowed_files.split(','),
+                extensions: allowed_files.split(','),
             }));
         }
 
@@ -99,10 +80,33 @@ $(function() {
                     projectExternalFileUpload(files, 'dropbox');
                 },
                 linkType: "preview",
-                extensions: app.options.allowed_files.split(','),
+                extensions: allowed_files.split(','),
             }));
         }
     }
+
+    if ($('#files-upload').length > 0) {
+        new Dropzone('#files-upload', {
+            uploadMultiple: true,
+            parallelUploads: 20,
+            maxFiles: 20,
+            paramName: "file",
+            dictFileTooBig: file_exceeds_maxfile_size_in_form,
+            dictDefaultMessage: drop_files_here_to_upload,
+            dictFallbackMessage: browser_not_support_drag_and_drop,
+            maxFilesize: (max_php_ini_upload_size_bytes / (1024 * 1024)).toFixed(0),
+            acceptedFiles: allowed_files,
+            success: function(file, response) {
+                if (this.getUploadingFiles().length === 0 && this.getQueuedFiles().length === 0) {
+                    window.location.reload();
+                }
+            },
+            error: function(file, response) {
+                alert_float('danger', response);
+            }
+        });
+    }
+
 
     if ($('#calendar').length) {
         var settings = {
@@ -113,13 +117,13 @@ $(function() {
                 right: 'month,agendaWeek,agendaDay'
             },
             editable: false,
-            eventLimit: parseInt(app.options.calendar_events_limit) + 1,
+            eventLimit: parseInt(calendar_events_limit) + 1,
             views: {
                 day: {
                     eventLimit: false
                 }
             },
-            defaultView: app.options.default_view_calendar,
+            defaultView: default_view_calendar,
             eventLimitClick: function(cellInfo, jsEvent) {
                 $('#calendar').fullCalendar('gotoDate', cellInfo.date);
                 $('#calendar').fullCalendar('changeView', 'basicDay');
@@ -128,9 +132,9 @@ $(function() {
                 isLoading && $('#calendar .fc-header-toolbar .btn-default').addClass('btn-info').removeClass('btn-default').css('display', 'block');
                 !isLoading ? $('.dt-loader').addClass('hide') : $('.dt-loader').removeClass('hide');
             },
-            isRTL: (app.options.isRTL == 'true' ? true : false),
+            isRTL: (isRTL == 'true' ? true : false),
             eventStartEditable: false,
-            firstDay: parseInt(app.options.calendar_first_day),
+            firstDay: parseInt(calendar_first_day),
             eventSources: [{
                 url: site_url + 'clients/get_calendar_data',
                 type: 'GET',
@@ -173,6 +177,7 @@ $(function() {
         $('.ticket-status,.ticket-status-inline').toggleClass('hide');
     });
 
+
     $('#ticket_status_single').on('change', function() {
         data = {};
         data.status_id = $(this).val();
@@ -181,6 +186,7 @@ $(function() {
             window.location.reload();
         });
     });
+
 
     if (typeof(contracts_by_type) != 'undefined') {
         new Chart($('#contracts-by-type-chart'), {
@@ -200,27 +206,91 @@ $(function() {
             }
         });
     }
-
-    if ($('#files-upload').length > 0) {
-        createDropzone('#files-upload');
-    }
-
     if ($('#task-file-upload').length > 0) {
-        createDropzone('#task-file-upload', {
+        new Dropzone('#task-file-upload', {
+            uploadMultiple: true,
+            parallelUploads: 20,
+            maxFiles: 20,
+            paramName: 'file',
+            dictFileTooBig: file_exceeds_maxfile_size_in_form,
+            dictDefaultMessage: drop_files_here_to_upload,
+            maxFilesize: (max_php_ini_upload_size_bytes / (1024 * 1024)).toFixed(0),
+            dictFallbackMessage: browser_not_support_drag_and_drop,
+            accept: function(file, done) {
+                done();
+            },
             sending: function(file, xhr, formData) {
                 formData.append("action", 'upload_task_file');
                 formData.append("task_id", $('input[name="task_id"]').val());
             },
+            success: function(file, response) {
+                if (this.getUploadingFiles().length === 0 && this.getQueuedFiles().length === 0) {
+                    window.location.reload();
+                }
+            },
+            acceptedFiles: allowed_files,
+            error: function(file, response) {
+                alert_float('danger', response);
+            }
         });
     }
 
     if ($('#project-files-upload').length > 0) {
-        createDropzone('#project-files-upload', {
+        new Dropzone('#project-files-upload', {
+            paramName: "file",
+            uploadMultiple: true,
+            parallelUploads: 20,
+            maxFiles: 20,
+            dictFileTooBig: file_exceeds_maxfile_size_in_form,
+            dictDefaultMessage: drop_files_here_to_upload,
+            dictFallbackMessage: browser_not_support_drag_and_drop,
+            maxFilesize: (max_php_ini_upload_size_bytes / (1024 * 1024)).toFixed(0),
+            accept: function(file, done) {
+                done();
+            },
             sending: function(file, xhr, formData) {
                 formData.append("action", 'upload_file');
             },
+            success: function(file, response) {
+                if (this.getUploadingFiles().length === 0 && this.getQueuedFiles().length === 0) {
+                    window.location.reload();
+                }
+            },
+            acceptedFiles: allowed_files,
+            error: function(file, response) {
+                alert_float('danger', response);
+            }
         });
     }
+
+    $('#open-new-ticket-form').validate();
+    $('#ticket-reply').validate();
+    $('#task-form').validate();
+
+    var ticketAttachmentKey = 1;
+    $('.add_more_attachments').on('click', function() {
+        if ($(this).hasClass('disabled')) {
+            return false;
+        }
+
+        var total_attachments = $('.attachments input[name*="attachments"]').length;
+        if ($(this).data('ticket') && total_attachments >= maximum_allowed_ticket_attachments) {
+            return false;
+        }
+
+        var newattachment = $('.attachments').find('.attachment').eq(0).clone().appendTo('.attachments');
+        newattachment.find('input').val('').attr('name', 'attachments[' + ticketAttachmentKey + ']');
+        newattachment.find('input').removeAttr('aria-describedby');
+        newattachment.find('input').removeAttr('aria-invalid');
+        newattachment.find('span[id*="error"]').remove();
+        newattachment.find('i').removeClass('fa-plus').addClass('fa-minus');
+        newattachment.find('button').removeClass('add_more_attachments').addClass('remove_attachment').removeClass('btn-success').addClass('btn-danger');
+        ticketAttachmentKey++;
+    });
+
+    $('body').on('click', '.remove_attachment', function() {
+        $(this).parents('.attachment').remove();
+    });
 
     // User cant add more money then the invoice total remaining
     $('body.viewinvoice input[name="amount"]').on('keyup', function() {
@@ -240,6 +310,12 @@ $(function() {
         }
     });
 
+    $('#discussion_form').validate({
+        rules: {
+            subject: 'required',
+        }
+    });
+
 
     $('#discussion').on('hidden.bs.modal', function(event) {
         $('#discussion input[name="subject"]').val('');
@@ -249,6 +325,21 @@ $(function() {
     });
 
 });
+
+// Generate float alert
+function alert_float(type, message) {
+
+    var aId, el;
+    aId = $('body').find('float-alert').length;
+    aId++;
+    aId = 'alert_float_' + aId;
+    el = $('<div id="' + aId + '" class="float-alert animated fadeInRight col-xs-11 col-sm-4 alert alert-' + type + '"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button><span>' + message + '</span></div>');
+    $('body').append(el);
+
+    setTimeout(function() {
+        $('#' + aId).remove();
+    }, 4500);
+}
 
 function new_discussion() {
     $('#discussion').modal('show');
@@ -303,9 +394,96 @@ function save_edited_comment(id) {
     });
 }
 
+function DataTablesOfflineLazyLoadImages(nRow, aData, iDisplayIndex) {
+    var img = $('img.img-table-loading', nRow);
+    img.attr('src', img.data('orig'));
+    img.prev('div').addClass('hide');
+    return nRow;
+}
+
+$.fn.dataTable.ext.type.order['task-status-pre'] = function(d) {
+    switch (d) {
+        case '2':
+            return 1;
+        case '4':
+            return 2;
+        case '3':
+            return 3;
+        case '1':
+            return 4;
+        case '5':
+            return 6;
+    }
+    return 5;
+};
+
 function initDataTable() {
-    appDataTableInline(undefined, {
-        scrollResponsive: true,
+
+    var length_options = [10, 25, 50, 100];
+    var length_options_names = [10, 25, 50, 100];
+
+    tables_pagination_limit = parseFloat(tables_pagination_limit);
+
+    if ($.inArray(tables_pagination_limit, length_options) == -1) {
+        length_options.push(tables_pagination_limit)
+        length_options_names.push(tables_pagination_limit)
+    }
+
+    length_options.sort(function(a, b) {
+        return a - b;
+    });
+
+    length_options_names.sort(function(a, b) {
+        return a - b;
+    });
+
+    length_options.push(-1);
+    length_options_names.push(dt_length_menu_all);
+
+    var options, order_col, order_type, sTypeColumns;
+    var _options = {
+        "language": dt_lang,
+        'paginate': true,
+        "pageLength": tables_pagination_limit,
+        "lengthMenu": [length_options, length_options_names],
+        "fnRowCallback": DataTablesOfflineLazyLoadImages,
+        "order": [0, 'asc'],
+        "fnDrawCallback": function(oSettings) {
+            if (oSettings.aoData.length == 0 || oSettings.aiDisplay.length == 0) {
+                $(oSettings.nTableWrapper).addClass('app_dt_empty');
+            } else {
+                $(oSettings.nTableWrapper).removeClass('app_dt_empty');
+            }
+        },
+        "initComplete": function(settings, json) {
+            this.wrap('<div class="table-responsive"></div>');
+        }
+    };
+    var tables = $('.dt-table');
+    $.each(tables, function() {
+        options = _options;
+        order_col = $(this).attr('data-order-col');
+        order_type = $(this).attr('data-order-type');
+        sTypeColumns = $(this).attr('data-s-type');
+        if (order_col && order_type) {
+            options.order = [
+                [order_col, order_type]
+            ];
+        }
+        if (sTypeColumns) {
+            sTypeColumns = JSON.parse(sTypeColumns);
+            var columns = $(this).find('thead th');
+            var totalColumns = columns.length;
+            options.aoColumns = [];
+            for (var i = 0; i < totalColumns; i++) {
+                var column = $(columns[i]);
+                var sTypeColumnOption = sTypeColumns.find(function(v) {
+                    return v['column'] === column.index();
+                });
+                options.aoColumns.push(sTypeColumnOption ? { sType: sTypeColumnOption.type } : null);
+            }
+        }
+        $(this).DataTable(options);
     });
 }
 
@@ -318,6 +496,20 @@ function dt_custom_view(table, column, val) {
     }
 }
 
+function get_url_param(param) {
+    var vars = {};
+    window.location.href.replace(location.hash, '').replace(
+        /[?&]+([^=&]+)=?([^&]*)?/gi, // regexp
+        function(m, key, value) { // callback
+            vars[key] = value !== undefined ? value : '';
+        }
+    );
+    if (param) {
+        return vars[param] ? vars[param] : null;
+    }
+    return vars;
+}
+
 function fix_phases_height() {
     if (is_mobile()) {
         return;
@@ -325,8 +517,11 @@ function fix_phases_height() {
     var maxPhaseHeight = Math.max.apply(null, $("div.tasks-phases .panel-body").map(function() {
         return $(this).outerHeight();
     }).get());
-
     $('div.tasks-phases .panel-body').css('min-height', maxPhaseHeight + 'px');
+}
+
+function color(r, g, b) {
+    return 'rgb(' + r + ',' + g + ',' + b + ')';
 }
 
 function taskTable() {
@@ -335,9 +530,33 @@ function taskTable() {
 }
 
 function discussion_comments(selector, discussion_id, discussion_type) {
-    var defaults = _get_jquery_comments_default_config(app.lang.discussions_lang);
+    $(selector).comments({
+        roundProfilePictures: true,
+        textareaRows: 4,
+        textareaRowsOnFocus: 6,
+        enableDeleting: true,
+        profilePictureURL: discussion_user_profile_image_url,
+        enableUpvoting: false,
+        enableDeletingCommentWithReplies: false,
+        enableAttachments: true,
+        popularText: '',
+        textareaPlaceholderText: discussions_lang.discussion_add_comment,
+        newestText: discussions_lang.discussion_newest,
+        oldestText: discussions_lang.discussion_oldest,
+        attachmentsText: discussions_lang.discussion_attachments,
+        sendText: discussions_lang.discussion_send,
+        replyText: discussions_lang.discussion_reply,
+        editText: discussions_lang.discussion_edit,
+        editedText: discussions_lang.discussion_edited,
+        youText: discussions_lang.discussion_you,
+        saveText: discussions_lang.discussion_save,
+        deleteText: discussions_lang.discussion_delete,
+        viewAllRepliesText: discussions_lang.discussion_view_all_replies + ' (__replyCount__)',
+        hideRepliesText: discussions_lang.discussion_hide_replies,
+        noCommentsText: discussions_lang.discussion_no_comments,
+        noAttachmentsText: discussions_lang.discussion_no_attachments,
+        attachmentDropText: discussions_lang.discussion_attachments_drop,
 
-    var options = {
         getComments: function(success, error) {
             $.post(site_url + 'clients/project/' + project_id, {
                 action: 'discussion_comments',
@@ -388,6 +607,9 @@ function discussion_comments(selector, discussion_id, discussion_type) {
                 }
             });
         },
+        timeFormatter: function(time) {
+            return moment(time).fromNow();
+        },
         uploadAttachments: function(commentArray, success, error) {
             var responses = 0;
             var successfulUploads = [];
@@ -407,8 +629,8 @@ function discussion_comments(selector, discussion_id, discussion_type) {
                 }
             }
             $(commentArray).each(function(index, commentJSON) {
-                if (commentJSON.file.size && commentJSON.file.size > app.max_php_ini_upload_size_bytes) {
-                    alert_float('danger', app.lang.file_exceeds_max_filesize);
+                if (commentJSON.file.size && commentJSON.file.size > max_php_ini_upload_size_bytes) {
+                    alert_float('danger', file_exceeds_max_filesize);
                     serverResponded();
                 } else {
                     // Create form data
@@ -446,11 +668,7 @@ function discussion_comments(selector, discussion_id, discussion_type) {
                 }
             });
         }
-    };
-
-    var settings = $.extend({}, defaults, options);
-
-    $(selector).comments(settings);
+    });
 }
 
 function view_project_file(id, project_id) {
@@ -472,6 +690,15 @@ function update_file_data(id) {
     data.description = $('body textarea[name="file_description"]').val();
     data.action = 'update_file_data';
     $.post(site_url + 'clients/project/' + project_id, data);
+}
+
+// Function to close modal manually... needed in some modals where the data is flexible.
+function close_modal_manually(modal) {
+    $(modal).fadeOut('slow', function() {
+        $(modal).remove();
+        $('.modal-backdrop').remove();
+        $('body').removeClass('modal-open');
+    });
 }
 
 function render_customer_statement() {
@@ -570,5 +797,15 @@ function customerExternalFileUpload(files, externalType) {
         external: externalType,
     }).done(function() {
         window.location.reload();
+    });
+}
+
+function onGoogleApiLoad() {
+    var pickers = $('.gpicker');
+    $.each(pickers, function() {
+        var that = $(this);
+        setTimeout(function() {
+            that.googleDrivePicker();
+        }, 10)
     });
 }

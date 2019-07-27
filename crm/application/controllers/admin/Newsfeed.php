@@ -1,8 +1,7 @@
 <?php
 
 defined('BASEPATH') or exit('No direct script access allowed');
-
-class Newsfeed extends AdminController
+class Newsfeed extends Admin_controller
 {
     public function __construct()
     {
@@ -174,16 +173,16 @@ class Newsfeed extends AdminController
             $_likes .= '<button type="button" class="btn btn-danger btn-icon" onclick="unlike_post(' . $id . ')"> <i class="fa fa-heart-o"></i></button>';
         }
         $_likes .= '</div>';
-        if (total_rows(db_prefix() . 'newsfeed_post_likes', [
+        if (total_rows('tblpostlikes', [
             'postid' => $id,
         ])) {
             $_likes .= '<div class="panel-footer post-likes">';
-            $total_post_likes = total_rows(db_prefix() . 'newsfeed_post_likes', [
+            $total_post_likes = total_rows('tblpostlikes', [
                 'postid' => $id,
             ]);
             $this->db->select();
-            $this->db->from(db_prefix() . 'newsfeed_post_likes');
-            $this->db->join(db_prefix() . 'staff', db_prefix() . 'staff.staffid = ' . db_prefix() . 'newsfeed_post_likes.userid', 'left');
+            $this->db->from('tblpostlikes');
+            $this->db->join('tblstaff', 'tblstaff.staffid = tblpostlikes.userid', 'left');
             $this->db->where('userid !=', get_staff_user_id());
             $this->db->where('postid', $id);
             $this->db->order_by('dateliked', 'asc');
@@ -237,7 +236,7 @@ class Newsfeed extends AdminController
     public function init_post_comments($id)
     {
         $_comments      = '';
-        $total_comments = total_rows(db_prefix() . 'newsfeed_post_comments', [
+        $total_comments = total_rows('tblpostcomments', [
             'postid' => $id,
         ]);
         if ($total_comments > 0) {
@@ -280,7 +279,7 @@ class Newsfeed extends AdminController
         }
         $_comments .= '<div class="media-body">';
         $_comments .= '<p class="no-margin comment-content"><a href="' . admin_url('profile/' . $comment['userid']) . '">' . get_staff_full_name($comment['userid']) . '</a> ' . check_for_links($comment['content']) . '</p>';
-        $total_comment_likes = total_rows(db_prefix() . 'newsfeed_comment_likes', [
+        $total_comment_likes = total_rows('tblcommentlikes', [
             'commentid' => $comment['id'],
             'postid'    => $comment['postid'],
         ]);
@@ -368,7 +367,7 @@ class Newsfeed extends AdminController
     /* Will pin post to top */
     public function pin_newsfeed_post($id)
     {
-        hooks()->do_action('before_pin_post', $id);
+        do_action('before_pin_post', $id);
         echo json_encode([
             'success' => $this->newsfeed_model->pin_post($id),
         ]);
@@ -378,7 +377,7 @@ class Newsfeed extends AdminController
     /* Will unpim post from top */
     public function unpin_newsfeed_post($id)
     {
-        hooks()->do_action('before_unpin_post', $id);
+        do_action('before_unpin_post', $id);
         echo json_encode([
             'success' => $this->newsfeed_model->unpin_post($id),
         ]);
@@ -455,7 +454,7 @@ class Newsfeed extends AdminController
     /* Delete all post */
     public function delete_post($postid)
     {
-        hooks()->do_action('before_delete_post', $postid);
+        do_action('before_delete_post', $postid);
         echo json_encode([
             'success' => $this->newsfeed_model->delete_post($postid),
         ]);

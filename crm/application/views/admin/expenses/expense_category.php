@@ -29,7 +29,7 @@
 </div><!-- /.modal -->
 <script>
   window.addEventListener('load',function(){
-     appValidateForm($('#expense-category-form'),{name:'required'},manage_categories);
+     _validate_form($('#expense-category-form'),{name:'required'},manage_categories);
         $('#expense-category-modal').on('hidden.bs.modal', function(event) {
             $('#additional').html('');
             $('#expense-category-modal input[name="name"]').val('');

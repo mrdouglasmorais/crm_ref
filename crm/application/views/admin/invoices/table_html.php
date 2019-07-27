@@ -21,6 +21,6 @@ $custom_fields = get_custom_fields('invoice',array('show_on_table'=>1));
 foreach($custom_fields as $field){
   array_push($table_data,$field['name']);
 }
-$table_data = hooks()->apply_filters('invoices_table_columns', $table_data);
+$table_data = do_action('invoices_table_columns',$table_data);
 render_datatable($table_data, (isset($class) ? $class : 'invoices'));
 ?>

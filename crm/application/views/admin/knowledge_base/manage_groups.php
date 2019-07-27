@@ -29,7 +29,7 @@
                             <tbody>
                                 <?php foreach($groups as $group){ ?>
                                 <tr>
-                                    <td><?php echo $group['name']; ?> <span class="badge mleft5"><?php echo total_rows(db_prefix().'knowledge_base','articlegroup='.$group['groupid']); ?></span></td>
+                                    <td><?php echo $group['name']; ?> <span class="badge mleft5"><?php echo total_rows('tblknowledgebase','articlegroup='.$group['groupid']); ?></span></td>
                                     <td>
                                         <div class="onoffswitch">
                                             <input type="checkbox" id="<?php echo $group['groupid']; ?>" data-id="<?php echo $group['groupid']; ?>" class="onoffswitch-checkbox" <?php if(!has_permission('knowledge_base','','edit')){ echo 'disabled'; } ?> data-switch-url="<?php echo admin_url(); ?>knowledge_base/change_group_status" <?php if($group['active'] == 1){echo 'checked';} ?>>

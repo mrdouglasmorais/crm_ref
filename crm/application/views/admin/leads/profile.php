@@ -12,7 +12,7 @@
       </a>
       <ul class="dropdown-menu dropdown-menu-left" id="lead-more-dropdown">
          <?php if($lead->junk == 0){
-         if($lead->lost == 0 && (total_rows(db_prefix().'clients',array('leadid'=>$lead->id)) == 0)){ ?>
+         if($lead->lost == 0 && (total_rows('tblclients',array('leadid'=>$lead->id)) == 0)){ ?>
          <li>
             <a href="#" onclick="lead_mark_as_lost(<?php echo $lead->id; ?>); return false;">
               <i class="fa fa-mars"></i>
@@ -30,7 +30,7 @@
          <?php } ?>
          <!-- mark as junk -->
          <?php if($lead->lost == 0){
-         if($lead->junk == 0 && (total_rows(db_prefix().'clients',array('leadid'=>$lead->id)) == 0)){ ?>
+         if($lead->junk == 0 && (total_rows('tblclients',array('leadid'=>$lead->id)) == 0)){ ?>
          <li>
             <a href="#" onclick="lead_mark_as_junk(<?php echo $lead->id; ?>); return false;">
               <i class="fa fa fa-times"></i>
@@ -62,10 +62,10 @@
        <?php
            $client = false;
            $convert_to_client_tooltip_email_exists = '';
-           if(total_rows(db_prefix().'contacts',array('email'=>$lead->email)) > 0 && total_rows(db_prefix().'clients',array('leadid'=>$lead->id)) == 0){
+           if(total_rows('tblcontacts',array('email'=>$lead->email)) > 0 && total_rows('tblclients',array('leadid'=>$lead->id)) == 0){
              $convert_to_client_tooltip_email_exists = _l('lead_email_already_exists');
              $text = _l('lead_convert_to_client');
-          } else if (total_rows(db_prefix().'clients',array('leadid'=>$lead->id))){
+          } else if (total_rows('tblclients',array('leadid'=>$lead->id))){
              $client = true;
           } else {
              $text = _l('lead_convert_to_client');
@@ -83,7 +83,7 @@
       <i class="fa fa-user-o"></i>
       </a>
    <?php } ?>
-   <?php if(total_rows(db_prefix().'clients',array('leadid'=>$lead->id)) == 0){ ?>
+   <?php if(total_rows('tblclients',array('leadid'=>$lead->id)) == 0){ ?>
       <a href="#" data-toggle="tooltip" data-title="<?php echo $convert_to_client_tooltip_email_exists; ?>" class="btn btn-success pull-right lead-convert-to-customer lead-top-btn lead-view" onclick="convert_lead_to_customer(<?php echo $lead->id; ?>); return false;">
             <i class="fa fa-user-o"></i>
             <?php echo $text; ?>
@@ -154,7 +154,7 @@
             <p class="bold font-medium-xs mbot15"><?php echo (isset($lead) && $lead->source_name != '' ? $lead->source_name : '-') ?></p>
             <?php if(get_option('disable_language') == 0){ ?>
             <p class="text-muted lead-field-heading"><?php echo _l('localization_default_language'); ?></p>
-            <p class="bold font-medium-xs mbot15"><?php echo (isset($lead) && $lead->default_language != '' ? ucfirst($lead->default_language) : _l('system_default_string')) ?></p>
+            <p class="bold font-medium-xs mbot15"><?php echo (isset($lead) && $lead->default_language != '' ? $lead->default_language : _l('system_default_string')) ?></p>
             <?php } ?>
             <p class="text-muted lead-field-heading"><?php echo _l('lead_add_edit_assigned'); ?></p>
             <p class="bold font-medium-xs mbot15"><?php echo (isset($lead) && $lead->assigned != 0 ? get_staff_full_name($lead->assigned) : '-') ?></p>
@@ -195,7 +195,7 @@
             <?php } ?>
          </div>
          <div class="col-md-4 col-xs-12 lead-information-col">
-            <?php if(total_rows(db_prefix().'customfields',array('fieldto'=>'leads','active'=>1)) > 0 && isset($lead)){ ?>
+            <?php if(total_rows('tblcustomfields',array('fieldto'=>'leads','active'=>1)) > 0 && isset($lead)){ ?>
             <div class="lead-info-heading">
                <h4 class="no-margin font-medium-xs bold">
                   <?php echo _l('custom_fields'); ?>
@@ -225,6 +225,11 @@
               $selected = $lead->status;
             } else if(isset($status_id)){
               $selected = $status_id;
+            }
+            foreach($statuses as $key => $status) {
+              if($status['isdefault'] == 1) {
+                  $statuses[$key]['option_attributes'] = array('data-subtext'=>_l('leads_converted_to_client'));
+              }
             }
             echo render_leads_status_select($statuses, $selected,'lead_add_edit_status');
           ?>
@@ -310,15 +315,15 @@
                <label for="default_language" class="control-label"><?php echo _l('localization_default_language'); ?></label>
                <select name="default_language" data-live-search="true" id="default_language" class="form-control selectpicker" data-none-selected-text="<?php echo _l('dropdown_non_selected_tex'); ?>">
                   <option value=""><?php echo _l('system_default_string'); ?></option>
-                  <?php foreach($this->app->get_available_languages() as $availableLanguage){
+                  <?php foreach($this->app->get_available_languages() as $language){
                      $selected = '';
                      if(isset($lead)){
-                       if($lead->default_language == $availableLanguage){
+                       if($lead->default_language == $language){
                          $selected = 'selected';
                       }
                      }
                      ?>
-                  <option value="<?php echo $availableLanguage; ?>" <?php echo $selected; ?>><?php echo ucfirst($availableLanguage); ?></option>
+                  <option value="<?php echo $language; ?>" <?php echo $selected; ?>><?php echo ucfirst($language); ?></option>
                   <?php } ?>
                </select>
             </div>

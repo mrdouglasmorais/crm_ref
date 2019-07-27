@@ -2,7 +2,6 @@
 
 namespace Http\Discovery\Strategy;
 
-use Http\Client\HttpAsyncClient;
 use Http\Client\HttpClient;
 use Http\Mock\Client as Mock;
 
@@ -18,12 +17,8 @@ final class MockClientStrategy implements DiscoveryStrategy
      */
     public static function getCandidates($type)
     {
-        switch ($type) {
-            case HttpClient::class:
-            case HttpAsyncClient::class:
-                return [['class' => Mock::class, 'condition' => Mock::class]];
-            default:
-                return [];
-       }
+        return (HttpClient::class === $type)
+            ? [['class' => Mock::class, 'condition' => Mock::class]]
+            : [];
     }
 }

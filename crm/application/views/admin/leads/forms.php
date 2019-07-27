@@ -11,7 +11,7 @@
       </div>
       <div class="clearfix"></div>
       <hr class="hr-panel-heading" />
-      <?php hooks()->do_action('forms_table_start'); ?>
+      <?php do_action('forms_table_start'); ?>
       <div class="clearfix"></div>
       <?php render_datatable(array(
        _l('id'),

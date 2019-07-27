@@ -50,8 +50,7 @@ class SimInstance extends InstanceResource {
      * 
      * @param \Twilio\Version $version Version that contains the resource
      * @param mixed[] $payload The response payload
-     * @param string $sid A 34 character string that uniquely identifies this
-     *                    resource.
+     * @param string $sid The sid
      * @return \Twilio\Rest\Wireless\V1\SimInstance 
      */
     public function __construct(Version $version, array $payload, $sid = null) {
@@ -120,16 +119,6 @@ class SimInstance extends InstanceResource {
      */
     public function update($options = array()) {
         return $this->proxy()->update($options);
-    }
-
-    /**
-     * Deletes the SimInstance
-     * 
-     * @return boolean True if delete succeeds, false otherwise
-     * @throws TwilioException When an HTTP error occurs.
-     */
-    public function delete() {
-        return $this->proxy()->delete();
     }
 
     /**

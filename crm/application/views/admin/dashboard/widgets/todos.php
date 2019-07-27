@@ -28,16 +28,8 @@
                   </div>
                </div>
                <div class="media-body">
-                  <p class="todo-description read-more no-padding-left" data-todo-description="<?php echo $todo['todoid']; ?>">
-                        <?php echo $todo['description']; ?>
-                     </p>
-                        <a href="#" onclick="delete_todo_item(this,<?php echo $todo['todoid']; ?>); return false;" class="pull-right text-muted">
-                           <i class="fa fa-remove"></i>
-                        </a>
-                        <a href="#" onclick="edit_todo_item(<?php echo $todo['todoid']; ?>); return false;" class="pull-right text-muted mright5">
-                           <i class="fa fa-pencil"></i>
-                        </a>
-                        <small class="todo-date"><?php echo $todo['dateadded']; ?></small>
+                  <p class="todo-description no-padding-left" data-todo-description="<?php echo $todo['todoid']; ?>"><?php echo $todo['description']; ?><a href="#" onclick="delete_todo_item(this,<?php echo $todo['todoid']; ?>); return false;" class="pull-right text-muted"><i class="fa fa-remove"></i></a><a href="#" onclick="edit_todo_item(<?php echo $todo['todoid']; ?>); return false;" class="pull-right text-muted mright5"><i class="fa fa-pencil"></i></a></p>
+                  <small class="todo-date"><?php echo $todo['dateadded']; ?></small>
                </div>
             </div>
          </li>
@@ -60,13 +52,7 @@
                </div>
             </div>
             <div class="media-body">
-               <p class="todo-description read-more line-throught no-padding-left">
-                  <?php echo $todo_finished['description']; ?>
-               </p>
-                 <a href="#" onclick="delete_todo_item(this,<?php echo $todo_finished['todoid']; ?>); return false;" class="pull-right text-muted"><i class="fa fa-remove"></i></a>
-               <a href="#" onclick="edit_todo_item(<?php echo $todo_finished['todoid']; ?>); return false;" class="pull-right text-muted mright5">
-                  <i class="fa fa-pencil"></i>
-               </a>
+               <p class="todo-description line-throught no-padding-left"><?php echo $todo_finished['description']; ?><a href="#" onclick="delete_todo_item(this,<?php echo $todo_finished['todoid']; ?>); return false;" class="pull-right text-muted"><i class="fa fa-remove"></i></a><a href="#" onclick="edit_todo_item(<?php echo $todo_finished['todoid']; ?>); return false;" class="pull-right text-muted mright5"><i class="fa fa-pencil"></i></a></p>
                <small class="todo-date todo-date-finished"><?php echo $todo_finished['datefinished']; ?></small>
             </div>
          </div>

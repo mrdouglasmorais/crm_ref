@@ -205,12 +205,11 @@
                <div class="row">
                   <div class="col-md-6">
                      <?php
-
-                        $currency_attr = array('disabled'=>true,'data-show-subtext'=>true);
-                        $currency_attr = apply_filters_deprecated('estimate_currency_disabled', [$currency_attr], '2.3.0', 'estimate_currency_attributes');
+                        $s_attrs = array('disabled'=>true,'data-show-subtext'=>true);
+                        $s_attrs = do_action('estimate_currency_disabled',$s_attrs);
                         foreach($currencies as $currency){
                           if($currency['isdefault'] == 1){
-                            $currency_attr['data-base'] = $currency['id'];
+                            $s_attrs['data-base'] = $currency['id'];
                           }
                           if(isset($estimate)){
                             if($currency['id'] == $estimate->currency){
@@ -222,9 +221,8 @@
                           }
                         }
                         }
-                        $currency_attr = hooks()->apply_filters('estimate_currency_attributes',$currency_attr);
                         ?>
-                     <?php echo render_select('currency', $currencies, array('id','name','symbol'), 'estimate_add_edit_currency', $selected, $currency_attr); ?>
+                     <?php echo render_select('currency',$currencies,array('id','name','symbol'),'estimate_add_edit_currency',$selected,$s_attrs); ?>
                   </div>
                    <div class="col-md-6">
                      <div class="form-group select-placeholder">

@@ -51,7 +51,7 @@
                   <?php
                   $_where = '';
                   if(!has_permission('projects','','view')){
-                    $_where = 'id IN (SELECT project_id FROM '.db_prefix().'project_members WHERE staff_id='.get_staff_user_id().')';
+                    $_where = 'id IN (SELECT project_id FROM tblprojectmembers WHERE staff_id='.get_staff_user_id().')';
                   }
                   ?>
                 </div>
@@ -70,7 +70,7 @@
                    <div class="col-md-2 col-xs-6 border-right">
                     <?php $where = ($_where == '' ? '' : $_where.' AND ').'status = '.$status['id']; ?>
                     <a href="#" onclick="dt_custom_view('project_status_<?php echo $status['id']; ?>','.table-projects','project_status_<?php echo $status['id']; ?>',true); return false;">
-                     <h3 class="bold"><?php echo total_rows(db_prefix().'projects',$where); ?></h3>
+                     <h3 class="bold"><?php echo total_rows('tblprojects',$where); ?></h3>
                      <span style="color:<?php echo $status['color']; ?>" project-status-<?php echo $status['id']; ?>">
                      <?php echo $status['name']; ?>
                      </span>
@@ -99,7 +99,7 @@ $(function(){
          ProjectsServerParams[$(this).attr('name')] = '[name="'+$(this).attr('name')+'"]';
      });
 
-     initDataTable('.table-projects', admin_url+'projects/table', undefined, undefined, ProjectsServerParams, <?php echo hooks()->apply_filters('projects_table_default_order', json_encode(array(5,'asc'))); ?>);
+     initDataTable('.table-projects', admin_url+'projects/table', undefined, undefined, ProjectsServerParams, <?php echo do_action('projects_table_default_order',json_encode(array(5,'asc'))); ?>);
 
      init_ajax_search('customer', '#clientid_copy_project.ajax-search');
 });

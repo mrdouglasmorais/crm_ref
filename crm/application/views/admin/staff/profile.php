@@ -11,7 +11,7 @@
                        </h4>
                        <hr class="hr-panel-heading" />
                        <?php echo form_open_multipart($this->uri->uri_string(),array('id'=>'staff_profile_table','autocomplete'=>'off')); ?>
-                       <?php if(total_rows(db_prefix().'emailtemplates',array('slug'=>'two-factor-authentication','active'=>0)) == 0){ ?>
+                       <?php if(total_rows('tblemailtemplates',array('slug'=>'two-factor-authentication','active'=>0)) == 0){ ?>
                        <div class="checkbox checkbox-primary">
                          <input type="checkbox" value="1" name="two_factor_auth_enabled" id="two_factor_auth_enabled"<?php if($current_user->two_factor_auth_enabled == 1){echo ' checked';} ?>>
                          <label for="two_factor_auth_enabled"><i class="fa fa-question-circle" data-placement="right" data-toggle="tooltip" data-title="<?php echo _l('two_factor_authentication_info'); ?>"></i>
@@ -56,15 +56,15 @@
                         <label for="default_language" class="control-label"><?php echo _l('localization_default_language'); ?></label>
                         <select name="default_language" data-live-search="true" id="default_language" class="form-control selectpicker" data-none-selected-text="<?php echo _l('dropdown_non_selected_tex'); ?>">
                             <option value=""><?php echo _l('system_default_string'); ?></option>
-                            <?php foreach($this->app->get_available_languages() as $availableLanguage){
+                            <?php foreach(list_folders(APPPATH .'language') as $language){
                                 $selected = '';
                                 if(isset($member)){
-                                   if($member->default_language == $availableLanguage){
+                                   if($member->default_language == $language){
                                       $selected = 'selected';
                                   }
                               }
                               ?>
-                              <option value="<?php echo $availableLanguage; ?>" <?php echo $selected; ?>><?php echo ucfirst($availableLanguage); ?></option>
+                              <option value="<?php echo $language; ?>" <?php echo $selected; ?>><?php echo ucfirst($language); ?></option>
                               <?php } ?>
                           </select>
                       </div>
@@ -91,7 +91,7 @@
                 </div>
                 <i class="fa fa-question-circle" data-toggle="tooltip" data-title="<?php echo _l('staff_email_signature_help'); ?>"></i>
                 <?php $value = (isset($member) ? $member->email_signature : ''); ?>
-                <?php echo render_textarea('email_signature','settings_email_signature',$value, ['data-entities-encode'=>'true']); ?>
+                <?php echo render_textarea('email_signature','settings_email_signature',$value); ?>
                 <?php if(count($staff_departments) > 0){ ?>
                 <div class="form-group">
                     <label for="departments"><?php echo _l('staff_edit_profile_your_departments'); ?></label>
@@ -154,8 +154,8 @@
 <?php init_tail(); ?>
 <script>
  $(function(){
-   appValidateForm($('#staff_profile_table'),{firstname:'required',lastname:'required',email:'required'});
-   appValidateForm($('#staff_password_change_form'),{oldpassword:'required',newpassword:'required',newpasswordr: { equalTo: "#newpassword"}});
+   _validate_form($('#staff_profile_table'),{firstname:'required',lastname:'required',email:'required'});
+   _validate_form($('#staff_password_change_form'),{oldpassword:'required',newpassword:'required',newpasswordr: { equalTo: "#newpassword"}});
  });
 </script>
 </body>

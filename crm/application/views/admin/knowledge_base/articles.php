@@ -64,14 +64,14 @@
                                     <?php if($has_permission_edit){ ?>
                                     <i class="fa fa-reorder pointer"></i> <?php } ?>
                                     <a href="#" class="color-white" <?php if($has_permission_create || $has_permission_edit){ ?>onclick="edit_kb_group(this,<?php echo $group['groupid']; ?>); return false;" data-name="<?php echo $group['name']; ?>" data-slug="<?php echo $group['group_slug']; ?>" data-color="<?php echo $group['color']; ?>" data-description="<?php echo clear_textarea_breaks($group['description']); ?>" data-order="<?php echo $group['group_order']; ?>" data-active="<?php echo $group['active']; ?>" <?php } ?>><?php echo $group['name']; ?></a>
-                                    <small> - <?php echo total_rows(db_prefix().'knowledge_base','articlegroup='.$group['groupid']); ?></small>
+                                    <small> - <?php echo total_rows('tblknowledgebase','articlegroup='.$group['groupid']); ?></small>
                                     <?php if($has_permission_edit){ ?>
                                     <a href="#" onclick="return false;" class="pull-right color-white kanban-color-picker" data-placement="bottom" data-toggle="popover" data-content="<div class='kan-ban-settings cpicker-wrapper'><?php echo $kanban_colors; ?></div>" data-html="true" data-trigger="focus"><i class="fa fa-angle-down"></i>
                                     </a>
                                     <?php } ?>
                                  </div>
                                  <?php
-                                    $this->db->select('*, (SELECT COUNT(*) FROM '.db_prefix().'views_tracking WHERE rel_type="kb_article" AND rel_id='.db_prefix().'knowledge_base.articleid) as total_views')->from(db_prefix().'knowledge_base')->where('articlegroup',$group['groupid'])->order_by('article_order','asc');
+                                    $this->db->select('*, (SELECT COUNT(*) FROM tblviewstracking WHERE rel_type="kb_article" AND rel_id=tblknowledgebase.articleid) as total_views')->from('tblknowledgebase')->where('articlegroup',$group['groupid'])->order_by('article_order','asc');
                                     if(!$has_permission_create && !$has_permission_edit) {
                                       $this->db->where('active', 1);
                                     }
@@ -92,8 +92,8 @@
                                                 <a href="<?php echo admin_url('knowledge_base/article/'.$article['articleid']); ?>" target="_blank" class="pull-right"><span><i class="fa fa-pencil-square-o" aria-hidden="true"></i></span></a>
                                                 <?php } ?>
                                                 <div class="clearfix"></div>
-                                                <hr class="hr-10" />
-                                                <p class="pull-left no-mbot"><small><?php echo _l('article_total_views'); ?>: <?php echo $article['total_views']; ?></small></p>
+                                                <hr />
+                                                <p class="pull-left"><small><?php echo _l('article_total_views'); ?>: <?php echo $article['total_views']; ?></small></p>
                                                 <?php if($article['staff_article'] == 1){ ?>
                                                 <span class="label label-default pull-right"><?php echo _l('internal_article'); ?></span>
                                                 <?php } ?>

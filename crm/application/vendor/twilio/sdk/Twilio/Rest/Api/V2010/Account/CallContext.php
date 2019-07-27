@@ -35,9 +35,8 @@ class CallContext extends InstanceContext {
      * Initialize the CallContext
      * 
      * @param \Twilio\Version $version Version that contains the resource
-     * @param string $accountSid The SID of the Account that created the
-     *                           resource(s) to fetch
-     * @param string $sid The unique string that identifies this resource
+     * @param string $accountSid The account_sid
+     * @param string $sid Call Sid that uniquely identifies the Call to fetch
      * @return \Twilio\Rest\Api\V2010\Account\CallContext 
      */
     public function __construct(Version $version, $accountSid, $sid) {

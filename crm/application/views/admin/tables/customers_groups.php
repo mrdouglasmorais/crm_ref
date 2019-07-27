@@ -5,7 +5,7 @@ defined('BASEPATH') or exit('No direct script access allowed');
 $aColumns = ['name'];
 
 $sIndexColumn = 'id';
-$sTable       = db_prefix().'customers_groups';
+$sTable       = 'tblcustomersgroups';
 
 $result  = data_tables_init($aColumns, $sIndexColumn, $sTable, [], [], ['id']);
 $output  = $result['output'];

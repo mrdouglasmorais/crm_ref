@@ -2,7 +2,7 @@
 
 defined('BASEPATH') or exit('No direct script access allowed');
 
-class Taxes_model extends App_Model
+class Taxes_model extends CRM_Model
 {
     public function __construct()
     {
@@ -19,11 +19,11 @@ class Taxes_model extends App_Model
         if (is_numeric($id)) {
             $this->db->where('id', $id);
 
-            return $this->db->get(db_prefix().'taxes')->row();
+            return $this->db->get('tbltaxes')->row();
         }
         $this->db->order_by('taxrate', 'ASC');
 
-        return $this->db->get(db_prefix().'taxes')->result_array();
+        return $this->db->get('tbltaxes')->result_array();
     }
 
     /**
@@ -36,10 +36,10 @@ class Taxes_model extends App_Model
         unset($data['taxid']);
         $data['name']    = trim($data['name']);
         $data['taxrate'] = trim($data['taxrate']);
-        $this->db->insert(db_prefix().'taxes', $data);
+        $this->db->insert('tbltaxes', $data);
         $insert_id = $this->db->insert_id();
         if ($insert_id) {
-            log_activity('New Tax Added [ID: ' . $insert_id . ', ' . $data['name'] . ']');
+            logActivity('New Tax Added [ID: ' . $insert_id . ', ' . $data['name'] . ']');
 
             return true;
         }
@@ -54,7 +54,7 @@ class Taxes_model extends App_Model
      */
     public function edit($data)
     {
-        if (total_rows(db_prefix().'expenses', [
+        if (total_rows('tblexpenses', [
             'tax' => $data['taxid'],
         ]) > 0) {
             return [
@@ -67,9 +67,9 @@ class Taxes_model extends App_Model
         $data['name']    = trim($data['name']);
         $data['taxrate'] = trim($data['taxrate']);
         $this->db->where('id', $taxid);
-        $this->db->update(db_prefix().'taxes', $data);
+        $this->db->update('tbltaxes', $data);
         if ($this->db->affected_rows() > 0) {
-            log_activity('Tax Updated [ID: ' . $taxid . ', ' . $data['name'] . ']');
+            logActivity('Tax Updated [ID: ' . $taxid . ', ' . $data['name'] . ']');
             // Check if this task is used in settings
             $default_taxes = unserialize(get_option('default_tax'));
             $i             = 0;
@@ -97,20 +97,20 @@ class Taxes_model extends App_Model
     public function delete($id)
     {
         if (
-            is_reference_in_table('tax', db_prefix().'items', $id)
-            || is_reference_in_table('tax2', db_prefix().'items', $id)
-            || is_reference_in_table('tax', db_prefix().'expenses', $id)
-            || is_reference_in_table('tax2', db_prefix().'expenses', $id)
-            || is_reference_in_table('tax_id', db_prefix().'subscriptions', $id)
+            is_reference_in_table('tax', 'tblitems', $id)
+            || is_reference_in_table('tax2', 'tblitems', $id)
+            || is_reference_in_table('tax', 'tblexpenses', $id)
+            || is_reference_in_table('tax2', 'tblexpenses', $id)
+            || is_reference_in_table('tax_id', 'tblsubscriptions', $id)
             ) {
             return [
                 'referenced' => true,
             ];
         }
         $this->db->where('id', $id);
-        $this->db->delete(db_prefix().'taxes');
+        $this->db->delete('tbltaxes');
         if ($this->db->affected_rows() > 0) {
-            log_activity('Tax Deleted [ID: ' . $id . ']');
+            logActivity('Tax Deleted [ID: ' . $id . ']');
 
             return true;
         }

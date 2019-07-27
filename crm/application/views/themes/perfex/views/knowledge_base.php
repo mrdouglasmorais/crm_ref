@@ -14,7 +14,7 @@
 			// Default page
 			get_template_part('knowledge_base/categories', array('articles'=>$articles));
 		}
-		hooks()->do_action('after_kb_groups_customers_area');
+		do_action('after_kb_groups_customers_area');
 		?>
 	</div>
 </div>

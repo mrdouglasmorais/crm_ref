@@ -5,7 +5,7 @@
 			<div class="col-md-<?php if(count($related_articles) == 0){echo '12';}else{echo '8';} ?>">
 				<h1 class="bold no-mtop kb-article-single-heading"><?php echo $article->subject; ?></h1>
 				<hr class="no-mtop" />
-				<div class="mtop10 tc-content kb-article-content">
+				<div class="mtop10 tc-content">
 					<?php echo $article->description; ?>
 				</div>
 				<hr />
@@ -27,11 +27,7 @@
 				<ul class="mtop10 articles_list">
 					<?php foreach($related_articles as $relatedArticle) { ?>
 					<li>
-						<h4 class="article-heading article-related-heading">
-							<a href="<?php echo site_url('knowledge-base/article/'.$relatedArticle['slug']); ?>">
-								<?php echo $relatedArticle['subject']; ?>
-							</a>
-						</h4>
+						<a href="<?php echo site_url('knowledge-base/article/'.$relatedArticle['slug']); ?>" class="article-heading"><?php echo $relatedArticle['subject']; ?></a>
 						<div class="text-muted mtop10"><?php echo mb_substr(strip_tags($relatedArticle['description']),0,150); ?>...</div>
 					</li>
 					<hr class="hr-10" />
@@ -39,7 +35,7 @@
 				</ul>
 			</div>
 			<?php }	?>
-			<?php hooks()->do_action('after_single_knowledge_base_article_customers_area',$article->articleid); ?>
+			<?php do_action('after_single_knowledge_base_article_customers_area',$article->articleid); ?>
 		</div>
 	</div>
 </div>

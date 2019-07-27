@@ -97,26 +97,33 @@ class Util
                 throw new Exception\Unexpected("Unexpected exception:" . $message);
             }
 
-            $errorClass = $error["extensions"]["errorClass"];
-
-            if ($errorClass == "VALIDATION") {
+            switch($error["extensions"]["errorClass"]) {
+            case "VALIDATION":
                 continue;
-            } else if ($errorClass == "AUTHENTICATION") {
+            case "AUTHENTICATION":
                 throw new Exception\Authentication();
-            } else if ($errorClass == "AUTHORIZATION") {
+                break;
+            case "AUTHORIZATION":
                 throw new Exception\Authorization($message);
-            } else if ($errorClass == "NOT_FOUND") {
+                break;
+            case "NOT_FOUND":
                 throw new Exception\NotFound();
-            } else if ($errorClass == "UNSUPPORTED_CLIENT") {
+                break;
+            case "UNSUPPORTED_CLIENT":
                 throw new Exception\UpgradeRequired();
-            } else if ($errorClass == "RESOURCE_LIMIT") {
+                break;
+            case "RESOURCE_LIMIT":
                 throw new Exception\TooManyRequests();
-            } else if ($errorClass == "INTERNAL") {
+                break;
+            case "INTERNAL":
                 throw new Exception\ServerError();
-            } else if ($errorClass == "SERVICE_AVAILABILITY") {
+                break;
+            case "SERVICE_AVAILABILITY":
                 throw new Exception\DownForMaintenance();
-            } else {
+                break;
+            default:
                 throw new Exception\Unexpected('Unexpected exception ' . $message);
+                break;
             }
         }
     }

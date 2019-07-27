@@ -2,7 +2,7 @@
 
 defined('BASEPATH') or exit('No direct script access allowed');
 
-class Verification extends ClientsController
+class Verification extends Clients_controller
 {
     public function index()
     {
@@ -12,8 +12,8 @@ class Verification extends ClientsController
 
         $data['title'] = _l('email_verification_required');
 
-        $this->view('verification_required');
-        $this->data($data);
+        $this->view = 'verification_required';
+        $this->data = $data;
         $this->layout();
     }
 
@@ -45,7 +45,7 @@ class Verification extends ClientsController
 
         // User not yet confirmed
         // from option customers_register_require_confirmation
-        if (total_rows(db_prefix() . 'clients', ['userid' => $contact->userid, 'registration_confirmed' => 0]) > 0) {
+        if (total_rows('tblclients', ['userid' => $contact->userid, 'registration_confirmed' => 0]) > 0) {
             set_alert('info', _l('email_successfully_verified_but_required_admin_confirmation'));
         } else {
             set_alert('success', _l('email_successfully_verified'));

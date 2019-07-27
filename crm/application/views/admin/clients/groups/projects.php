@@ -8,7 +8,7 @@
    <?php
       $_where = '';
       if(!has_permission('projects','','view')){
-        $_where = 'id IN (SELECT project_id FROM '.db_prefix().'project_members WHERE staff_id='.get_staff_user_id().')';
+        $_where = 'id IN (SELECT project_id FROM tblprojectmembers WHERE staff_id='.get_staff_user_id().')';
       }
       ?>
    <?php foreach($project_statuses as $status){ ?>
@@ -17,7 +17,7 @@
          <div class="panel-body">
             <h3 class="text-muted _total">
                <?php $where = ($_where == '' ? '' : $_where.' AND ').'status = '.$status['id']. ' AND clientid='.$client->userid; ?>
-               <?php echo total_rows(db_prefix().'projects',$where); ?>
+               <?php echo total_rows('tblprojects',$where); ?>
             </h3>
             <span style="color:<?php echo $status['color']; ?>"><?php echo $status['name']; ?></span>
          </div>

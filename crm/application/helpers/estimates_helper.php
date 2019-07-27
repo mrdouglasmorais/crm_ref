@@ -40,7 +40,7 @@ function check_estimate_restrictions($id, $hash)
  */
 function is_estimates_email_expiry_reminder_enabled()
 {
-    return total_rows(db_prefix().'emailtemplates', ['slug' => 'estimate-expiry-reminder', 'active' => 1]) > 0;
+    return total_rows('tblemailtemplates', ['slug' => 'estimate-expiry-reminder', 'active' => 1]) > 0;
 }
 
 /**
@@ -125,7 +125,13 @@ function estimate_status_by_id($id)
         }
     }
 
-    return hooks()->apply_filters('estimate_status_label', $status, $id);
+    $hook_data = do_action('estimate_status_label', [
+        'id'    => $id,
+        'label' => $status,
+    ]);
+    $status = $hook_data['label'];
+
+    return $status;
 }
 
 /**
@@ -162,7 +168,13 @@ function estimate_status_color_class($id, $replace_default_by_muted = false)
         }
     }
 
-    return hooks()->apply_filters('estimate_status_color_class', $class, $id);
+    $hook_data = do_action('estimate_status_color_class', [
+        'id'    => $id,
+        'class' => $class,
+    ]);
+    $class = $hook_data['class'];
+
+    return $class;
 }
 
 /**
@@ -173,7 +185,7 @@ function estimate_status_color_class($id, $replace_default_by_muted = false)
 function is_last_estimate($id)
 {
     $CI = & get_instance();
-    $CI->db->select('id')->from(db_prefix().'estimates')->order_by('id', 'desc')->limit(1);
+    $CI->db->select('id')->from('tblestimates')->order_by('id', 'desc')->limit(1);
     $query            = $CI->db->get();
     $last_estimate_id = $query->row()->id;
     if ($last_estimate_id == $id) {
@@ -191,19 +203,41 @@ function is_last_estimate($id)
 function format_estimate_number($id)
 {
     $CI = & get_instance();
-    $CI->db->select('date,number,prefix,number_format')->from(db_prefix().'estimates')->where('id', $id);
+    $CI->db->select('date,number,prefix,number_format')->from('tblestimates')->where('id', $id);
     $estimate = $CI->db->get()->row();
 
     if (!$estimate) {
         return '';
     }
 
-    $number = sales_number_format($estimate->number, $estimate->number_format, $estimate->prefix, $estimate->date);
+    $format        = $estimate->number_format;
+    $prefix        = $estimate->prefix;
+    $number        = $estimate->number;
+    $date          = $estimate->date;
+    $prefixPadding = get_option('number_padding_prefixes');
 
-    return hooks()->apply_filters('format_estimate_number', $number, [
-        'id'       => $id,
-        'estimate' => $estimate,
-    ]);
+
+    if ($format == 1) {
+        // Number based
+        $number = $prefix . str_pad($number, $prefixPadding, '0', STR_PAD_LEFT);
+    } elseif ($format == 2) {
+        // Year based
+        $number = $prefix . date('Y', strtotime($date)) . '/' . str_pad($number, $prefixPadding, '0', STR_PAD_LEFT);
+    } elseif ($format == 3) {
+        // Number-yy based
+        $number = $prefix . str_pad($number, $prefixPadding, '0', STR_PAD_LEFT) . '-' . date('y', strtotime($date));
+    } elseif ($format == 4) {
+        // Number-mm-yyyy based
+        $number = $prefix . str_pad($number, $prefixPadding, '0', STR_PAD_LEFT) . '/' . date('m', strtotime($date)) . '/' . date('Y', strtotime($date));
+    }
+
+    $hook_data['id']               = $id;
+    $hook_data['estimate']         = $estimate;
+    $hook_data['formatted_number'] = $number;
+    $hook_data                     = do_action('format_estimate_number', $hook_data);
+    $number                        = $hook_data['formatted_number'];
+
+    return $number;
 }
 
 
@@ -217,7 +251,7 @@ function get_estimate_item_taxes($itemid)
     $CI = & get_instance();
     $CI->db->where('itemid', $itemid);
     $CI->db->where('rel_type', 'estimate');
-    $taxes = $CI->db->get(db_prefix().'item_tax')->result_array();
+    $taxes = $CI->db->get('tblitemstax')->result_array();
     $i     = 0;
     foreach ($taxes as $tax) {
         $taxes[$i]['taxname'] = $tax['taxname'] . '|' . $tax['taxrate'];
@@ -250,21 +284,21 @@ function get_estimates_percent_by_status($status, $project_id = null)
         $where = substr_replace($where, '', -3);
     }
 
-    $total_estimates = total_rows(db_prefix().'estimates', $where);
+    $total_estimates = total_rows('tblestimates', $where);
 
     $data            = [];
     $total_by_status = 0;
 
     if (!is_numeric($status)) {
         if ($status == 'not_sent') {
-            $total_by_status = total_rows(db_prefix().'estimates', 'sent=0 AND status NOT IN(2,3,4)' . ($where != '' ? ' AND (' . $where . ')' : ''));
+            $total_by_status = total_rows('tblestimates', 'sent=0 AND status NOT IN(2,3,4)' . ($where != '' ? ' AND (' . $where . ')' : ''));
         }
     } else {
         $whereByStatus = 'status=' . $status;
         if ($where != '') {
             $whereByStatus .= ' AND (' . $where . ')';
         }
-        $total_by_status = total_rows(db_prefix().'estimates', $whereByStatus);
+        $total_by_status = total_rows('tblestimates', $whereByStatus);
     }
 
     $percent                 = ($total_estimates > 0 ? number_format(($total_by_status * 100) / $total_estimates, 2) : 0);
@@ -281,7 +315,7 @@ function get_estimates_where_sql_for_staff($staff_id)
     $allow_staff_view_estimates_assigned = get_option('allow_staff_view_estimates_assigned');
     $whereUser                           = '';
     if ($has_permission_view_own) {
-        $whereUser = '(('.db_prefix().'estimates.addedfrom=' . $staff_id . ' AND '.db_prefix().'estimates.addedfrom IN (SELECT staff_id FROM '.db_prefix().'staff_permissions WHERE feature = "estimates" AND capability="view_own"))';
+        $whereUser = '((tblestimates.addedfrom=' . $staff_id . ' AND tblestimates.addedfrom IN (SELECT staffid FROM tblstaffpermissions JOIN tblpermissions ON tblpermissions.permissionid=tblstaffpermissions.permissionid WHERE tblpermissions.name = "estimates" AND can_view_own=1))';
         if ($allow_staff_view_estimates_assigned == 1) {
             $whereUser .= ' OR sale_agent=' . $staff_id;
         }
@@ -301,13 +335,13 @@ function staff_has_assigned_estimates($staff_id = '')
 {
     $CI       = &get_instance();
     $staff_id = is_numeric($staff_id) ? $staff_id : get_staff_user_id();
-    $cache    = $CI->app_object_cache->get('staff-total-assigned-estimates-' . $staff_id);
+    $cache    = $CI->object_cache->get('staff-total-assigned-estimates-' . $staff_id);
 
     if (is_numeric($cache)) {
         $result = $cache;
     } else {
-        $result = total_rows(db_prefix().'estimates', ['sale_agent' => $staff_id]);
-        $CI->app_object_cache->add('staff-total-assigned-estimates-' . $staff_id, $result);
+        $result = total_rows('tblestimates', ['sale_agent' => $staff_id]);
+        $CI->object_cache->add('staff-total-assigned-estimates-' . $staff_id, $result);
     }
 
     return $result > 0 ? true : false;
@@ -329,7 +363,7 @@ function user_can_view_estimate($id, $staff_id = false)
     }
 
     $CI->db->select('id, addedfrom, sale_agent');
-    $CI->db->from(db_prefix().'estimates');
+    $CI->db->from('tblestimates');
     $CI->db->where('id', $id);
     $estimate = $CI->db->get()->row();
 
@@ -339,4 +373,65 @@ function user_can_view_estimate($id, $staff_id = false)
     }
 
     return false;
+}
+
+function prepare_estimates_for_export($customer_id)
+{
+    $CI = &get_instance();
+
+
+    $valAllowed = get_option('gdpr_contact_data_portability_allowed');
+    if (empty($valAllowed)) {
+        $valAllowed = [];
+    } else {
+        $valAllowed = unserialize($valAllowed);
+    }
+
+    $CI->db->where('clientid', $customer_id);
+    $estimates = $CI->db->get('tblestimates')->result_array();
+
+    $CI->db->where('show_on_client_portal', 1);
+    $CI->db->where('fieldto', 'estimate');
+    $CI->db->order_by('field_order', 'asc');
+    $custom_fields = $CI->db->get('tblcustomfields')->result_array();
+
+    $CI->load->model('currencies_model');
+    foreach ($estimates as $estimatesKey => $estimate) {
+        unset($estimates[$estimatesKey]['adminnote']);
+        $estimates[$estimatesKey]['shipping_country'] = get_country($estimate['shipping_country']);
+        $estimates[$estimatesKey]['billing_country']  = get_country($estimate['billing_country']);
+
+        $estimates[$estimatesKey]['currency'] = $CI->currencies_model->get($estimate['currency']);
+
+        $estimates[$estimatesKey]['items'] = _prepare_items_array_for_export(get_items_by_type('estimate', $estimate['id']), 'estimate');
+
+        if (in_array('estimates_notes', $valAllowed)) {
+            // Notes
+            $CI->db->where('rel_id', $estimate['id']);
+            $CI->db->where('rel_type', 'estimate');
+
+            $estimates[$estimatesKey]['notes'] = $CI->db->get('tblnotes')->result_array();
+        }
+        if (in_array('estimates_activity_log', $valAllowed)) {
+            // Activity
+            $CI->db->where('rel_id', $estimate['id']);
+            $CI->db->where('rel_type', 'estimate');
+
+            $estimates[$estimatesKey]['activity'] = $CI->db->get('tblsalesactivity')->result_array();
+        }
+        $estimates[$estimatesKey]['views'] = get_views_tracking('estimate', $estimate['id']);
+
+        $estimates[$estimatesKey]['tracked_emails'] = get_tracked_emails($estimate['id'], 'estimate');
+
+        $estimates[$estimatesKey]['additional_fields'] = [];
+
+        foreach ($custom_fields as $cf) {
+            $estimates[$estimatesKey]['additional_fields'][] = [
+                    'name'  => $cf['name'],
+                    'value' => get_custom_field_value($estimate['id'], $cf['id'], 'estimate'),
+                ];
+        }
+    }
+
+    return $estimates;
 }

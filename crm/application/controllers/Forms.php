@@ -2,8 +2,9 @@
 
 defined('BASEPATH') or exit('No direct script access allowed');
 
-class Forms extends ClientsController
+class Forms extends Clients_controller
 {
+
     public function index()
     {
         show_404();
@@ -76,7 +77,7 @@ class Forms extends ClientsController
                             'value' => $val,
                             ]);
                     } else {
-                        if ($this->db->field_exists($name, db_prefix().'leads')) {
+                        if ($this->db->field_exists($name, 'tblleads')) {
                             if ($name == 'country') {
                                 if (!is_numeric($val)) {
                                     if ($val == '') {
@@ -85,7 +86,7 @@ class Forms extends ClientsController
                                         $this->db->where('iso2', $val);
                                         $this->db->or_where('short_name', $val);
                                         $this->db->or_where('long_name', $val);
-                                        $country = $this->db->get(db_prefix().'countries')->row();
+                                        $country = $this->db->get('tblcountries')->row();
                                         if ($country) {
                                             $val = $country->country_id;
                                         } else {
@@ -115,7 +116,7 @@ class Forms extends ClientsController
                     }
 
                     if (count($where) > 0) {
-                        $total = total_rows(db_prefix().'leads', $where);
+                        $total = total_rows('tblleads', $where);
 
                         $duplicateLead = false;
                         /**
@@ -124,8 +125,10 @@ class Forms extends ClientsController
                          * the request
                          */
                         if ($total == 1) {
-                            $this->db->where($where);
-                            $duplicateLead = $this->db->get(db_prefix().'leads')->row();
+                            $this->db->select('email,id')
+                            ->where($where);
+
+                            $duplicateLead = $this->db->get('tblleads')->row();
                         }
 
                         if ($total > 0) {
@@ -189,8 +192,8 @@ class Forms extends ClientsController
                                     'description' => $description,
                                     ];
 
-                                $task_data = hooks()->apply_filters('before_add_task', $task_data);
-                                $this->db->insert(db_prefix().'tasks', $task_data);
+                                $task_data = do_action('before_add_task', $task_data);
+                                $this->db->insert('tblstafftasks', $task_data);
                                 $task_id = $this->db->insert_id();
                                 if ($task_id) {
                                     $attachment = handle_task_attachments_array($task_id, 'file-input');
@@ -205,9 +208,15 @@ class Forms extends ClientsController
                                         ];
                                     $this->tasks_model->add_task_assignees($assignee_data, true);
 
-                                    hooks()->do_action('after_add_task', $task_id);
+                                    do_action('after_add_task', $task_id);
+
                                     if ($duplicateLead && $duplicateLead->email != '') {
-                                        send_mail_template('lead_web_form_submitted', $duplicateLead);
+                                        $this->load->model('emails_model');
+                                        $merge_fields = get_lead_merge_fields($duplicateLead->id);
+
+                                        $this->emails_model->set_rel_id($duplicateLead->id);
+                                        $this->emails_model->set_rel_type('lead');
+                                        $this->emails_model->send_email_template('new-web-to-lead-form-submitted', $duplicateLead->email, $merge_fields);
                                     }
                                 }
                             }
@@ -227,10 +236,10 @@ class Forms extends ClientsController
                     $regular_fields['dateadded']    = date('Y-m-d H:i:s');
                     $regular_fields['from_form_id'] = $form->id;
                     $regular_fields['is_public']    = $form->mark_public;
-                    $this->db->insert(db_prefix().'leads', $regular_fields);
+                    $this->db->insert('tblleads', $regular_fields);
                     $lead_id = $this->db->insert_id();
 
-                    hooks()->do_action('lead_created', [
+                    do_action('lead_created', [
                         'lead_id'          => $lead_id,
                         'web_to_lead_form' => true,
                         ]);
@@ -269,7 +278,7 @@ class Forms extends ClientsController
                             if ($to_responsible == false && is_array($ids) && count($ids) > 0) {
                                 $this->db->where('active', 1);
                                 $this->db->where_in($field, $ids);
-                                $staff = $this->db->get(db_prefix().'staff')->result_array();
+                                $staff = $this->db->get('tblstaff')->result_array();
                             } else {
                                 $staff = [
                                             [
@@ -298,8 +307,14 @@ class Forms extends ClientsController
                             pusher_trigger_notification($notifiedUsers);
                         }
                         if (isset($regular_fields['email']) && $regular_fields['email'] != '') {
-                            $lead = $this->leads_model->get($lead_id);
-                            send_mail_template('lead_web_form_submitted', $lead);
+                            // System default language will be used here when sending this email template
+                            // No need to set rel id and rel type
+                            $this->load->model('emails_model');
+                            $merge_fields = get_lead_merge_fields($lead_id);
+
+                            $this->emails_model->set_rel_id($lead_id);
+                            $this->emails_model->set_rel_type('lead');
+                            $this->emails_model->send_email_template('new-web-to-lead-form-submitted', $regular_fields['email'], $merge_fields);
                         }
                     }
                 } // end insert_to_db
@@ -310,7 +325,7 @@ class Forms extends ClientsController
                     if (!isset($task_id)) {
                         $task_id = 0;
                     }
-                    hooks()->do_action('web_to_lead_form_submitted', [
+                    do_action('web_to_lead_form_submitted', [
                         'lead_id' => $lead_id,
                         'form_id' => $form->id,
                         'task_id' => $task_id,
@@ -356,8 +371,7 @@ class Forms extends ClientsController
             $this->leads_model->update($data, $lead->id);
             redirect($_SERVER['HTTP_REFERER']);
         } elseif ($this->input->post('export') && get_option('gdpr_data_portability_leads') == '1') {
-            $this->load->library('gdpr/gdpr_lead');
-            $this->gdpr_lead->export($lead->id);
+            export_lead_data($lead->id);
         } elseif ($this->input->post('removal_request')) {
             $success = $this->gdpr_model->add_removal_request([
                 'description'  => nl2br($this->input->post('removal_description')),
@@ -365,19 +379,19 @@ class Forms extends ClientsController
                 'lead_id'      => $lead->id,
             ]);
             if ($success) {
-                send_gdpr_email_template('gdpr_removal_request_by_lead', $lead->id);
+                send_gdpr_email_template('gdpr-removal-request-to-lead', $lead->id, 'lead');
                 set_alert('success', _l('data_removal_request_sent'));
             }
             redirect($_SERVER['HTTP_REFERER']);
         }
 
         $lead->attachments    = $this->leads_model->get_lead_attachments($lead->id);
-        $this->disableNavigation();
-        $this->disableSubMenu();
+        $this->use_navigation = false;
+        $this->use_submenu    = false;
         $data['title']        = $lead->name;
         $data['lead']         = $lead;
-        $this->view('forms/lead');
-        $this->data($data);
+        $this->view           = 'forms/lead';
+        $this->data           = $data;
         $this->layout(true);
     }
 
@@ -394,9 +408,10 @@ class Forms extends ClientsController
 
         $form->success_submit_msg = _l('success_submit_msg');
 
-        $form = hooks()->apply_filters('ticket_form_settings', $form);
+        $form = do_action('ticket_form_settings', $form);
 
         if ($this->input->post() && $this->input->is_ajax_request()) {
+
             $post_data = $this->input->post();
 
             $required = ['subject', 'department', 'email', 'name', 'message', 'priority'];
@@ -440,7 +455,7 @@ class Forms extends ClientsController
             $success = false;
 
             $this->db->where('email', $post_data['email']);
-            $result = $this->db->get(db_prefix().'contacts')->row();
+            $result = $this->db->get('tblcontacts')->row();
 
             if ($result) {
                 $post_data['userid']    = $result->userid;
@@ -451,7 +466,7 @@ class Forms extends ClientsController
 
             $this->load->model('tickets_model');
 
-            $post_data = hooks()->apply_filters('ticket_external_form_insert_data', $post_data);
+            $post_data = do_action('ticket_external_form_insert_data', $post_data);
             $ticket_id = $this->tickets_model->add($post_data);
 
             if ($ticket_id) {
@@ -459,7 +474,7 @@ class Forms extends ClientsController
             }
 
             if ($success == true) {
-                hooks()->do_action('ticket_form_submitted', [
+                do_action('ticket_form_submitted', [
                         'ticket_id' => $ticket_id,
                      ]);
             }

@@ -7,12 +7,8 @@ defined('BASEPATH') or exit('No direct script access allowed');
  * @param  string  $table table to check
  * @return boolean
  */
-function is_using_multiple_currencies($table = null)
+function is_using_multiple_currencies($table = 'tblinvoices')
 {
-    if (!$table) {
-        $table = db_prefix() . 'invoices';
-    }
-
     $CI = & get_instance();
     $CI->load->model('currencies_model');
     $currencies            = $CI->currencies_model->get();
@@ -43,108 +39,64 @@ function is_using_multiple_currencies($table = null)
     return true;
 }
 /**
- * Custom format number function for the app
- * @param  mixed  $total
- * @param  boolean $foce_check_zero_decimals whether to force check
- * @return mixed
+ * Forat number with 2 decimals
+ * @param  mixed $total
+ * @return string
  */
-function app_format_number($total, $foce_check_zero_decimals = false)
+function _format_number($total, $force_checking_zero_decimals = false)
 {
     if (!is_numeric($total)) {
         return $total;
     }
-
     $decimal_separator  = get_option('decimal_separator');
     $thousand_separator = get_option('thousand_separator');
 
     $d = get_decimal_places();
-    if (get_option('remove_decimals_on_zero') == 1 || $foce_check_zero_decimals == true) {
+    if (get_option('remove_decimals_on_zero') == 1 || $force_checking_zero_decimals == true) {
         if (!is_decimal($total)) {
             $d = 0;
         }
     }
 
-    $formatted = number_format($total, $d, $decimal_separator, $thousand_separator);
-
-    return hooks()->apply_filters('number_after_format', $formatted, [
-        'total'              => $total,
-        'decimal_separator'  => $decimal_separator,
-        'thousand_separator' => $thousand_separator,
-        'decimal_places'     => $d,
-    ]);
+    return do_action('number_after_format', number_format($total, $d, $decimal_separator, $thousand_separator));
 }
 
 /**
- * Format money/amount based on currency settings
- * @since  2.3.2
- * @param  mixed   $amount          amount to format
- * @param  mixed   $currency        currency db object or currency name (ISO code)
- * @param  boolean $excludeSymbol   whether to exclude to symbol from the format
+ * Format money with 2 decimal based on symbol
+ * @param  mixed $total
+ * @param  string $symbol Money symbol
  * @return string
  */
-function app_format_money($amount, $currency, $excludeSymbol = false)
+function format_money($total, $symbol = '')
 {
-    /**
-     *  Check ewhether the amount is numeric and valid
-     */
-    if (!is_numeric($amount) && $amount != 0) {
-        return $amount;
+    if (!is_numeric($total) && $total != 0) {
+        return $total;
     }
 
-    /**
-     * Check if currency is passed as Object from database or just currency name e.q. USD
-     */
-    if (is_string($currency)) {
+    $decimal_separator  = get_option('decimal_separator');
+    $thousand_separator = get_option('thousand_separator');
+    $currency_placement = get_option('currency_placement');
+    $d                  = get_decimal_places();
 
-        $dbCurrency = get_currency($currency);
-
-        // Check of currency found in case does not exists in database
-        if ($dbCurrency) {
-            $currency = $dbCurrency;
-        } else {
-            $currency = [
-                'symbol'             => $currency,
-                'name'               => $currency,
-                'placement'          => 'before',
-                'decimal_separator'  => get_option('decimal_separator'),
-                'thousand_separator' => get_option('thousand_separator'),
-            ];
-            $currency = (object) $currency;
+    if (get_option('remove_decimals_on_zero') == 1) {
+        if (!is_decimal($total)) {
+            $d = 0;
         }
     }
 
-    /**
-     * Determine the symbol
-     * @var string
-     */
-    $symbol = !$excludeSymbol ? $currency->symbol : '';
+    $total = number_format($total, $d, $decimal_separator, $thousand_separator);
+    $total = do_action('money_after_format_without_currency', $total);
 
-    /**
-     * Check decimal places
-     * @var mixed
-     */
-    $d = get_option('remove_decimals_on_zero') == 1 && !is_decimal($amount) ? 0 : get_decimal_places();
+    if ($currency_placement === 'after') {
+        $_formatted = $total . '' . $symbol;
+    } else {
+        $_formatted = $symbol . '' . $total;
+    }
 
-    /**
-     * Format the amount
-     * @var string
-     */
-    $amountFormatted = number_format($amount, $d, $currency->decimal_separator, $currency->thousand_separator);
+    $_formatted = do_action('money_after_format_with_currency', $_formatted);
 
-    /**
-     * Maybe add the currency symbol
-     * @var string
-     */
-    $formattedWithCurrency = $currency->placement === 'after' ? $amountFormatted . '' . $symbol : $symbol . '' . $amountFormatted;
-
-    return hooks()->apply_filters('app_format_money', $formattedWithCurrency, [
-        'amount'         => $amount,
-        'currency'       => $currency,
-        'exclude_symbol' => $excludeSymbol,
-        'decimal_places' => $d,
-    ]);
+    return $_formatted;
 }
-
 /**
  * Check if passed number is decimal
  * @param  mixed  $val
@@ -159,7 +111,7 @@ function is_decimal($val)
  * @param  array $taxes
  * @return boolean
  */
-function multiple_taxes_found_for_item($taxes)
+function mutiple_taxes_found_for_item($taxes)
 {
     $names = [];
     foreach ($taxes as $t) {
@@ -180,7 +132,7 @@ function multiple_taxes_found_for_item($taxes)
  */
 function ajax_on_total_items()
 {
-    return hooks()->apply_filters('ajax_on_total_items', 200);
+    return do_action('ajax_on_total_items', 200);
 }
 
 /**
@@ -193,7 +145,7 @@ function get_tax_by_id($id)
     $CI = & get_instance();
     $CI->db->where('id', $id);
 
-    return $CI->db->get(db_prefix() . 'taxes')->row();
+    return $CI->db->get('tbltaxes')->row();
 }
 /**
  * Helper function to get tax by passed name
@@ -205,7 +157,7 @@ function get_tax_by_name($name)
     $CI = & get_instance();
     $CI->db->where('name', $name);
 
-    return $CI->db->get(db_prefix() . 'taxes')->row();
+    return $CI->db->get('tbltaxes')->row();
 }
 /**
  * This function replace <br /> only nothing exists in the line and first line other then <br />
@@ -264,11 +216,7 @@ function _info_format_custom_field($id, $label, $value, $txt)
         $result = preg_replace($re, '', $txt);
     }
 
-    return hooks()->apply_filters('info_format_custom_field', $result, [
-        'id'    => $id,
-        'label' => $label,
-        'txt'   => $txt,
-    ]);
+    return $result;
 }
 
 /**
@@ -421,14 +369,10 @@ if (!function_exists('format_customer_info')) {
         $format = preg_replace('/\s+/', ' ', $format);
         $format = trim($format);
 
-        return hooks()->apply_filters('customer_info_text', $format, [
-            'data'         => $data,
-            'for'          => $for,
-            'type'         => $type,
-            'company_link' => $companyLink,
-        ]);
+        return do_action('customer_info_text', $format);
     }
 }
+
 
 if (!function_exists('format_proposal_info')) {
     /**
@@ -500,7 +444,7 @@ if (!function_exists('format_proposal_info')) {
         $format = preg_replace('/\s+/', ' ', $format);
         $format = trim($format);
 
-        return hooks()->apply_filters('proposal_info_text', $format, ['proposal' => $proposal, 'for' => $for]);
+        return do_action('proposal_info_text', $format);
     }
 }
 
@@ -538,7 +482,7 @@ if (!function_exists('format_organization_info')) {
         $format = preg_replace('/\s+/', ' ', $format);
         $format = trim($format);
 
-        return hooks()->apply_filters('organization_info_text', $format);
+        return do_action('organization_info_text', $format);
     }
 }
 
@@ -549,7 +493,7 @@ if (!function_exists('format_organization_info')) {
  */
 function get_decimal_places()
 {
-    return hooks()->apply_filters('app_decimal_places', 2);
+    return do_action('app_decimal_places', 2);
 }
 
 /**
@@ -561,7 +505,7 @@ function get_items_by_type($type, $id)
 {
     $CI = &get_instance();
     $CI->db->select();
-    $CI->db->from(db_prefix() . 'itemable');
+    $CI->db->from('tblitems_in');
     $CI->db->where('rel_id', $id);
     $CI->db->where('rel_type', $type);
     $CI->db->order_by('item_order', 'asc');
@@ -650,14 +594,14 @@ function _maybe_insert_post_item_tax($item_id, $post_item, $rel_id, $rel_type)
                 if (isset($tax_array[0]) && isset($tax_array[1])) {
                     $tax_name = trim($tax_array[0]);
                     $tax_rate = trim($tax_array[1]);
-                    if (total_rows(db_prefix() . 'item_tax', [
+                    if (total_rows('tblitemstax', [
                         'itemid' => $item_id,
                         'taxrate' => $tax_rate,
                         'taxname' => $tax_name,
                         'rel_id' => $rel_id,
                         'rel_type' => $rel_type,
                     ]) == 0) {
-                        $CI->db->insert(db_prefix() . 'item_tax', [
+                        $CI->db->insert('tblitemstax', [
                                 'itemid'   => $item_id,
                                 'taxrate'  => $tax_rate,
                                 'taxname'  => $tax_name,
@@ -691,7 +635,7 @@ function add_new_sales_item_post($item, $rel_id, $rel_type)
 
     $CI = &get_instance();
 
-    $CI->db->insert(db_prefix() . 'itemable', [
+    $CI->db->insert('tblitems_in', [
                     'description'      => $item['description'],
                     'long_description' => nl2br($item['long_description']),
                     'qty'              => $item['qty'],
@@ -744,7 +688,7 @@ function update_sales_item_post($item_id, $data, $field = '')
 
     $CI = &get_instance();
     $CI->db->where('id', $item_id);
-    $CI->db->update(db_prefix() . 'itemable', $update);
+    $CI->db->update('tblitems_in', $update);
 
     return $CI->db->affected_rows() > 0 ? true : false;
 }
@@ -761,13 +705,13 @@ function handle_removed_sales_item_post($id, $rel_type)
     $CI = &get_instance();
 
     $CI->db->where('id', $id);
-    $CI->db->delete(db_prefix() . 'itemable');
+    $CI->db->delete('tblitems_in');
     if ($CI->db->affected_rows() > 0) {
         delete_taxes_from_item($id, $rel_type);
 
         $CI->db->where('relid', $id);
         $CI->db->where('fieldto', 'items');
-        $CI->db->delete(db_prefix() . 'customfieldsvalues');
+        $CI->db->delete('tblcustomfieldsvalues');
 
         return true;
     }
@@ -786,7 +730,7 @@ function delete_taxes_from_item($item_id, $rel_type)
     $CI = &get_instance();
     $CI->db->where('itemid', $item_id)
     ->where('rel_type', $rel_type)
-    ->delete(db_prefix() . 'item_tax');
+    ->delete('tblitemstax');
 
     return $CI->db->affected_rows() > 0 ? true : false;
 }
@@ -810,87 +754,187 @@ function is_sale_discount($data, $is)
     return $discount_type == $is;
 }
 
-/**
- * Get items table for preview
- * @param  object  $transaction   e.q. invoice, estimate from database result row
- * @param  string  $type          type, e.q. invoice, estimate, proposal
- * @param  string  $for           where the items will be shown, html or pdf
- * @param  boolean $admin_preview is the preview for admin area
- * @return object
- */
-function get_items_table_data($transaction, $type, $for = 'html', $admin_preview = false)
-{
-    include_once(APPPATH . 'libraries/App_items_table.php');
-    $class = new App_items_table($transaction, $type, $for, $admin_preview);
+if (!function_exists('get_table_items_and_taxes')) {
+    /**
+     * Function for all table items HTML and PDF
+     * @param  array  $items         all items
+     * @param  [type]  $type          where do items come form, eq invoice,estimate,proposal etc..
+     * @param  boolean $admin_preview in admin preview add additional sortable classes
+     * @return array
+     */
+    function get_table_items_and_taxes($items, $type, $admin_preview = false)
+    {
+        $cf = count($items) > 0 ? get_items_custom_fields_for_table_html($items[0]['rel_id'], $type) : [];
 
-    $class = hooks()->apply_filters('items_table_class', $class, $transaction, $type, $for, $admin_preview);
+        static $rel_data = null;
 
-    if (!$class instanceof App_items_table_template) {
-        show_error(get_class($class) . ' must be instance of "App_items_template"');
+        $result['html']    = '';
+        $result['taxes']   = [];
+        $_calculated_taxes = [];
+        $i                 = 1;
+        foreach ($items as $item) {
+            $itemHTML        = '';
+            $trAttributes    = '';
+            $tdFirstSortable = '';
+
+            if ($admin_preview == true) {
+                $trAttributes    = ' class="sortable" data-item-id="' . $item['id'] . '"';
+                $tdFirstSortable = ' class="dragger item_no"';
+            }
+
+            if (class_exists('pdf')) {
+                $font_size = get_option('pdf_font_size');
+                if ($font_size == '') {
+                    $font_size = 10;
+                }
+
+                $trAttributes .= ' style="font-size:' . ($font_size + 4) . 'px;"';
+            }
+
+            $itemHTML .= '<tr' . $trAttributes . '>';
+            $itemHTML .= '<td' . $tdFirstSortable . ' align="center">' . $i . '</td>';
+
+            $itemHTML .= '<td class="description" align="left;">';
+            if (!empty($item['description'])) {
+                $itemHTML .= '<span style="font-size:' . (isset($font_size) ? $font_size + 4 : '') . 'px;"><strong>' . $item['description'] . '</strong></span>';
+
+                if (!empty($item['long_description'])) {
+                    $itemHTML .= '<br />';
+                }
+            }
+            if (!empty($item['long_description'])) {
+                $itemHTML .= '<span style="color:#424242;">' . $item['long_description'] . '</span>';
+            }
+
+            $itemHTML .= '</td>';
+
+            foreach ($cf as $custom_field) {
+                $itemHTML .= '<td align="left">' . get_custom_field_value($item['id'], $custom_field['id'], 'items') . '</td>';
+            }
+
+            $itemHTML .= '<td align="right">' . floatVal($item['qty']);
+            if ($item['unit']) {
+                $itemHTML .= ' ' . $item['unit'];
+            }
+
+            $itemHTML .= '</td>';
+            $itemHTML .= '<td align="right">' . _format_number($item['rate']) . '</td>';
+            if (get_option('show_tax_per_item') == 1) {
+                $itemHTML .= '<td align="right">';
+            }
+
+            $item_taxes = [];
+
+            // Separate functions exists to get item taxes for Invoice, Estimate, Proposal, Credit Note
+            $func_taxes = 'get_' . $type . '_item_taxes';
+            if (function_exists($func_taxes)) {
+                $item_taxes = call_user_func($func_taxes, $item['id']);
+            }
+
+            if (defined('INVOICE_PREVIEW_SUBSCRIPTION')) {
+                $item_taxes = $item['taxname'];
+            }
+
+            if (count($item_taxes) > 0) {
+
+                // No relation data on preview becuase taxes are not saved in database
+                if (!defined('INVOICE_PREVIEW_SUBSCRIPTION')) {
+                    if (!$rel_data) {
+                        $rel_data = get_relation_data($item['rel_type'], $item['rel_id']);
+                    }
+                } else {
+                    $rel_data = $GLOBALS['preview_rel_data'];
+                }
+
+                foreach ($item_taxes as $tax) {
+                    $calc_tax     = 0;
+                    $tax_not_calc = false;
+
+                    if (!in_array($tax['taxname'], $_calculated_taxes)) {
+                        array_push($_calculated_taxes, $tax['taxname']);
+                        $tax_not_calc = true;
+                    }
+                    if ($tax_not_calc == true) {
+                        $result['taxes'][$tax['taxname']]          = [];
+                        $result['taxes'][$tax['taxname']]['total'] = [];
+                        array_push($result['taxes'][$tax['taxname']]['total'], (($item['qty'] * $item['rate']) / 100 * $tax['taxrate']));
+                        $result['taxes'][$tax['taxname']]['tax_name'] = $tax['taxname'];
+                        $result['taxes'][$tax['taxname']]['taxrate']  = $tax['taxrate'];
+                    } else {
+                        array_push($result['taxes'][$tax['taxname']]['total'], (($item['qty'] * $item['rate']) / 100 * $tax['taxrate']));
+                    }
+                    if (get_option('show_tax_per_item') == 1) {
+                        $item_tax = '';
+                        if ((count($item_taxes) > 1 && get_option('remove_tax_name_from_item_table') == false) || get_option('remove_tax_name_from_item_table') == false || mutiple_taxes_found_for_item($item_taxes)) {
+                            $tmp      = explode('|', $tax['taxname']);
+                            $item_tax = $tmp[0] . ' ' . _format_number($tmp[1]) . '%<br />';
+                        } else {
+                            $item_tax .= _format_number($tax['taxrate']) . '%';
+                        }
+                        $hook_data = ['final_tax_html' => $item_tax, 'item_taxes' => $item_taxes, 'item_id' => $item['id']];
+                        $hook_data = do_action('item_tax_table_row', $hook_data);
+                        $item_tax  = $hook_data['final_tax_html'];
+                        $itemHTML .= $item_tax;
+                    }
+                }
+            } else {
+                if (get_option('show_tax_per_item') == 1) {
+                    $hook_data = ['final_tax_html' => '0%', 'item_taxes' => $item_taxes, 'item_id' => $item['id']];
+                    $hook_data = do_action('item_tax_table_row', $hook_data);
+                    $itemHTML .= $hook_data['final_tax_html'];
+                }
+            }
+
+            if (get_option('show_tax_per_item') == 1) {
+                $itemHTML .= '</td>';
+            }
+
+            /**
+             * Since @version 1.7.0
+             * Possible action hook user to include tax in item total amount calculated with the quantiy
+             * eq Rate * QTY + TAXES APPLIED
+             */
+
+            $hook_data = do_action('final_item_amount', [
+                'amount'     => ($item['qty'] * $item['rate']),
+                'item_taxes' => $item_taxes,
+                'item'       => $item,
+            ]);
+
+            $item_amount_with_quantity = _format_number($hook_data['amount']);
+
+            $itemHTML .= '<td class="amount" align="right">' . $item_amount_with_quantity . '</td>';
+            $itemHTML .= '</tr>';
+            $result['html'] .= $itemHTML;
+            $i++;
+        }
+
+        if ($rel_data) {
+            foreach ($result['taxes'] as $tax) {
+                $total_tax = array_sum($tax['total']);
+                if ($rel_data->discount_percent != 0 && $rel_data->discount_type == 'before_tax') {
+                    $total_tax_tax_calculated = ($total_tax * $rel_data->discount_percent) / 100;
+                    $total_tax                = ($total_tax - $total_tax_tax_calculated);
+                } elseif ($rel_data->discount_total != 0 && $rel_data->discount_type == 'before_tax') {
+                    $t         = ($rel_data->discount_total / $rel_data->subtotal) * 100;
+                    $total_tax = ($total_tax - $total_tax * $t / 100);
+                }
+
+                $result['taxes'][$tax['tax_name']]['total_tax'] = $total_tax;
+                // Tax name is in format NAME|PERCENT
+                $tax_name_array                               = explode('|', $tax['tax_name']);
+                $result['taxes'][$tax['tax_name']]['taxname'] = $tax_name_array[0];
+            }
+        }
+
+        // Order taxes by taxrate
+        // Lowest tax rate will be on top (if multiple)
+        usort($result['taxes'], function ($a, $b) {
+            return $a['taxrate'] - $b['taxrate'];
+        });
+
+        $rel_data = null;
+
+        return do_action('before_return_table_items_html_and_taxes', $result);
     }
-
-    return $class;
-}
-
-function sales_number_format($number, $format, $applied_prefix, $date)
-{
-    $originalNumber = $number;
-    $prefixPadding  = get_option('number_padding_prefixes');
-
-    if ($format == 1) {
-        // Number based
-        $number = $applied_prefix . str_pad($number, $prefixPadding, '0', STR_PAD_LEFT);
-    } elseif ($format == 2) {
-        // Year based
-        $number = $applied_prefix . date('Y', strtotime($date)) . '/' . str_pad($number, $prefixPadding, '0', STR_PAD_LEFT);
-    } elseif ($format == 3) {
-        // Number-yy based
-        $number = $applied_prefix . str_pad($number, $prefixPadding, '0', STR_PAD_LEFT) . '-' . date('y', strtotime($date));
-    } elseif ($format == 4) {
-        // Number-mm-yyyy based
-        $number = $applied_prefix . str_pad($number, $prefixPadding, '0', STR_PAD_LEFT) . '/' . date('m', strtotime($date)) . '/' . date('Y', strtotime($date));
-    }
-
-    return hooks()->apply_filters('sales_number_format', $number, [
-        'format'         => $format,
-        'date'           => $date,
-        'number'         => $originalNumber,
-        'prefix_padding' => $prefixPadding,
-    ]);
-}
-
-/**
- * Helper function to get currency by ID or by Name
- * @since  2.3.2
- * @param  mixed $id_or_name
- * @return object
- */
-function get_currency($id_or_name)
-{
-    $CI = &get_instance();
-    if (!class_exists('currencies_model', false)) {
-        $CI->load->model('currencies_model');
-    }
-
-    if (is_numeric($id_or_name)) {
-        return $CI->currencies_model->get($id_or_name);
-    }
-
-    return $CI->currencies_model->get_by_name($id_or_name);
-}
-
-/**
- * Get base currency
- * @since  2.3.2
- * @return object
- */
-function get_base_currency()
-{
-    $CI = &get_instance();
-
-    if (!class_exists('currencies_model', false)) {
-        $CI->load->model('currencies_model');
-    }
-
-    return $CI->currencies_model->get_base_currency();
 }

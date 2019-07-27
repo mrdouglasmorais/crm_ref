@@ -30,23 +30,23 @@
                         <?php if(has_permission('tasks','','create')){ ?>
                         <?php
                            $copy_template = "";
-                           if(total_rows(db_prefix().'task_assigned',array('taskid'=>$task->id)) > 0){
+                           if(total_rows('tblstafftaskassignees',array('taskid'=>$task->id)) > 0){
                              $copy_template .= "<div class='checkbox checkbox-primary'><input type='checkbox' name='copy_task_assignees' id='copy_task_assignees' checked><label for='copy_task_assignees'>"._l('task_single_assignees')."</label></div>";
                            }
-                           if(total_rows(db_prefix().'task_followers',array('taskid'=>$task->id)) > 0){
+                           if(total_rows('tblstafftasksfollowers',array('taskid'=>$task->id)) > 0){
                              $copy_template .= "<div class='checkbox checkbox-primary'><input type='checkbox' name='copy_task_followers' id='copy_task_followers' checked><label for='copy_task_followers'>"._l('task_single_followers')."</label></div>";
                            }
-                           if(total_rows(db_prefix().'task_checklist_items',array('taskid'=>$task->id)) > 0){
+                           if(total_rows('tbltaskchecklists',array('taskid'=>$task->id)) > 0){
                             $copy_template .= "<div class='checkbox checkbox-primary'><input type='checkbox' name='copy_task_checklist_items' id='copy_task_checklist_items' checked><label for='copy_task_checklist_items'>"._l('task_checklist_items')."</label></div>";
                            }
-                           if(total_rows(db_prefix().'files',array('rel_id'=>$task->id,'rel_type'=>'task')) > 0){
+                           if(total_rows('tblfiles',array('rel_id'=>$task->id,'rel_type'=>'task')) > 0){
                             $copy_template .= "<div class='checkbox checkbox-primary'><input type='checkbox' name='copy_task_attachments' id='copy_task_attachments'><label for='copy_task_attachments'>"._l('task_view_attachments')."</label></div>";
                            }
 
                            $copy_template .= "<p>"._l('task_status')."</p>";
-                           $task_copy_statuses = hooks()->apply_filters('task_copy_statuses', $task_statuses);
+                           $task_copy_statuses = do_action('task_copy_statuses',$task_statuses);
                            foreach($task_copy_statuses as $copy_status){
-                           $copy_template .= "<div class='radio radio-primary'><input type='radio' value='".$copy_status['id']."' name='copy_task_status' id='copy_task_status_".$copy_status['id']."'".($copy_status['id'] == hooks()->apply_filters('copy_task_default_status', 1) ? ' checked' : '')."><label for='copy_task_status_".$copy_status['id']."'>".$copy_status['name']."</label></div>";
+                           $copy_template .= "<div class='radio radio-primary'><input type='radio' value='".$copy_status['id']."' name='copy_task_status' id='copy_task_status_".$copy_status['id']."'".($copy_status['id'] == do_action('copy_task_default_status',1) ? ' checked' : '')."><label for='copy_task_status_".$copy_status['id']."'>".$copy_status['name']."</label></div>";
                            }
 
                            $copy_template .= "<div class='text-center'>";
@@ -83,7 +83,7 @@
                      <?php if((isset($task) && $task->billable == 1) || (!isset($task) && get_option('task_biillable_checked_on_creation') == 1)) {echo ' checked'; }?>>
                   <label for="task_is_billable"><?php echo _l('task_billable'); ?></label>
                </div>
-               <div class="task-visible-to-customer checkbox checkbox-inline checkbox-primary<?php if((isset($task) && $task->rel_type != 'project') || !isset($task) || (isset($task) && $task->rel_type == 'project' && total_rows(db_prefix().'project_settings',array('project_id'=>$task->rel_id,'name'=>'view_tasks','value'=>0)) > 0)){echo ' hide';} ?>">
+               <div class="task-visible-to-customer checkbox checkbox-inline checkbox-primary<?php if((isset($task) && $task->rel_type != 'project') || !isset($task) || (isset($task) && $task->rel_type == 'project' && total_rows('tblprojectsettings',array('project_id'=>$task->rel_id,'name'=>'view_tasks','value'=>0)) > 0)){echo ' hide';} ?>">
                   <input type="checkbox" id="task_visible_to_client" name="visible_to_client" <?php if(isset($task)){if($task->visible_to_client == 1){echo 'checked';}} ?>>
                   <label for="task_visible_to_client"><?php echo _l('task_visible_to_client'); ?></label>
                </div>
@@ -117,7 +117,7 @@
                <hr />
                <?php $value = (isset($task) ? $task->name : ''); ?>
                <?php echo render_input('name','task_add_edit_subject',$value); ?>
-               <div class="task-hours<?php if(isset($task) && $task->rel_type == 'project' && total_rows(db_prefix().'projects',array('id'=>$task->rel_id,'billing_type'=>3)) == 0){echo ' hide';} ?>">
+               <div class="task-hours<?php if(isset($task) && $task->rel_type == 'project' && total_rows('tblprojects',array('id'=>$task->rel_id,'billing_type'=>3)) == 0){echo ' hide';} ?>">
                   <?php $value = (isset($task) ? $task->hourly_rate : 0); ?>
                   <?php echo render_input('hourly_rate','task_hourly_rate',$value); ?>
                </div>
@@ -159,7 +159,7 @@
                            <?php foreach(get_tasks_priorities() as $priority) { ?>
                            <option value="<?php echo $priority['id']; ?>"<?php if(isset($task) && $task->priority == $priority['id'] || !isset($task) && get_option('default_task_priority') == $priority['id']){echo ' selected';} ?>><?php echo $priority['name']; ?></option>
                            <?php } ?>
-                           <?php hooks()->do_action('task_priorities_select', (isset($task) ? $task : 0)); ?>
+                           <?php do_action('task_priorities_select',(isset($task)?$task:0)); ?>
                         </select>
                      </div>
                   </div>
@@ -267,13 +267,10 @@
                      </div>
                   </div>
                </div>
-               <?php
-                  if(isset($task)
-                     && $task->status == Tasks_model::STATUS_COMPLETE
-                     && (has_permission('create') || has_permission('edit'))){
-                     echo render_datetime_input('datefinished','task_finished',_dt($task->datefinished));
+               <?php if(isset($task) && $task->status == 5 && (has_permission('create') || has_permission('edit'))){
+                  echo render_datetime_input('datefinished','task_finished',_dt($task->datefinished));
                   }
-               ?>
+                  ?>
                <div class="form-group checklist-templates-wrapper<?php if(count($checklistTemplates) == 0 || isset($task)){echo ' hide';}  ?>">
                   <label for="checklist_items"><?php echo _l('insert_checklist_templates'); ?></label>
                   <select id="checklist_items" name="checklist_items[]" class="selectpicker checklist-items-template-select" multiple="1" data-none-selected-text="<?php echo _l('dropdown_non_selected_tex') ?>" data-width="100%" data-live-search="true" data-actions-box="true">
@@ -336,10 +333,9 @@
 
     custom_fields_hyperlink();
 
-    appValidateForm($('#task-form'), {
+    _validate_form($('#task-form'), {
       name: 'required',
-      startdate: 'required',
-      repeat_every_custom: { min: 1},
+      startdate: 'required'
     },task_form_handler);
 
     $('.rel_id_label').html(_rel_type.find('option:selected').text());
@@ -383,10 +379,11 @@
          }
 
          if(project.deadline) {
+
             var $duedate = $('#_task_modal #duedate');
             var currentSelectedTaskDate = $duedate.val();
-            $duedate.attr('data-date-end-date', project.deadline);
             $duedate.datetimepicker('destroy');
+            $duedate.attr('data-date-end-date', project.deadline);
             init_datepicker($duedate);
 
             if(currentSelectedTaskDate) {

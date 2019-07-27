@@ -14,7 +14,7 @@
                     <div class="panel-body">
                        <?php
                        $_currency = $base_currency;
-                       if(is_using_multiple_currencies(db_prefix().'expenses')){ ?>
+                       if(is_using_multiple_currencies('tblexpenses')){ ?>
                        <div data-toggle="tooltip" class="mbot15 pull-left" title="<?php echo _l('report_expenses_base_currency_select_explanation'); ?>">
                         <select class="selectpicker" name="currencies" data-none-selected-text="<?php echo _l('dropdown_non_selected_tex'); ?>" >
                             <?php foreach($currencies as $c) {

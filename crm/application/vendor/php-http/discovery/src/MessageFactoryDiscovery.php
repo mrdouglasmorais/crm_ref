@@ -9,8 +9,6 @@ use Http\Message\MessageFactory;
  * Finds a Message Factory.
  *
  * @author Márk Sági-Kazár <mark.sagikazar@gmail.com>
- *
- * @deprecated This will be removed in 2.0. Consider using Psr17FactoryDiscovery.
  */
 final class MessageFactoryDiscovery extends ClassDiscovery
 {

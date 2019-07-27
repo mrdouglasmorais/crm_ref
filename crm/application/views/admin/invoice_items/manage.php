@@ -35,7 +35,7 @@
        </div>
        <!-- /.modal -->
      <?php } ?>
-     <?php hooks()->do_action('before_items_page_content'); ?>
+     <?php do_action('before_items_page_content'); ?>
      <?php if(has_permission('items','','create')){ ?>
        <div class="_buttons">
         <a href="#" class="btn btn-info pull-left" data-toggle="modal" data-target="#sales_item_modal"><?php echo _l('new_invoice_item'); ?></a>

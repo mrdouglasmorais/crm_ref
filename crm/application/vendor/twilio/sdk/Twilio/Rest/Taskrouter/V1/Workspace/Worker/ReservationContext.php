@@ -118,8 +118,6 @@ class ReservationContext extends InstanceContext {
             'SipAuthPassword' => $options['sipAuthPassword'],
             'DequeueStatusCallbackEvent' => Serialize::map($options['dequeueStatusCallbackEvent'], function($e) { return $e; }),
             'PostWorkActivitySid' => $options['postWorkActivitySid'],
-            'EndConferenceOnCustomerExit' => Serialize::booleanToString($options['endConferenceOnCustomerExit']),
-            'BeepOnCustomerEntrance' => Serialize::booleanToString($options['beepOnCustomerEntrance']),
         ));
 
         $payload = $this->version->update(

@@ -77,7 +77,7 @@ class App
 
         $this->init();
 
-        hooks()->do_action('app_base_after_construct_action');
+        do_action('app_base_after_construct_action');
     }
 
     /**
@@ -107,7 +107,7 @@ class App
     {
         $this->ci->db->limit(1);
 
-        return $this->ci->db->get(db_prefix() . 'migrations')->row()->version;
+        return $this->ci->db->get('tblmigrations')->row()->version;
     }
 
     /**
@@ -116,6 +116,10 @@ class App
      */
     public function upgrade_database()
     {
+        if (!is_really_writable(APPPATH . 'config/config.php')) {
+            show_error('/config/config.php file is not writable. You need to change the permissions to 0644. This error occurs while trying to update database to latest version.');
+            die;
+        }
 
         $update = $this->upgrade_database_silent();
 
@@ -127,7 +131,7 @@ class App
             if (is_staff_logged_in()) {
                 redirect(admin_url(), 'refresh');
             } else {
-                redirect(admin_url('authentication'));
+                redirect(admin_url('authentication/admin'));
             }
         }
     }
@@ -150,8 +154,6 @@ class App
             CURLOPT_POSTFIELDS     => [
                 'update_info'     => 'true',
                 'current_version' => $this->get_current_db_version(),
-                'php_version'     => PHP_VERSION,
-                'purchase_key'    => get_option('purchase_key'),
             ],
         ]);
 
@@ -177,7 +179,9 @@ class App
      */
     public function get_available_languages()
     {
-        return hooks()->apply_filters('before_get_languages', $this->available_languages);
+        $languages = $this->available_languages;
+
+        return do_action('before_get_languages', $languages);
     }
 
     /**
@@ -188,26 +192,23 @@ class App
      */
     public function get_table_data($table, $params = [])
     {
-        $params = hooks()->apply_filters('table_params', $params, $table);
+        $hook_data = do_action('before_render_table_data', [
+            'table'  => $table,
+            'params' => $params,
+        ]);
 
-        foreach ($params as $key => $val) {
+        foreach ($hook_data['params'] as $key => $val) {
             $$key = $val;
         }
 
+        $table = $hook_data['table'];
+
         $customFieldsColumns = [];
 
-        $path = VIEWPATH . 'admin/tables/' . $table . EXT;
+        $path = VIEWPATH . 'admin/tables/' . $table . '.php';
 
-        if (!file_exists($path)) {
-            $path = $table;
-            if (!endsWith($path, EXT)) {
-                $path .= EXT;
-            }
-        } else {
-            $myPrefixedPath = VIEWPATH . 'admin/tables/my_' . $table . EXT;
-            if (file_exists($myPrefixedPath)) {
-                $path = $myPrefixedPath;
-            }
+        if (file_exists(VIEWPATH . 'admin/tables/my_' . $table . '.php')) {
+            $path = VIEWPATH . 'admin/tables/my_' . $table . '.php';
         }
 
         include_once($path);
@@ -252,7 +253,7 @@ class App
             // is not auto loaded
             $this->ci->db->select('value');
             $this->ci->db->where('name', $name);
-            $row = $this->ci->db->get(db_prefix() . 'options')->row();
+            $row = $this->ci->db->get('tbloptions')->row();
             if ($row) {
                 $val = $row->value;
             }
@@ -260,7 +261,9 @@ class App
             $val = $this->options[$name];
         }
 
-        return hooks()->apply_filters('get_option', $val, $name);
+        $hook_data = do_action('get_option', ['name' => $name, 'value' => $val]);
+
+        return $hook_data['value'];
     }
 
     /**
@@ -269,20 +272,18 @@ class App
      */
     public function add_quick_actions_link($item = [])
     {
-        if (!isset($item['position'])) {
-            $item['position'] = null;
-        }
-
         $this->quick_actions[] = $item;
     }
 
     /**
-     * Quick actions data set from core/AdminController.php
+     * Quick actions data set from admin_controller.php
      * @return array
      */
     public function get_quick_actions_links()
     {
-        return hooks()->apply_filters('quick_actions_links', app_sort_by_position($this->quick_actions));
+        $this->quick_actions = do_action('before_build_quick_actions_links', $this->quick_actions);
+
+        return $this->quick_actions;
     }
 
     /**
@@ -300,7 +301,7 @@ class App
      */
     public function show_setup_menu()
     {
-        return hooks()->apply_filters('show_setup_menu', $this->show_setup_menu);
+        return do_action('show_setup_menu', $this->show_setup_menu);
     }
 
     /**
@@ -309,7 +310,7 @@ class App
      */
     public function get_tables_with_currency()
     {
-        return hooks()->apply_filters('tables_with_currency', $this->tables_with_currency);
+        return do_action('tables_with_currency', $this->tables_with_currency);
     }
 
     /**
@@ -318,7 +319,7 @@ class App
      */
     public function get_media_folder()
     {
-        return hooks()->apply_filters('get_media_folder', $this->media_folder);
+        return do_action('get_media_folder', $this->media_folder);
     }
 
     /**
@@ -330,32 +331,26 @@ class App
         $this->ci->load->config('migration');
 
         $beforeUpdateVersion = $this->get_current_db_version();
-        $updateToVersion     = $this->ci->config->item('migration_version');
 
         $this->ci->load->library('migration', [
             'migration_enabled'     => true,
             'migration_type'        => $this->ci->config->item('migration_type'),
             'migration_table'       => $this->ci->config->item('migration_table'),
             'migration_auto_latest' => $this->ci->config->item('migration_auto_latest'),
-            'migration_version'     => $updateToVersion,
+            'migration_version'     => $this->ci->config->item('migration_version'),
             'migration_path'        => $this->ci->config->item('migration_path'),
         ]);
-
-        hooks()->do_action('before_update_database', $updateToVersion);
-        define('DOING_DATABASE_UPGRADE', true);
         if ($this->ci->migration->current() === false) {
             return [
                 'success' => false,
                 'message' => $this->ci->migration->error_string(),
             ];
         }
+        update_option('upgraded_from_version', $beforeUpdateVersion);
 
-        delete_option('upgraded_from_version');
-        add_option('upgraded_from_version', $beforeUpdateVersion);
-
-        hooks()->do_action('database_updated', $updateToVersion);
-
-        return ['success' => true];
+        return [
+                'success' => true,
+            ];
     }
 
     /**
@@ -364,13 +359,13 @@ class App
     protected function init()
     {
         // Temporary checking for v1.8.0
-        if ($this->ci->db->field_exists('autoload', db_prefix() . 'options')) {
+        if ($this->ci->db->field_exists('autoload', 'tbloptions')) {
             $options = $this->ci->db->select('name, value')
             ->where('autoload', 1)
-            ->get(db_prefix() . 'options')->result_array();
+            ->get('tbloptions')->result_array();
         } else {
             $options = $this->ci->db->select('name, value')
-            ->get(db_prefix() . 'options')->result_array();
+            ->get('tbloptions')->result_array();
         }
 
         // Loop the options and store them in a array to prevent fetching again and again from database
@@ -391,7 +386,7 @@ class App
          * Media folder
          * @var string
          */
-        $this->media_folder = hooks()->apply_filters('before_set_media_folder', 'media');
+        $this->media_folder = do_action('before_set_media_folder', 'media');
 
         /**
          * Tables with currency
@@ -399,31 +394,31 @@ class App
          */
         $this->tables_with_currency = [
             [
-                'table' => db_prefix() . 'invoices',
+                'table' => 'tblinvoices',
                 'field' => 'currency',
             ],
             [
-                'table' => db_prefix() . 'expenses',
+                'table' => 'tblexpenses',
                 'field' => 'currency',
             ],
             [
-                'table' => db_prefix() . 'proposals',
+                'table' => 'tblproposals',
                 'field' => 'currency',
             ],
             [
-                'table' => db_prefix() . 'estimates',
+                'table' => 'tblestimates',
                 'field' => 'currency',
             ],
             [
-                'table' => db_prefix() . 'clients',
+                'table' => 'tblclients',
                 'field' => 'default_currency',
             ],
             [
-                'table' => db_prefix() . 'creditnotes',
+                'table' => 'tblcreditnotes',
                 'field' => 'currency',
             ],
             [
-                'table' => db_prefix() . 'subscriptions',
+                'table' => 'tblsubscriptions',
                 'field' => 'currency',
             ],
         ];

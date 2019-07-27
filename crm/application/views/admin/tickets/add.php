@@ -70,7 +70,7 @@
 						<div class="row">
 							<div class="col-md-<?php if(get_option('services') == 1){ echo 6; }else{echo 12;} ?>">
 								<?php $priorities['callback_translate'] = 'ticket_priority_translate';
-								echo render_select('priority', $priorities, array('priorityid','name'), 'ticket_settings_priority', hooks()->apply_filters('new_ticket_priority_selected', 2), array('required'=>'true')); ?>
+								echo render_select('priority',$priorities,array('priorityid','name'),'ticket_settings_priority',do_action('new_ticket_priority_selected',2),array('required'=>'true')); ?>
 							</div>
 							<?php if(get_option('services') == 1){ ?>
 								<div class="col-md-6">
@@ -160,7 +160,7 @@
 										<div class="input-group">
 											<input type="file" extension="<?php echo str_replace('.','',get_option('ticket_attachments_file_extensions')); ?>" filesize="<?php echo file_upload_max_size(); ?>" class="form-control" name="attachments[0]" accept="<?php echo get_ticket_form_accepted_mimes(); ?>">
 											<span class="input-group-btn">
-												<button class="btn btn-success add_more_attachments p8-half" data-max="<?php echo get_option('maximum_allowed_ticket_attachments'); ?>" type="button"><i class="fa fa-plus"></i></button>
+												<button class="btn btn-success add_more_attachments p8-half" data-ticket="true" type="button"><i class="fa fa-plus"></i></button>
 											</span>
 										</div>
 									</div>
@@ -177,7 +177,8 @@
 </div>
 <?php $this->load->view('admin/tickets/services/service'); ?>
 <?php init_tail(); ?>
-<?php hooks()->do_action('new_ticket_admin_page_loaded'); ?>
+<?php echo app_script('assets/js','tickets.js'); ?>
+<?php do_action('new_ticket_admin_page_loaded'); ?>
 <script>
 	$(function(){
 
@@ -194,7 +195,12 @@
 				}
 			});
 
-		validate_new_ticket_form();
+		$('#new_ticket_form').validate();
+		setTimeout(function(){
+			$.each($('#new_ticket_form').find('[data-custom-field-required="1"]'), function () {
+				$(this).rules('add','required');
+			});
+		},10);
 
 		<?php if(isset($project_id) || isset($contact)){ ?>
 			$('body.ticket select[name="contactid"]').change();

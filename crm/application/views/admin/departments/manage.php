@@ -102,7 +102,7 @@
     <script>
         $(function(){
            initDataTable('.table-departments', window.location.href, [4], [4], undefined, [1, 'asc']);
-           appValidateForm($('form'),{name:'required',email:{
+           _validate_form($('form'),{name:'required',email:{
             email: true,
             remote: {
                 url: admin_url + "departments/email_exists",

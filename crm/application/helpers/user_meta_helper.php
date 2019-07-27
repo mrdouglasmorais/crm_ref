@@ -79,7 +79,7 @@ function add_meta($for, $user_id, $meta_key, $meta_value = '')
         return false;
     }
 
-    $CI->db->insert(db_prefix().'user_meta', [
+    $CI->db->insert('tblusermeta', [
         $column      => $user_id,
         'meta_key'   => $meta_key,
         'meta_value' => $meta_value,
@@ -105,7 +105,7 @@ function update_meta($for, $user_id, $meta_key, $meta_value)
         return false;
     }
     $CI->db->where('meta_key', $meta_key);
-    $CI->db->update(db_prefix().'user_meta', ['meta_value' => $meta_value]);
+    $CI->db->update('tblusermeta', ['meta_value' => $meta_value]);
 
     return $CI->db->affected_rows() > 0;
 }
@@ -120,7 +120,7 @@ function meta_key_exists($for, $user_id, $meta_key)
     }
     $CI->db->where('meta_key', $meta_key);
 
-    return $CI->db->count_all_results(db_prefix().'user_meta') > 0;
+    return $CI->db->count_all_results('tblusermeta') > 0;
 }
 
 function delete_meta($for, $user_id, $meta_key)
@@ -132,7 +132,7 @@ function delete_meta($for, $user_id, $meta_key)
         return false;
     }
     $CI->db->where('meta_key', $meta_key);
-    $CI->db->delete(db_prefix().'user_meta');
+    $CI->db->delete('tblusermeta');
 
     return $CI->db->affected_rows() > 0;
 }
@@ -140,7 +140,7 @@ function delete_meta($for, $user_id, $meta_key)
 function get_meta($for, $user_id, $meta_key = '')
 {
     $CI   = &get_instance();
-    $meta = $CI->app_object_cache->get($for . '-meta-' . $user_id);
+    $meta = $CI->object_cache->get($for . '-meta-' . $user_id);
 
     if ($meta) {
         if ($meta_key) {
@@ -157,7 +157,7 @@ function get_meta($for, $user_id, $meta_key = '')
     }
 
     $CI->db->where($column, $user_id);
-    $meta = $CI->db->get(db_prefix().'user_meta')->result_array();
+    $meta = $CI->db->get('tblusermeta')->result_array();
 
     $flat = [];
 
@@ -169,7 +169,7 @@ function get_meta($for, $user_id, $meta_key = '')
         return $meta_key ? '' : [];
     }
 
-    $CI->app_object_cache->add($for . '-meta-' . $user_id, $flat);
+    $CI->object_cache->add($for . '-meta-' . $user_id, $flat);
 
     return get_meta($for, $user_id, $meta_key);
 }

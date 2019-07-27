@@ -9,7 +9,7 @@ $aColumns = [
     get_sql_select_client_company(),
     'recurring', // Frequncy
     'CASE WHEN cycles != 0 THEN cycles - total_cycles ELSE null end as cycles_remaining', // Cycles Passed
-    '(SELECT date FROM ' . db_prefix() . 'invoices t WHERE is_recurring_from=' . db_prefix() . 'invoices.id ORDER BY id DESC LIMIT 1) as last_date', // Last Date
+    '(SELECT date FROM tblinvoices t WHERE is_recurring_from=tblinvoices.id ORDER BY id DESC LIMIT 1) as last_date', // Last Date
     // Used only for filtering, in most case php and mysql timezone won't be the same and this may lead to incorect showing dates
     // However, the correct date will be calculated with php when the row is added into the table, see below
     'CASE WHEN (cycles > 0 AND cycles = total_cycles) THEN NULL
@@ -21,11 +21,11 @@ $aColumns = [
 ];
 
 $sIndexColumn = 'id';
-$sTable       = db_prefix() . 'invoices';
+$sTable       = 'tblinvoices';
 
 $join = [
-    'LEFT JOIN ' . db_prefix() . 'clients ON ' . db_prefix() . 'clients.userid = ' . db_prefix() . 'invoices.clientid',
-    'LEFT JOIN ' . db_prefix() . 'currencies ON ' . db_prefix() . 'currencies.id = ' . db_prefix() . 'invoices.currency',
+    'LEFT JOIN tblclients ON tblclients.userid = tblinvoices.clientid',
+    'LEFT JOIN tblcurrencies ON tblcurrencies.id = tblinvoices.currency',
 ];
 
 $where  = ['AND recurring != 0'];
@@ -67,13 +67,13 @@ if (!has_permission('invoices', '', 'view')) {
 }
 
 $result = data_tables_init($aColumns, $sIndexColumn, $sTable, $join, $where, [
-    db_prefix() . 'invoices.id',
-    db_prefix() . 'invoices.clientid',
+    'tblinvoices.id',
+    'tblinvoices.clientid',
     'custom_recurring',
     'recurring_type',
     'cycles',
     'total_cycles',
-    db_prefix().'currencies.name as currency_name',
+    'symbol',
     'hash',
     'deleted_customer_name',
     // next recurring date
@@ -102,7 +102,7 @@ foreach ($rResult as $aRow) {
 
     $row[] = $numberOutput;
 
-    $row[] = app_format_money($aRow['total'], $aRow['currency_name']);
+    $row[] = format_money($aRow['total'], $aRow['symbol']);
 
     $row[] = $aRow['year'];
 

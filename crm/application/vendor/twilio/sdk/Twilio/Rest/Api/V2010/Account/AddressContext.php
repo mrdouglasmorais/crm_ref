@@ -27,9 +27,8 @@ class AddressContext extends InstanceContext {
      * Initialize the AddressContext
      * 
      * @param \Twilio\Version $version Version that contains the resource
-     * @param string $accountSid The SID of the Account that is responsible for
-     *                           this address
-     * @param string $sid The unique string that identifies the resource
+     * @param string $accountSid The account_sid
+     * @param string $sid The sid
      * @return \Twilio\Rest\Api\V2010\Account\AddressContext 
      */
     public function __construct(Version $version, $accountSid, $sid) {

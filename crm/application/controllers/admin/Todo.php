@@ -1,8 +1,7 @@
 <?php
 
 defined('BASEPATH') or exit('No direct script access allowed');
-
-class Todo extends AdminController
+class Todo extends Admin_controller
 {
     public function __construct()
     {
@@ -18,11 +17,11 @@ class Todo extends AdminController
             exit;
         }
         $data['bodyclass']            = 'main-todo-page';
-        $data['total_pages_finished'] = ceil(total_rows(db_prefix().'todos', [
+        $data['total_pages_finished'] = ceil(total_rows('tbltodoitems', [
             'finished' => 1,
             'staffid'  => get_staff_user_id(),
         ]) / $this->todo_model->getTodosLimit());
-        $data['total_pages_unfinished'] = ceil(total_rows(db_prefix().'todos', [
+        $data['total_pages_unfinished'] = ceil(total_rows('tbltodoitems', [
             'finished' => 0,
             'staffid'  => get_staff_user_id(),
         ]) / $this->todo_model->getTodosLimit());

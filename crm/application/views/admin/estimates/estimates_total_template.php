@@ -37,7 +37,7 @@
       <div class="panel_s">
         <div class="panel-body">
           <h3 class="text-muted _total">
-            <?php echo app_format_money($data['total'], $data['currency_name']); ?>
+            <?php echo format_money($data['total'],$data['symbol']); ?>
           </h3>
           <span class="text-<?php echo $class; ?>"><?php echo $name; ?></span>
         </div>

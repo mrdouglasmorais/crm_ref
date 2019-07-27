@@ -63,9 +63,6 @@ foreach (array(
     'CRYPTO_SIGN_KEYPAIRBYTES',
     'CRYPTO_STREAM_KEYBYTES',
     'CRYPTO_STREAM_NONCEBYTES',
-    'LIBRARY_VERSION_MAJOR',
-    'LIBRARY_VERSION_MINOR',
-    'VERSION_STRING'
     ) as $constant
 ) {
     if (!defined("SODIUM_$constant")) {
@@ -429,16 +426,14 @@ if (!is_callable('sodium_crypto_box_seal_open')) {
      * @param string $message
      * @param string $kp
      * @return string|bool
-     * @throws SodiumException
      */
     function sodium_crypto_box_seal_open($message, $kp)
     {
         try {
             return ParagonIE_Sodium_Compat::crypto_box_seal_open($message, $kp);
-        } catch (SodiumException $ex) {
-            if ($ex->getMessage() === 'Argument 2 must be CRYPTO_BOX_KEYPAIRBYTES long.') {
-                throw $ex;
-            }
+        } catch (Error $ex) {
+            return false;
+        } catch (Exception $ex) {
             return false;
         }
     }

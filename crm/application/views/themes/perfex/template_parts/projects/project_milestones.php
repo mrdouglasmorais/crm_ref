@@ -1,5 +1,5 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
-<table class="table dt-table table-milestones" data-order-col="0" data-order-type="asc">
+<table class="table dt-table" data-order-col="0" data-order-type="asc">
     <thead>
         <tr>
             <th class="hidden"></th>

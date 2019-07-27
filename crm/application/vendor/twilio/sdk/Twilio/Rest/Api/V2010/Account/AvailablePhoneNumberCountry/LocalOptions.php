@@ -14,27 +14,31 @@ use Twilio\Values;
 
 abstract class LocalOptions {
     /**
-     * @param integer $areaCode The area code of the phone numbers to read
-     * @param string $contains The pattern on which to match phone numbers
-     * @param boolean $smsEnabled Whether the phone numbers can receive text
-     *                            messages
-     * @param boolean $mmsEnabled Whether the phone numbers can receive MMS messages
-     * @param boolean $voiceEnabled Whether the phone numbers can receive calls.
-     * @param boolean $excludeAllAddressRequired Whether to exclude phone numbers
-     *                                           that require an Address
-     * @param boolean $excludeLocalAddressRequired Whether to exclude phone numbers
-     *                                             that require a local address
-     * @param boolean $excludeForeignAddressRequired Whether to exclude phone
-     *                                               numbers that require a foreign
-     *                                               address
-     * @param boolean $beta Whether to read phone numbers new to the Twilio platform
+     * @param integer $areaCode Find phone numbers in the specified area code.
+     * @param string $contains A pattern on which to match phone numbers.
+     * @param boolean $smsEnabled This indicates whether the phone numbers can
+     *                            receive text messages.
+     * @param boolean $mmsEnabled This indicates whether the phone numbers can
+     *                            receive MMS messages.
+     * @param boolean $voiceEnabled This indicates whether the phone numbers can
+     *                              receive calls.
+     * @param boolean $excludeAllAddressRequired Indicates whether the response
+     *                                           includes phone numbers which
+     *                                           require any Address.
+     * @param boolean $excludeLocalAddressRequired Indicates whether the response
+     *                                             includes phone numbers which
+     *                                             require a local Address.
+     * @param boolean $excludeForeignAddressRequired Indicates whether the response
+     *                                               includes phone numbers which
+     *                                               require a foreign Address.
+     * @param boolean $beta Include phone numbers new to the Twilio platform.
      * @param string $nearNumber Given a phone number, find a geographically close
-     *                           number within distance miles. (US/Canada only)
+     *                           number within Distance miles. (US/Canada only)
      * @param string $nearLatLong Given a latitude/longitude pair lat,long find
-     *                            geographically close numbers within distance
+     *                            geographically close numbers within Distance
      *                            miles. (US/Canada only)
-     * @param integer $distance The search radius, in miles, for a near_ query.
-     *                          (US/Canada only)
+     * @param integer $distance Specifies the search radius for a Near- query in
+     *                          miles. (US/Canada only)
      * @param string $inPostalCode Limit results to a particular postal code.
      *                             (US/Canada only)
      * @param string $inRegion Limit results to a particular region. (US/Canada
@@ -42,10 +46,12 @@ abstract class LocalOptions {
      * @param string $inRateCenter Limit results to a specific rate center, or
      *                             given a phone number search within the same rate
      *                             center as that number. (US/Canada only)
-     * @param string $inLata Limit results to a specific local access and transport
+     * @param string $inLata Limit results to a specific Local access and transport
      *                       area. (US/Canada only)
-     * @param string $inLocality Limit results to a particular locality
-     * @param boolean $faxEnabled Whether the phone numbers can receive faxes
+     * @param string $inLocality Limit results to a particular locality. (US/Canada
+     *                           only)
+     * @param boolean $faxEnabled This indicates whether the phone numbers can
+     *                            receive faxes.
      * @return ReadLocalOptions Options builder
      */
     public static function read($areaCode = Values::NONE, $contains = Values::NONE, $smsEnabled = Values::NONE, $mmsEnabled = Values::NONE, $voiceEnabled = Values::NONE, $excludeAllAddressRequired = Values::NONE, $excludeLocalAddressRequired = Values::NONE, $excludeForeignAddressRequired = Values::NONE, $beta = Values::NONE, $nearNumber = Values::NONE, $nearLatLong = Values::NONE, $distance = Values::NONE, $inPostalCode = Values::NONE, $inRegion = Values::NONE, $inRateCenter = Values::NONE, $inLata = Values::NONE, $inLocality = Values::NONE, $faxEnabled = Values::NONE) {
@@ -55,27 +61,31 @@ abstract class LocalOptions {
 
 class ReadLocalOptions extends Options {
     /**
-     * @param integer $areaCode The area code of the phone numbers to read
-     * @param string $contains The pattern on which to match phone numbers
-     * @param boolean $smsEnabled Whether the phone numbers can receive text
-     *                            messages
-     * @param boolean $mmsEnabled Whether the phone numbers can receive MMS messages
-     * @param boolean $voiceEnabled Whether the phone numbers can receive calls.
-     * @param boolean $excludeAllAddressRequired Whether to exclude phone numbers
-     *                                           that require an Address
-     * @param boolean $excludeLocalAddressRequired Whether to exclude phone numbers
-     *                                             that require a local address
-     * @param boolean $excludeForeignAddressRequired Whether to exclude phone
-     *                                               numbers that require a foreign
-     *                                               address
-     * @param boolean $beta Whether to read phone numbers new to the Twilio platform
+     * @param integer $areaCode Find phone numbers in the specified area code.
+     * @param string $contains A pattern on which to match phone numbers.
+     * @param boolean $smsEnabled This indicates whether the phone numbers can
+     *                            receive text messages.
+     * @param boolean $mmsEnabled This indicates whether the phone numbers can
+     *                            receive MMS messages.
+     * @param boolean $voiceEnabled This indicates whether the phone numbers can
+     *                              receive calls.
+     * @param boolean $excludeAllAddressRequired Indicates whether the response
+     *                                           includes phone numbers which
+     *                                           require any Address.
+     * @param boolean $excludeLocalAddressRequired Indicates whether the response
+     *                                             includes phone numbers which
+     *                                             require a local Address.
+     * @param boolean $excludeForeignAddressRequired Indicates whether the response
+     *                                               includes phone numbers which
+     *                                               require a foreign Address.
+     * @param boolean $beta Include phone numbers new to the Twilio platform.
      * @param string $nearNumber Given a phone number, find a geographically close
-     *                           number within distance miles. (US/Canada only)
+     *                           number within Distance miles. (US/Canada only)
      * @param string $nearLatLong Given a latitude/longitude pair lat,long find
-     *                            geographically close numbers within distance
+     *                            geographically close numbers within Distance
      *                            miles. (US/Canada only)
-     * @param integer $distance The search radius, in miles, for a near_ query.
-     *                          (US/Canada only)
+     * @param integer $distance Specifies the search radius for a Near- query in
+     *                          miles. (US/Canada only)
      * @param string $inPostalCode Limit results to a particular postal code.
      *                             (US/Canada only)
      * @param string $inRegion Limit results to a particular region. (US/Canada
@@ -83,10 +93,12 @@ class ReadLocalOptions extends Options {
      * @param string $inRateCenter Limit results to a specific rate center, or
      *                             given a phone number search within the same rate
      *                             center as that number. (US/Canada only)
-     * @param string $inLata Limit results to a specific local access and transport
+     * @param string $inLata Limit results to a specific Local access and transport
      *                       area. (US/Canada only)
-     * @param string $inLocality Limit results to a particular locality
-     * @param boolean $faxEnabled Whether the phone numbers can receive faxes
+     * @param string $inLocality Limit results to a particular locality. (US/Canada
+     *                           only)
+     * @param boolean $faxEnabled This indicates whether the phone numbers can
+     *                            receive faxes.
      */
     public function __construct($areaCode = Values::NONE, $contains = Values::NONE, $smsEnabled = Values::NONE, $mmsEnabled = Values::NONE, $voiceEnabled = Values::NONE, $excludeAllAddressRequired = Values::NONE, $excludeLocalAddressRequired = Values::NONE, $excludeForeignAddressRequired = Values::NONE, $beta = Values::NONE, $nearNumber = Values::NONE, $nearLatLong = Values::NONE, $distance = Values::NONE, $inPostalCode = Values::NONE, $inRegion = Values::NONE, $inRateCenter = Values::NONE, $inLata = Values::NONE, $inLocality = Values::NONE, $faxEnabled = Values::NONE) {
         $this->options['areaCode'] = $areaCode;
@@ -110,9 +122,9 @@ class ReadLocalOptions extends Options {
     }
 
     /**
-     * The area code of the phone numbers to read. Applies to only phone numbers in the US and Canada.
+     * Find phone numbers in the specified area code. (US and Canada only)
      * 
-     * @param integer $areaCode The area code of the phone numbers to read
+     * @param integer $areaCode Find phone numbers in the specified area code.
      * @return $this Fluent Builder
      */
     public function setAreaCode($areaCode) {
@@ -121,9 +133,9 @@ class ReadLocalOptions extends Options {
     }
 
     /**
-     * The pattern on which to match phone numbers. Valid characters are `*`, `0-9`, `a-z`, and `A-Z`. The `*` character matches any single digit. For examples, see [Example 2](https://www.twilio.com/docs/api/rest/available-phone-numbers#local-get-basic-example-2) and [Example 3](https://www.twilio.com/docs/api/rest/available-phone-numbers#local-get-basic-example-3). If specified, this value must have at least two characters.
+     * A pattern on which to match phone numbers. Valid characters are `'*'` and `[0-9a-zA-Z]`. The `'*'` character will match any single digit. See [Example 2](https://www.twilio.com/docs/api/rest/available-phone-numbers#local-get-basic-example-2) and [Example 3](https://www.twilio.com/docs/api/rest/available-phone-numbers#local-get-basic-example-3) below. *NOTE:* Patterns must be at least two characters long.
      * 
-     * @param string $contains The pattern on which to match phone numbers
+     * @param string $contains A pattern on which to match phone numbers.
      * @return $this Fluent Builder
      */
     public function setContains($contains) {
@@ -132,10 +144,10 @@ class ReadLocalOptions extends Options {
     }
 
     /**
-     * Whether the phone numbers can receive text messages. Can be: `true` or `false`.
+     * This indicates whether the phone numbers can receive text messages. Possible values are `true` or `false`.
      * 
-     * @param boolean $smsEnabled Whether the phone numbers can receive text
-     *                            messages
+     * @param boolean $smsEnabled This indicates whether the phone numbers can
+     *                            receive text messages.
      * @return $this Fluent Builder
      */
     public function setSmsEnabled($smsEnabled) {
@@ -144,9 +156,10 @@ class ReadLocalOptions extends Options {
     }
 
     /**
-     * Whether the phone numbers can receive MMS messages. Can be: `true` or `false`.
+     * This indicates whether the phone numbers can receive MMS messages. Possible values are `true` or `false`.
      * 
-     * @param boolean $mmsEnabled Whether the phone numbers can receive MMS messages
+     * @param boolean $mmsEnabled This indicates whether the phone numbers can
+     *                            receive MMS messages.
      * @return $this Fluent Builder
      */
     public function setMmsEnabled($mmsEnabled) {
@@ -155,9 +168,10 @@ class ReadLocalOptions extends Options {
     }
 
     /**
-     * Whether the phone numbers can receive calls. Can be: `true` or `false`.
+     * This indicates whether the phone numbers can receive calls. Possible values are `true` or `false`.
      * 
-     * @param boolean $voiceEnabled Whether the phone numbers can receive calls.
+     * @param boolean $voiceEnabled This indicates whether the phone numbers can
+     *                              receive calls.
      * @return $this Fluent Builder
      */
     public function setVoiceEnabled($voiceEnabled) {
@@ -166,10 +180,11 @@ class ReadLocalOptions extends Options {
     }
 
     /**
-     * Whether to exclude phone numbers that require an [Address](https://www.twilio.com/docs/usage/api/addresses). Can be: `true` or `false` and the default is `false`.
+     * Indicates whether the response includes phone numbers which require any [Address](https://www.twilio.com/docs/usage/api/addresses). Possible values are `true` or `false`. If not specified, the default is `false`, and results could include phone numbers with an Address required.
      * 
-     * @param boolean $excludeAllAddressRequired Whether to exclude phone numbers
-     *                                           that require an Address
+     * @param boolean $excludeAllAddressRequired Indicates whether the response
+     *                                           includes phone numbers which
+     *                                           require any Address.
      * @return $this Fluent Builder
      */
     public function setExcludeAllAddressRequired($excludeAllAddressRequired) {
@@ -178,10 +193,11 @@ class ReadLocalOptions extends Options {
     }
 
     /**
-     * Whether to exclude phone numbers that require a local [Address](https://www.twilio.com/docs/usage/api/addresses). Can be: `true` or `false` and the default is `false`.
+     * Indicates whether the response includes phone numbers which require a local [Address](https://www.twilio.com/docs/usage/api/addresses). Possible values are `true` or `false`. If not specified, the default is `false`, and results could include phone numbers with a local Address required.
      * 
-     * @param boolean $excludeLocalAddressRequired Whether to exclude phone numbers
-     *                                             that require a local address
+     * @param boolean $excludeLocalAddressRequired Indicates whether the response
+     *                                             includes phone numbers which
+     *                                             require a local Address.
      * @return $this Fluent Builder
      */
     public function setExcludeLocalAddressRequired($excludeLocalAddressRequired) {
@@ -190,11 +206,11 @@ class ReadLocalOptions extends Options {
     }
 
     /**
-     * Whether to exclude phone numbers that require a foreign [Address](https://www.twilio.com/docs/usage/api/addresses). Can be: `true` or `false` and the default is `false`.
+     * Indicates whether the response includes phone numbers which require a foreign [Address](https://www.twilio.com/docs/usage/api/addresses). Possible values are `true` or `false`. If not specified, the default is `false`, and results could include phone numbers with a foreign Address required.
      * 
-     * @param boolean $excludeForeignAddressRequired Whether to exclude phone
-     *                                               numbers that require a foreign
-     *                                               address
+     * @param boolean $excludeForeignAddressRequired Indicates whether the response
+     *                                               includes phone numbers which
+     *                                               require a foreign Address.
      * @return $this Fluent Builder
      */
     public function setExcludeForeignAddressRequired($excludeForeignAddressRequired) {
@@ -203,9 +219,9 @@ class ReadLocalOptions extends Options {
     }
 
     /**
-     * Whether to read phone numbers that are new to the Twilio platform. Can be: `true` or `false` and the default is `true`.
+     * Include phone numbers new to the Twilio platform. Possible values are either `true` or `false`. Default is `true`.
      * 
-     * @param boolean $beta Whether to read phone numbers new to the Twilio platform
+     * @param boolean $beta Include phone numbers new to the Twilio platform.
      * @return $this Fluent Builder
      */
     public function setBeta($beta) {
@@ -214,10 +230,10 @@ class ReadLocalOptions extends Options {
     }
 
     /**
-     * Given a phone number, find a geographically close number within `distance` miles. Distance defaults to 25 miles. Applies to only phone numbers in the US and Canada.
+     * Given a phone number, find a geographically close number within `Distance` miles. Distance defaults to 25 miles. *Limited to US and Canadian phone numbers.*
      * 
      * @param string $nearNumber Given a phone number, find a geographically close
-     *                           number within distance miles. (US/Canada only)
+     *                           number within Distance miles. (US/Canada only)
      * @return $this Fluent Builder
      */
     public function setNearNumber($nearNumber) {
@@ -226,10 +242,10 @@ class ReadLocalOptions extends Options {
     }
 
     /**
-     * Given a latitude/longitude pair `lat,long` find geographically close numbers within `distance` miles. Applies to only phone numbers in the US and Canada.
+     * Given a latitude/longitude pair `lat,long` find geographically close numbers within `Distance` miles. *Limited to US and Canadian phone numbers.*
      * 
      * @param string $nearLatLong Given a latitude/longitude pair lat,long find
-     *                            geographically close numbers within distance
+     *                            geographically close numbers within Distance
      *                            miles. (US/Canada only)
      * @return $this Fluent Builder
      */
@@ -239,10 +255,10 @@ class ReadLocalOptions extends Options {
     }
 
     /**
-     * The search radius, in miles, for a `near_` query.  Can be up to `500` and the default is `25`. Applies to only phone numbers in the US and Canada.
+     * Specifies the search radius for a `Near-` query in miles. If not specified this defaults to 25 miles. Maximum searchable distance is 500 miles. *Limited to US and Canadian phone numbers.*
      * 
-     * @param integer $distance The search radius, in miles, for a near_ query.
-     *                          (US/Canada only)
+     * @param integer $distance Specifies the search radius for a Near- query in
+     *                          miles. (US/Canada only)
      * @return $this Fluent Builder
      */
     public function setDistance($distance) {
@@ -251,7 +267,7 @@ class ReadLocalOptions extends Options {
     }
 
     /**
-     * Limit results to a particular postal code. Given a phone number, search within the same postal code as that number. Applies to only phone numbers in the US and Canada.
+     * Limit results to a particular postal code. Given a phone number, search within the same postal code as that number. *Limited to US and Canadian phone numbers.*
      * 
      * @param string $inPostalCode Limit results to a particular postal code.
      *                             (US/Canada only)
@@ -263,7 +279,7 @@ class ReadLocalOptions extends Options {
     }
 
     /**
-     * Limit results to a particular region, state, or province. Given a phone number, search within the same region as that number. Applies to only phone numbers in the US and Canada.
+     * Limit results to a particular region (i.e.  State/Province). Given a phone number, search within the same Region as that number. *Limited to US and Canadian phone numbers.*
      * 
      * @param string $inRegion Limit results to a particular region. (US/Canada
      *                         only)
@@ -275,7 +291,7 @@ class ReadLocalOptions extends Options {
     }
 
     /**
-     * Limit results to a specific rate center, or given a phone number search within the same rate center as that number. Requires `in_lata` to be set as well. Applies to only phone numbers in the US and Canada.
+     * Limit results to a specific rate center, or given a phone number search within the same rate center as that number. Requires InLata to be set as well. *Limited to US and Canadian phone numbers.*
      * 
      * @param string $inRateCenter Limit results to a specific rate center, or
      *                             given a phone number search within the same rate
@@ -288,9 +304,9 @@ class ReadLocalOptions extends Options {
     }
 
     /**
-     * Limit results to a specific local access and transport area ([LATA](http://en.wikipedia.org/wiki/Local_access_and_transport_area)). Given a phone number, search within the same [LATA](http://en.wikipedia.org/wiki/Local_access_and_transport_area) as that number. Applies to only phone numbers in the US and Canada.
+     * Limit results to a specific Local access and transport area ([LATA](http://en.wikipedia.org/wiki/Local_access_and_transport_area)). Given a phone number, search within the same [LATA](http://en.wikipedia.org/wiki/Local_access_and_transport_area) as that number. *Limited to US and Canadian phone numbers.*
      * 
-     * @param string $inLata Limit results to a specific local access and transport
+     * @param string $inLata Limit results to a specific Local access and transport
      *                       area. (US/Canada only)
      * @return $this Fluent Builder
      */
@@ -300,9 +316,10 @@ class ReadLocalOptions extends Options {
     }
 
     /**
-     * Limit results to a particular locality or city. Given a phone number, search within the same Locality as that number.
+     * Limit results to a particular locality (i.e.  City). Given a phone number, search within the same Locality as that number. *Limited to US and Canadian phone numbers.*
      * 
-     * @param string $inLocality Limit results to a particular locality
+     * @param string $inLocality Limit results to a particular locality. (US/Canada
+     *                           only)
      * @return $this Fluent Builder
      */
     public function setInLocality($inLocality) {
@@ -311,9 +328,10 @@ class ReadLocalOptions extends Options {
     }
 
     /**
-     * Whether the phone numbers can receive faxes. Can be: `true` or `false`.
+     * This indicates whether the phone numbers can receive faxes. Possible values are `true` or `false`.
      * 
-     * @param boolean $faxEnabled Whether the phone numbers can receive faxes
+     * @param boolean $faxEnabled This indicates whether the phone numbers can
+     *                            receive faxes.
      * @return $this Fluent Builder
      */
     public function setFaxEnabled($faxEnabled) {

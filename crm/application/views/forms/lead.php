@@ -42,13 +42,13 @@
        <label for="default_language" class="control-label"><?php echo _l('localization_default_language'); ?></label>
        <select name="default_language" data-live-search="true" id="default_language" class="form-control selectpicker" data-none-selected-text="<?php echo _l('dropdown_non_selected_tex'); ?>">
         <option value=""><?php echo _l('system_default_string'); ?></option>
-        <?php foreach($this->app->get_available_languages() as $availableLanguage){
+        <?php foreach($this->app->get_available_languages() as $language){
          $selected = '';
-         if($lead->default_language == $availableLanguage){
+         if($lead->default_language == $language){
            $selected = 'selected';
          }
          ?>
-         <option value="<?php echo $availableLanguage; ?>" <?php echo $selected; ?>><?php echo ucfirst($availableLanguage); ?></option>
+         <option value="<?php echo $language; ?>" <?php echo $selected; ?>><?php echo ucfirst($language); ?></option>
        <?php } ?>
      </select>
    </div>

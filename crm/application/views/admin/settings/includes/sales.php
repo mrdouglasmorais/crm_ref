@@ -20,7 +20,7 @@
          <li role="presentation">
             <a href="#proposals" aria-controls="proposals" role="tab" data-toggle="tab"><?php echo _l('proposals'); ?></a>
          </li>
-         <?php hooks()->do_action('after_finance_settings_last_tab'); ?>
+         <?php do_action('after_finance_settings_last_tab'); ?>
       </ul>
    </div>
 </div>
@@ -54,6 +54,18 @@
                   <option value=" " data-subtext="space"<?php if(get_option('thousand_separator') == " "){echo ' selected';}; ?>>&nbsp;</option>
                </select>
             </div>
+         </div>
+      </div>
+      <hr />
+      <div class="form-group">
+         <label for="currency_placement" class="control-label clearfix"><?php echo _l('settings_sales_currency_placement'); ?></label>
+         <div class="radio radio-primary radio-inline">
+            <input type="radio" name="settings[currency_placement]" value="before" id="c_placement_before" <?php if(get_option('currency_placement') == 'before'){echo 'checked';} ?>>
+            <label for="c_placement_before"><?php echo _l('settings_sales_currency_placement_before'); ?> ( <?php echo $this->currencies_model->get_base_currency()->symbol; ?>25.00 ) </label>
+         </div>
+         <div class="radio radio-primary radio-inline">
+            <input type="radio" name="settings[currency_placement]" id="c_placement_after" value="after" <?php if(get_option('currency_placement') == 'after'){echo 'checked';} ?>>
+            <label for="c_placement_after"><?php echo _l('settings_sales_currency_placement_after'); ?> ( 25.00<?php echo $this->currencies_model->get_base_currency()->symbol; ?> )</label>
          </div>
       </div>
       <hr class="no-mtop" />
@@ -93,7 +105,7 @@
       </div>
       <hr />
       <i class="fa fa-question-circle pull-left" data-toggle="tooltip" data-title="<?php echo _l('settings_sales_next_invoice_number_tooltip'); ?>"></i>
-      <?php echo render_input('settings[next_invoice_number]','settings_sales_next_invoice_number',get_option('next_invoice_number'), 'number', ['min'=>1]); ?>
+      <?php echo render_input('settings[next_invoice_number]','settings_sales_next_invoice_number',get_option('next_invoice_number')); ?>
       <hr />
       <i class="fa fa-question-circle pull-left" data-toggle="tooltip" data-title="<?php echo _l('invoice_due_after_help'); ?>"></i>
       <?php echo render_input('settings[invoice_due_after]','settings_sales_invoice_due_after',get_option('invoice_due_after')); ?>
@@ -148,7 +160,7 @@
       </div>
       <hr />
       <i class="fa fa-question-circle pull-left" data-toggle="tooltip" data-title="<?php echo _l('settings_sales_next_invoice_number_tooltip'); ?>"></i>
-      <?php echo render_input('settings[next_credit_note_number]','settings_sales_next_credit_note_number',get_option('next_credit_note_number'), 'number', ['min'=>1]); ?>
+      <?php echo render_input('settings[next_credit_note_number]','settings_sales_next_credit_note_number',get_option('next_credit_note_number')); ?>
       <hr />
       <div class="form-group">
          <label for="credit_note_number_format" class="control-label clearfix"><?php echo _l('settings_sales_credit_note_number_format'); ?></label>
@@ -184,7 +196,7 @@
       </div>
       <hr />
       <i class="fa fa-question-circle pull-left" data-toggle="tooltip" data-title="<?php echo _l('settings_sales_next_estimate_number_tooltip'); ?>"></i>
-      <?php echo render_input('settings[next_estimate_number]','settings_sales_next_estimate_number',get_option('next_estimate_number'), 'number', ['min'=>1]); ?>
+      <?php echo render_input('settings[next_estimate_number]','settings_sales_next_estimate_number',get_option('next_estimate_number')); ?>
       <hr />
 
       <i class="fa fa-question-circle pull-left" data-toggle="tooltip" data-title="<?php echo _l('invoice_due_after_help'); ?>"></i>
@@ -313,7 +325,7 @@
       if(count($custom_fields) > 0){
         echo '<hr />';
         echo '<p class="no-mbot font-medium"><b>'._l('custom_fields').'</b></p>';
-        if(total_rows(db_prefix().'customfields',array('fieldto'=>'proposal','show_on_client_portal'=>1)) == 0){
+        if(total_rows('tblcustomfields',array('fieldto'=>'proposal','show_on_client_portal'=>1)) == 0){
           echo '<p>' . _l('custom_field_pdf_html_help'). '</p>';
           echo '<hr />';
        }
@@ -326,5 +338,5 @@
     }
     ?>
  </div>
- <?php hooks()->do_action('after_finance_settings_tabs_content'); ?>
+ <?php do_action('after_finance_settings_tabs_content'); ?>
 </div>

@@ -18,7 +18,7 @@ if ($this->ci->input->post('activity_log_date')) {
 }
 
 $sIndexColumn = 'id';
-$sTable       = db_prefix().'tickets_pipe_log';
+$sTable       = 'tblticketpipelog';
 $result       = data_tables_init($aColumns, $sIndexColumn, $sTable, [], $sWhere);
 $output       = $result['output'];
 $rResult      = $result['rResult'];

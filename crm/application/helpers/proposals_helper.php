@@ -27,7 +27,7 @@ function check_proposal_restrictions($id, $hash)
  */
 function is_proposals_email_expiry_reminder_enabled()
 {
-    return total_rows(db_prefix().'emailtemplates', ['slug' => 'proposal-expiry-reminder', 'active' => 1]) > 0;
+    return total_rows('tblemailtemplates', ['slug' => 'proposal-expiry-reminder', 'active' => 1]) > 0;
 }
 
 /**
@@ -126,7 +126,7 @@ function get_proposal_item_taxes($itemid)
     $CI = & get_instance();
     $CI->db->where('itemid', $itemid);
     $CI->db->where('rel_type', 'proposal');
-    $taxes = $CI->db->get(db_prefix().'item_tax')->result_array();
+    $taxes = $CI->db->get('tblitemstax')->result_array();
     $i     = 0;
     foreach ($taxes as $tax) {
         $taxes[$i]['taxname'] = $tax['taxname'] . '|' . $tax['taxrate'];
@@ -164,7 +164,7 @@ function get_proposals_percent_by_status($status, $total_proposals = '')
     }
 
     if (!is_numeric($total_proposals)) {
-        $total_proposals = total_rows(db_prefix().'proposals', $whereUser);
+        $total_proposals = total_rows('tblproposals', $whereUser);
     }
 
     $data            = [];
@@ -174,7 +174,7 @@ function get_proposals_percent_by_status($status, $total_proposals = '')
         $where .= ' AND (' . $whereUser . ')';
     }
 
-    $total_by_status = total_rows(db_prefix().'proposals', $where);
+    $total_by_status = total_rows('tblproposals', $where);
     $percent         = ($total_proposals > 0 ? number_format(($total_by_status * 100) / $total_proposals, 2) : 0);
 
     $data['total_by_status'] = $total_by_status;
@@ -217,7 +217,7 @@ function user_can_view_proposal($id, $staff_id = false)
     }
 
     $CI->db->select('id, addedfrom, assigned');
-    $CI->db->from(db_prefix().'proposals');
+    $CI->db->from('tblproposals');
     $CI->db->where('id', $id);
     $proposal = $CI->db->get()->row();
 
@@ -231,14 +231,9 @@ function user_can_view_proposal($id, $staff_id = false)
 function parse_proposal_content_merge_fields($proposal)
 {
     $id           = is_array($proposal) ? $proposal['id'] : $proposal->id;
-    $CI = &get_instance();
-
-    $CI->load->library('merge_fields/proposals_merge_fields');
-    $CI->load->library('merge_fields/other_merge_fields');
-
     $merge_fields = [];
-    $merge_fields = array_merge($merge_fields, $CI->proposals_merge_fields->format($id));
-    $merge_fields = array_merge($merge_fields, $CI->other_merge_fields->format());
+    $merge_fields = array_merge($merge_fields, get_proposal_merge_fields($id));
+    $merge_fields = array_merge($merge_fields, get_other_merge_fields());
     foreach ($merge_fields as $key => $val) {
         $content = is_array($proposal) ? $proposal['content'] : $proposal->content;
 
@@ -269,13 +264,13 @@ function staff_has_assigned_proposals($staff_id = '')
 {
     $CI         = &get_instance();
     $staff_id = is_numeric($staff_id) ? $staff_id : get_staff_user_id();
-    $cache    = $CI->app_object_cache->get('staff-total-assigned-proposals-' . $staff_id);
+    $cache    = $CI->object_cache->get('staff-total-assigned-proposals-' . $staff_id);
     if (is_numeric($cache)) {
         $result = $cache;
 
     } else {
-        $result = total_rows(db_prefix().'proposals', ['assigned' => $staff_id]);
-        $CI->app_object_cache->add('staff-total-assigned-proposals-' . $staff_id, $result);
+        $result = total_rows('tblproposals', ['assigned' => $staff_id]);
+        $CI->object_cache->add('staff-total-assigned-proposals-' . $staff_id, $result);
     }
 
     return $result > 0 ? true : false;
@@ -287,7 +282,7 @@ function get_proposals_sql_where_staff($staff_id)
     $allow_staff_view_invoices_assigned = get_option('allow_staff_view_proposals_assigned');
     $whereUser                          = '';
     if ($has_permission_view_own) {
-        $whereUser = '(('.db_prefix().'proposals.addedfrom=' . $staff_id . ' AND '.db_prefix().'proposals.addedfrom IN (SELECT staff_id FROM '.db_prefix().'staff_permissions WHERE feature = "proposals" AND capability="view_own"))';
+        $whereUser = '((tblproposals.addedfrom=' . $staff_id . ' AND tblproposals.addedfrom IN (SELECT staffid FROM tblstaffpermissions JOIN tblpermissions ON tblpermissions.permissionid=tblstaffpermissions.permissionid WHERE tblpermissions.name = "proposals" AND can_view_own=1))';
         if ($allow_staff_view_invoices_assigned == 1) {
             $whereUser .= ' OR assigned=' . $staff_id;
         }
@@ -297,4 +292,88 @@ function get_proposals_sql_where_staff($staff_id)
     }
 
     return $whereUser;
+}
+
+function prepare_proposals_for_export($rel_id, $rel_type)
+{
+    // $readProposalsDir = '';
+    // $tmpDir           = get_temp_dir();
+
+    $CI               = &get_instance();
+
+    if (!class_exists('proposals_model')) {
+        $CI->load->model('proposals_model');
+    }
+
+    $CI->db->where('rel_id', $rel_id);
+    $CI->db->where('rel_type', $rel_type);
+
+    $proposals = $CI->db->get('tblproposals')->result_array();
+
+    $CI->db->where('show_on_client_portal', 1);
+    $CI->db->where('fieldto', 'proposal');
+    $CI->db->order_by('field_order', 'asc');
+    $custom_fields = $CI->db->get('tblcustomfields')->result_array();
+/*
+    if (count($proposals) > 0) {
+        $uniqueIdentifier = $tmpDir . $rel_id . time() . '-proposals';
+        $readProposalsDir = $uniqueIdentifier;
+    }*/
+    $CI->load->model('currencies_model');
+    foreach ($proposals as $proposaArrayKey => $proposal) {
+
+        // $proposal['attachments'] = _prepare_attachments_array_for_export($CI->proposals_model->get_attachments($proposal['id']));
+
+       // $proposals[$proposaArrayKey] = parse_proposal_content_merge_fields($proposal);
+
+        $proposals[$proposaArrayKey]['country'] = get_country($proposal['country']);
+
+        $proposals[$proposaArrayKey]['currency'] = $CI->currencies_model->get($proposal['currency']);
+
+        $proposals[$proposaArrayKey]['items'] = _prepare_items_array_for_export(get_items_by_type('proposal', $proposal['id']), 'proposal');
+
+        $proposals[$proposaArrayKey]['comments'] = $CI->proposals_model->get_comments($proposal['id']);
+
+        $proposals[$proposaArrayKey]['views'] = get_views_tracking('proposal', $proposal['id']);
+
+        $proposals[$proposaArrayKey]['tracked_emails'] = get_tracked_emails($proposal['id'], 'proposal');
+
+        $proposals[$proposaArrayKey]['additional_fields'] = [];
+        foreach ($custom_fields as $cf) {
+            $proposals[$proposaArrayKey]['additional_fields'][] = [
+                    'name'  => $cf['name'],
+                    'value' => get_custom_field_value($proposal['id'], $cf['id'], 'proposal'),
+                ];
+        }
+
+      /*  $tmpProposalsDirName = $uniqueIdentifier;
+        if (!is_dir($tmpProposalsDirName)) {
+            mkdir($tmpProposalsDirName, 0755);
+        }
+
+        $tmpProposalsDirName = $tmpProposalsDirName . '/' . $proposal['id'];
+
+        mkdir($tmpProposalsDirName, 0755);*/
+
+/*        if (count($proposal['attachments']) > 0 || !empty($proposal['signature'])) {
+            $attachmentsDir = $tmpProposalsDirName . '/attachments';
+            mkdir($attachmentsDir, 0755);
+
+            foreach ($proposal['attachments'] as $att) {
+                xcopy(get_upload_path_by_type('proposal') . $proposal['id'] . '/' . $att['file_name'], $attachmentsDir . '/' . $att['file_name']);
+            }
+
+            if (!empty($proposal['signature'])) {
+                xcopy(get_upload_path_by_type('proposal') . $proposal['id'] . '/' . $proposal['signature'], $attachmentsDir . '/' . $proposal['signature']);
+            }
+        }*/
+
+        // unset($proposal['id']);
+
+        // $fp = fopen($tmpProposalsDirName . '/proposal.json', 'w');
+        // fwrite($fp, json_encode($proposal, JSON_PRETTY_PRINT));
+        // fclose($fp);
+    }
+
+    return $proposals;
 }

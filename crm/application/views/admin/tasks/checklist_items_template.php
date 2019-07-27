@@ -19,7 +19,7 @@
         </a>
         <?php } ?>
         <?php if(has_permission('checklist_templates','','create')){ ?>
-            <a href="#" class="pull-right text-muted mright5 save-checklist-template<?php if($list['description'] == '' || total_rows(db_prefix().'tasks_checklist_templates',array('description'=>$list['description'])) > 0){echo ' hide';} ?>" data-toggle="tooltip" data-title="<?php echo _l('save_as_template'); ?>" onclick="save_checklist_item_template(<?php echo $list['id']; ?>,this); return false;">
+            <a href="#" class="pull-right text-muted mright5 save-checklist-template<?php if($list['description'] == '' || total_rows('tblcheckliststemplates',array('description'=>$list['description'])) > 0){echo ' hide';} ?>" data-toggle="tooltip" data-title="<?php echo _l('save_as_template'); ?>" onclick="save_checklist_item_template(<?php echo $list['id']; ?>,this); return false;">
             <i class="fa fa-level-up" aria-hidden="true"></i>
             </a>
         <?php } ?>

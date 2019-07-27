@@ -21,9 +21,8 @@ class AssignedAddOnList extends ListResource {
      * Construct the AssignedAddOnList
      * 
      * @param Version $version Version that contains the resource
-     * @param string $accountSid The SID of the Account that created the resource
-     * @param string $resourceSid The SID of the Phone Number that installed this
-     *                            Add-on
+     * @param string $accountSid The Account id that has installed this Add-on
+     * @param string $resourceSid The Phone Number id that has installed this Add-on
      * @return \Twilio\Rest\Api\V2010\Account\IncomingPhoneNumber\AssignedAddOnList 
      */
     public function __construct(Version $version, $accountSid, $resourceSid) {
@@ -124,8 +123,8 @@ class AssignedAddOnList extends ListResource {
     /**
      * Create a new AssignedAddOnInstance
      * 
-     * @param string $installedAddOnSid The SID that identifies the Add-on
-     *                                  installation
+     * @param string $installedAddOnSid A string that uniquely identifies the
+     *                                  Add-on installation
      * @return AssignedAddOnInstance Newly created AssignedAddOnInstance
      * @throws TwilioException When an HTTP error occurs.
      */
@@ -150,7 +149,7 @@ class AssignedAddOnList extends ListResource {
     /**
      * Constructs a AssignedAddOnContext
      * 
-     * @param string $sid The unique string that identifies the resource
+     * @param string $sid The unique Installed Add-on Sid
      * @return \Twilio\Rest\Api\V2010\Account\IncomingPhoneNumber\AssignedAddOnContext 
      */
     public function getContext($sid) {

@@ -2,7 +2,7 @@
 
 defined('BASEPATH') or exit('No direct script access allowed');
 
-class Client_groups_model extends App_Model
+class Client_groups_model extends CRM_Model
 {
     public function __construct()
     {
@@ -15,12 +15,10 @@ class Client_groups_model extends App_Model
      */
     public function add($data)
     {
-        $this->db->insert(db_prefix().'customers_groups', $data);
-
+        $this->db->insert('tblcustomersgroups', $data);
         $insert_id = $this->db->insert_id();
-
         if ($insert_id) {
-            log_activity('New Customer Group Created [ID:' . $insert_id . ', Name:' . $data['name'] . ']');
+            logActivity('New Customer Group Created [ID:' . $insert_id . ', Name:' . $data['name'] . ']');
 
             return $insert_id;
         }
@@ -37,7 +35,7 @@ class Client_groups_model extends App_Model
     {
         $this->db->where('customer_id', $id);
 
-        return $this->db->get(db_prefix().'customer_groups')->result_array();
+        return $this->db->get('tblcustomergroups_in')->result_array();
     }
 
     /**
@@ -50,11 +48,11 @@ class Client_groups_model extends App_Model
         if (is_numeric($id)) {
             $this->db->where('id', $id);
 
-            return $this->db->get(db_prefix().'customers_groups')->row();
+            return $this->db->get('tblcustomersgroups')->row();
         }
         $this->db->order_by('name', 'asc');
 
-        return $this->db->get(db_prefix().'customers_groups')->result_array();
+        return $this->db->get('tblcustomersgroups')->result_array();
     }
 
     /**
@@ -65,11 +63,11 @@ class Client_groups_model extends App_Model
     public function edit($data)
     {
         $this->db->where('id', $data['id']);
-        $this->db->update(db_prefix().'customers_groups', [
+        $this->db->update('tblcustomersgroups', [
             'name' => $data['name'],
         ]);
         if ($this->db->affected_rows() > 0) {
-            log_activity('Customer Group Updated [ID:' . $data['id'] . ']');
+            logActivity('Customer Group Updated [ID:' . $data['id'] . ']');
 
             return true;
         }
@@ -85,14 +83,11 @@ class Client_groups_model extends App_Model
     public function delete($id)
     {
         $this->db->where('id', $id);
-        $this->db->delete(db_prefix().'customers_groups');
+        $this->db->delete('tblcustomersgroups');
         if ($this->db->affected_rows() > 0) {
             $this->db->where('groupid', $id);
-            $this->db->delete(db_prefix().'customer_groups');
-
-            hooks()->do_action('customer_group_deleted', $id);
-
-            log_activity('Customer Group Deleted [ID:' . $id . ']');
+            $this->db->delete('tblcustomergroups_in');
+            logActivity('Customer Group Deleted [ID:' . $id . ']');
 
             return true;
         }
@@ -119,14 +114,14 @@ class Client_groups_model extends App_Model
                     if (!in_array($customer_group['groupid'], $groups_in)) {
                         $this->db->where('customer_id', $id);
                         $this->db->where('id', $customer_group['id']);
-                        $this->db->delete(db_prefix().'customer_groups');
+                        $this->db->delete('tblcustomergroups_in');
                         if ($this->db->affected_rows() > 0) {
                             $affectedRows++;
                         }
                     }
                 } else {
                     $this->db->where('customer_id', $id);
-                    $this->db->delete(db_prefix().'customer_groups');
+                    $this->db->delete('tblcustomergroups_in');
                     if ($this->db->affected_rows() > 0) {
                         $affectedRows++;
                     }
@@ -136,12 +131,12 @@ class Client_groups_model extends App_Model
                 foreach ($groups_in as $group) {
                     $this->db->where('customer_id', $id);
                     $this->db->where('groupid', $group);
-                    $_exists = $this->db->get(db_prefix().'customer_groups')->row();
+                    $_exists = $this->db->get('tblcustomergroups_in')->row();
                     if (!$_exists) {
                         if (empty($group)) {
                             continue;
                         }
-                        $this->db->insert(db_prefix().'customer_groups', [
+                        $this->db->insert('tblcustomergroups_in', [
                             'customer_id' => $id,
                             'groupid'     => $group,
                         ]);
@@ -157,7 +152,7 @@ class Client_groups_model extends App_Model
                     if (empty($group)) {
                         continue;
                     }
-                    $this->db->insert(db_prefix().'customer_groups', [
+                    $this->db->insert('tblcustomergroups_in', [
                         'customer_id' => $id,
                         'groupid'     => $group,
                     ]);

@@ -22,7 +22,7 @@
                      <a href="#home_my_reminders" onclick="initDataTable('.table-my-reminders', admin_url + 'misc/my_reminders', undefined, undefined,undefined,[2,'asc']);" aria-controls="home_my_reminders" role="tab" data-toggle="tab">
                      <i class="fa fa-clock-o menu-icon"></i> <?php echo _l('my_reminders'); ?>
                      <?php
-                        $total_reminders = total_rows(db_prefix().'reminders',
+                        $total_reminders = total_rows('tblreminders',
                           array(
                            'isnotified'=>0,
                            'staff'=>get_staff_user_id(),
@@ -67,7 +67,7 @@
                            echo form_hidden('my_tasks',true);
                            foreach($task_statuses as $status){
                             $val = 'true';
-                            if($status['id'] == Tasks_model::STATUS_COMPLETE){
+                            if($status['id'] == 5){
                               $val = '';
                            }
                            echo form_hidden('task_status_'.$status['id'],$val);

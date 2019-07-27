@@ -18,10 +18,9 @@ class MemberContext extends InstanceContext {
      * Initialize the MemberContext
      * 
      * @param \Twilio\Version $version Version that contains the resource
-     * @param string $accountSid The SID of the Account that created the
-     *                           resource(s) to fetch
+     * @param string $accountSid The account_sid
      * @param string $queueSid The Queue in which to find the members
-     * @param string $callSid The Call SID of the resource(s) to fetch
+     * @param string $callSid The call_sid
      * @return \Twilio\Rest\Api\V2010\Account\Queue\MemberContext 
      */
     public function __construct(Version $version, $accountSid, $queueSid, $callSid) {
@@ -64,8 +63,8 @@ class MemberContext extends InstanceContext {
     /**
      * Update the MemberInstance
      * 
-     * @param string $url The absolute URL of this Queue resource
-     * @param string $method How to pass the update request data
+     * @param string $url The url
+     * @param string $method The method
      * @return MemberInstance Updated MemberInstance
      * @throws TwilioException When an HTTP error occurs.
      */

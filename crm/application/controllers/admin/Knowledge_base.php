@@ -1,8 +1,7 @@
 <?php
 
 defined('BASEPATH') or exit('No direct script access allowed');
-
-class Knowledge_base extends AdminController
+class Knowledge_base extends Admin_controller
 {
     public function __construct()
     {

@@ -14,11 +14,13 @@ use Twilio\Values;
 
 abstract class LocalOptions {
     /**
-     * @param boolean $beta Whether to include new phone numbers
-     * @param string $friendlyName A string that identifies the resources to read
-     * @param string $phoneNumber The phone numbers of the resources to read
-     * @param string $origin Include phone numbers based on their origin. By
-     *                       default, phone numbers of all origin are included.
+     * @param boolean $beta Include phone numbers new to the Twilio platform.
+     * @param string $friendlyName Only show the incoming phone number resources
+     *                             with friendly names that exactly match this name.
+     * @param string $phoneNumber Only show the incoming phone number resources
+     *                            that match this pattern.
+     * @param string $origin Include phone numbers based on the origin, by default,
+     *                       phone numbers of all origin are included.
      * @return ReadLocalOptions Options builder
      */
     public static function read($beta = Values::NONE, $friendlyName = Values::NONE, $phoneNumber = Values::NONE, $origin = Values::NONE) {
@@ -26,36 +28,43 @@ abstract class LocalOptions {
     }
 
     /**
-     * @param string $apiVersion The API version to use for incoming calls made to
-     *                           the new phone number
-     * @param string $friendlyName A string to describe the new phone number
-     * @param string $smsApplicationSid The SID of the application to handle SMS
-     *                                  messages
-     * @param string $smsFallbackMethod The HTTP method we use to call
-     *                                  status_callback
-     * @param string $smsFallbackUrl The URL we call when an error occurs while
-     *                               executing TwiML
-     * @param string $smsMethod The HTTP method to use with sms url
-     * @param string $smsUrl The URL we should call when the new phone number
-     *                       receives an incoming SMS message
-     * @param string $statusCallback The URL we should call to send status
-     *                               information to your application
-     * @param string $statusCallbackMethod HTTP method we should use to call
-     *                                     status_callback
-     * @param string $voiceApplicationSid The SID of the application to handle the
-     *                                    new phone number
-     * @param boolean $voiceCallerIdLookup Whether to lookup the caller's name
-     * @param string $voiceFallbackMethod The HTTP method used with
-     *                                    voice_fallback_url
-     * @param string $voiceFallbackUrl The URL we will call when an error occurs in
-     *                                 TwiML
-     * @param string $voiceMethod The HTTP method used with the voice_url
-     * @param string $voiceUrl The URL we should call when the phone number
-     *                         receives a call
-     * @param string $identitySid The SID of the Identity resource to associate
-     *                            with the new phone number
-     * @param string $addressSid The SID of the Address resource associated with
-     *                           the phone number
+     * @param string $apiVersion The Twilio REST API version to use for incoming
+     *                           calls made to this number.
+     * @param string $friendlyName A human readable description of the new incoming
+     *                             phone number.
+     * @param string $smsApplicationSid The 34 character sid of the application
+     *                                  Twilio should use to handle SMSs sent to
+     *                                  the new number.
+     * @param string $smsFallbackMethod The HTTP method that should be used to
+     *                                  request the SmsFallbackUrl.
+     * @param string $smsFallbackUrl A URL that Twilio will request if an error
+     *                               occurs requesting or executing the TwiML
+     *                               defined by SmsUrl.
+     * @param string $smsMethod The HTTP method that should be used to request the
+     *                          SmsUrl.
+     * @param string $smsUrl The URL that Twilio should request when somebody sends
+     *                       an SMS to the phone number.
+     * @param string $statusCallback The URL that Twilio will request to pass
+     *                               status parameters to your application.
+     * @param string $statusCallbackMethod The HTTP method Twilio will use to make
+     *                                     requests to the StatusCallback URL.
+     * @param string $voiceApplicationSid The 34 character sid of the application
+     *                                    Twilio should use to handle phone calls
+     *                                    to the new number.
+     * @param boolean $voiceCallerIdLookup Do a lookup of a caller's name from the
+     *                                     CNAM database and post it to your app.
+     * @param string $voiceFallbackMethod The HTTP method that should be used to
+     *                                    request the VoiceFallbackUrl.
+     * @param string $voiceFallbackUrl A URL that Twilio will request if an error
+     *                                 occurs requesting or executing the TwiML at
+     *                                 Url.
+     * @param string $voiceMethod The HTTP method that should be used to request
+     *                            the VoiceUrl.
+     * @param string $voiceUrl The URL that Twilio should request when somebody
+     *                         dials the new phone number.
+     * @param string $identitySid The identity_sid
+     * @param string $addressSid The 34 character sid of the address Twilio should
+     *                           associate with the number.
      * @return CreateLocalOptions Options builder
      */
     public static function create($apiVersion = Values::NONE, $friendlyName = Values::NONE, $smsApplicationSid = Values::NONE, $smsFallbackMethod = Values::NONE, $smsFallbackUrl = Values::NONE, $smsMethod = Values::NONE, $smsUrl = Values::NONE, $statusCallback = Values::NONE, $statusCallbackMethod = Values::NONE, $voiceApplicationSid = Values::NONE, $voiceCallerIdLookup = Values::NONE, $voiceFallbackMethod = Values::NONE, $voiceFallbackUrl = Values::NONE, $voiceMethod = Values::NONE, $voiceUrl = Values::NONE, $identitySid = Values::NONE, $addressSid = Values::NONE) {
@@ -65,11 +74,13 @@ abstract class LocalOptions {
 
 class ReadLocalOptions extends Options {
     /**
-     * @param boolean $beta Whether to include new phone numbers
-     * @param string $friendlyName A string that identifies the resources to read
-     * @param string $phoneNumber The phone numbers of the resources to read
-     * @param string $origin Include phone numbers based on their origin. By
-     *                       default, phone numbers of all origin are included.
+     * @param boolean $beta Include phone numbers new to the Twilio platform.
+     * @param string $friendlyName Only show the incoming phone number resources
+     *                             with friendly names that exactly match this name.
+     * @param string $phoneNumber Only show the incoming phone number resources
+     *                            that match this pattern.
+     * @param string $origin Include phone numbers based on the origin, by default,
+     *                       phone numbers of all origin are included.
      */
     public function __construct($beta = Values::NONE, $friendlyName = Values::NONE, $phoneNumber = Values::NONE, $origin = Values::NONE) {
         $this->options['beta'] = $beta;
@@ -79,9 +90,9 @@ class ReadLocalOptions extends Options {
     }
 
     /**
-     * Whether to include phone numbers new to the Twilio platform. Can be: `true` or `false` and the default is `true`.
+     * Include phone numbers new to the Twilio platform. Possible values are either `true` or `false`. Default is `true`.
      * 
-     * @param boolean $beta Whether to include new phone numbers
+     * @param boolean $beta Include phone numbers new to the Twilio platform.
      * @return $this Fluent Builder
      */
     public function setBeta($beta) {
@@ -90,9 +101,10 @@ class ReadLocalOptions extends Options {
     }
 
     /**
-     * A string that identifies the resources to read.
+     * Only show the incoming phone number resources with friendly names that exactly match this name.
      * 
-     * @param string $friendlyName A string that identifies the resources to read
+     * @param string $friendlyName Only show the incoming phone number resources
+     *                             with friendly names that exactly match this name.
      * @return $this Fluent Builder
      */
     public function setFriendlyName($friendlyName) {
@@ -101,9 +113,10 @@ class ReadLocalOptions extends Options {
     }
 
     /**
-     * The phone numbers of the IncomingPhoneNumber resources to read. You can specify partial numbers and use '*' as a wildcard for any digit.
+     * Only show the incoming phone number resources that match this pattern. You can specify partial numbers and use '*' as a wildcard for any digit.
      * 
-     * @param string $phoneNumber The phone numbers of the resources to read
+     * @param string $phoneNumber Only show the incoming phone number resources
+     *                            that match this pattern.
      * @return $this Fluent Builder
      */
     public function setPhoneNumber($phoneNumber) {
@@ -112,10 +125,10 @@ class ReadLocalOptions extends Options {
     }
 
     /**
-     * Whether to include phone numbers based on their origin. Can be: `twilio` or `hosted`. By default, phone numbers of all origin are included.
+     * Include phone numbers based on the origin, by default, phone numbers of all origin are included. Possible values are either `twilio` or `hosted`.
      * 
-     * @param string $origin Include phone numbers based on their origin. By
-     *                       default, phone numbers of all origin are included.
+     * @param string $origin Include phone numbers based on the origin, by default,
+     *                       phone numbers of all origin are included.
      * @return $this Fluent Builder
      */
     public function setOrigin($origin) {
@@ -141,36 +154,43 @@ class ReadLocalOptions extends Options {
 
 class CreateLocalOptions extends Options {
     /**
-     * @param string $apiVersion The API version to use for incoming calls made to
-     *                           the new phone number
-     * @param string $friendlyName A string to describe the new phone number
-     * @param string $smsApplicationSid The SID of the application to handle SMS
-     *                                  messages
-     * @param string $smsFallbackMethod The HTTP method we use to call
-     *                                  status_callback
-     * @param string $smsFallbackUrl The URL we call when an error occurs while
-     *                               executing TwiML
-     * @param string $smsMethod The HTTP method to use with sms url
-     * @param string $smsUrl The URL we should call when the new phone number
-     *                       receives an incoming SMS message
-     * @param string $statusCallback The URL we should call to send status
-     *                               information to your application
-     * @param string $statusCallbackMethod HTTP method we should use to call
-     *                                     status_callback
-     * @param string $voiceApplicationSid The SID of the application to handle the
-     *                                    new phone number
-     * @param boolean $voiceCallerIdLookup Whether to lookup the caller's name
-     * @param string $voiceFallbackMethod The HTTP method used with
-     *                                    voice_fallback_url
-     * @param string $voiceFallbackUrl The URL we will call when an error occurs in
-     *                                 TwiML
-     * @param string $voiceMethod The HTTP method used with the voice_url
-     * @param string $voiceUrl The URL we should call when the phone number
-     *                         receives a call
-     * @param string $identitySid The SID of the Identity resource to associate
-     *                            with the new phone number
-     * @param string $addressSid The SID of the Address resource associated with
-     *                           the phone number
+     * @param string $apiVersion The Twilio REST API version to use for incoming
+     *                           calls made to this number.
+     * @param string $friendlyName A human readable description of the new incoming
+     *                             phone number.
+     * @param string $smsApplicationSid The 34 character sid of the application
+     *                                  Twilio should use to handle SMSs sent to
+     *                                  the new number.
+     * @param string $smsFallbackMethod The HTTP method that should be used to
+     *                                  request the SmsFallbackUrl.
+     * @param string $smsFallbackUrl A URL that Twilio will request if an error
+     *                               occurs requesting or executing the TwiML
+     *                               defined by SmsUrl.
+     * @param string $smsMethod The HTTP method that should be used to request the
+     *                          SmsUrl.
+     * @param string $smsUrl The URL that Twilio should request when somebody sends
+     *                       an SMS to the phone number.
+     * @param string $statusCallback The URL that Twilio will request to pass
+     *                               status parameters to your application.
+     * @param string $statusCallbackMethod The HTTP method Twilio will use to make
+     *                                     requests to the StatusCallback URL.
+     * @param string $voiceApplicationSid The 34 character sid of the application
+     *                                    Twilio should use to handle phone calls
+     *                                    to the new number.
+     * @param boolean $voiceCallerIdLookup Do a lookup of a caller's name from the
+     *                                     CNAM database and post it to your app.
+     * @param string $voiceFallbackMethod The HTTP method that should be used to
+     *                                    request the VoiceFallbackUrl.
+     * @param string $voiceFallbackUrl A URL that Twilio will request if an error
+     *                                 occurs requesting or executing the TwiML at
+     *                                 Url.
+     * @param string $voiceMethod The HTTP method that should be used to request
+     *                            the VoiceUrl.
+     * @param string $voiceUrl The URL that Twilio should request when somebody
+     *                         dials the new phone number.
+     * @param string $identitySid The identity_sid
+     * @param string $addressSid The 34 character sid of the address Twilio should
+     *                           associate with the number.
      */
     public function __construct($apiVersion = Values::NONE, $friendlyName = Values::NONE, $smsApplicationSid = Values::NONE, $smsFallbackMethod = Values::NONE, $smsFallbackUrl = Values::NONE, $smsMethod = Values::NONE, $smsUrl = Values::NONE, $statusCallback = Values::NONE, $statusCallbackMethod = Values::NONE, $voiceApplicationSid = Values::NONE, $voiceCallerIdLookup = Values::NONE, $voiceFallbackMethod = Values::NONE, $voiceFallbackUrl = Values::NONE, $voiceMethod = Values::NONE, $voiceUrl = Values::NONE, $identitySid = Values::NONE, $addressSid = Values::NONE) {
         $this->options['apiVersion'] = $apiVersion;
@@ -193,10 +213,10 @@ class CreateLocalOptions extends Options {
     }
 
     /**
-     * The API version to use for incoming calls made to the new phone number. The default is `2010-04-01`.
+     * The Twilio REST API version to use for incoming calls made to this number. If omitted, uses `2010-04-01`.
      * 
-     * @param string $apiVersion The API version to use for incoming calls made to
-     *                           the new phone number
+     * @param string $apiVersion The Twilio REST API version to use for incoming
+     *                           calls made to this number.
      * @return $this Fluent Builder
      */
     public function setApiVersion($apiVersion) {
@@ -205,9 +225,10 @@ class CreateLocalOptions extends Options {
     }
 
     /**
-     * A descriptive string that you created to describe the new phone number. It can be up to 64 characters long. By default, this is a formatted version of the phone number.
+     * A human readable description of the new incoming phone number. Maximum 64 characters. Defaults to a formatted version of the number.
      * 
-     * @param string $friendlyName A string to describe the new phone number
+     * @param string $friendlyName A human readable description of the new incoming
+     *                             phone number.
      * @return $this Fluent Builder
      */
     public function setFriendlyName($friendlyName) {
@@ -216,10 +237,11 @@ class CreateLocalOptions extends Options {
     }
 
     /**
-     * The SID of the application that should handle SMS messages sent to the new phone number. If an `sms_application_sid` is present, we ignore all of the `sms_*_url` urls and use those set on the application.
+     * The 34 character sid of the application Twilio should use to handle SMSs sent to the new number. If a `SmsApplicationSid` is present, Twilio will ignore all of the SMS urls above and use those set on the application.
      * 
-     * @param string $smsApplicationSid The SID of the application to handle SMS
-     *                                  messages
+     * @param string $smsApplicationSid The 34 character sid of the application
+     *                                  Twilio should use to handle SMSs sent to
+     *                                  the new number.
      * @return $this Fluent Builder
      */
     public function setSmsApplicationSid($smsApplicationSid) {
@@ -228,10 +250,10 @@ class CreateLocalOptions extends Options {
     }
 
     /**
-     * The HTTP method that we should use to call `sms_fallback_url`. Can be: `GET` or `POST` and defaults to `POST`.
+     * The HTTP method that should be used to request the `SmsFallbackUrl`. Must be either `GET` or `POST`. Defaults to `POST`.
      * 
-     * @param string $smsFallbackMethod The HTTP method we use to call
-     *                                  status_callback
+     * @param string $smsFallbackMethod The HTTP method that should be used to
+     *                                  request the SmsFallbackUrl.
      * @return $this Fluent Builder
      */
     public function setSmsFallbackMethod($smsFallbackMethod) {
@@ -240,10 +262,11 @@ class CreateLocalOptions extends Options {
     }
 
     /**
-     * The URL that we should call when an error occurs while requesting or executing the TwiML defined by `sms_url`.
+     * A URL that Twilio will request if an error occurs requesting or executing the TwiML defined by `SmsUrl`.
      * 
-     * @param string $smsFallbackUrl The URL we call when an error occurs while
-     *                               executing TwiML
+     * @param string $smsFallbackUrl A URL that Twilio will request if an error
+     *                               occurs requesting or executing the TwiML
+     *                               defined by SmsUrl.
      * @return $this Fluent Builder
      */
     public function setSmsFallbackUrl($smsFallbackUrl) {
@@ -252,9 +275,10 @@ class CreateLocalOptions extends Options {
     }
 
     /**
-     * The HTTP method that we should use to call `sms_url`. Can be: `GET` or `POST` and defaults to `POST`.
+     * The HTTP method that should be used to request the `SmsUrl`. Must be either `GET` or `POST`. Defaults to `POST`.
      * 
-     * @param string $smsMethod The HTTP method to use with sms url
+     * @param string $smsMethod The HTTP method that should be used to request the
+     *                          SmsUrl.
      * @return $this Fluent Builder
      */
     public function setSmsMethod($smsMethod) {
@@ -263,10 +287,10 @@ class CreateLocalOptions extends Options {
     }
 
     /**
-     * The URL we should call when the new phone number receives an incoming SMS message.
+     * The URL that Twilio should request when somebody sends an SMS to the phone number.
      * 
-     * @param string $smsUrl The URL we should call when the new phone number
-     *                       receives an incoming SMS message
+     * @param string $smsUrl The URL that Twilio should request when somebody sends
+     *                       an SMS to the phone number.
      * @return $this Fluent Builder
      */
     public function setSmsUrl($smsUrl) {
@@ -275,10 +299,10 @@ class CreateLocalOptions extends Options {
     }
 
     /**
-     * The URL we should call using the `status_callback_method` to send status information to your application.
+     * The URL that Twilio will request to pass status parameters (such as call ended) to your application.
      * 
-     * @param string $statusCallback The URL we should call to send status
-     *                               information to your application
+     * @param string $statusCallback The URL that Twilio will request to pass
+     *                               status parameters to your application.
      * @return $this Fluent Builder
      */
     public function setStatusCallback($statusCallback) {
@@ -287,10 +311,10 @@ class CreateLocalOptions extends Options {
     }
 
     /**
-     * The HTTP method we should use to call `status_callback`. Can be: `GET` or `POST` and defaults to `POST`.
+     * The HTTP method Twilio will use to make requests to the `StatusCallback` URL. Either `GET` or `POST`. Defaults to `POST`.
      * 
-     * @param string $statusCallbackMethod HTTP method we should use to call
-     *                                     status_callback
+     * @param string $statusCallbackMethod The HTTP method Twilio will use to make
+     *                                     requests to the StatusCallback URL.
      * @return $this Fluent Builder
      */
     public function setStatusCallbackMethod($statusCallbackMethod) {
@@ -299,10 +323,11 @@ class CreateLocalOptions extends Options {
     }
 
     /**
-     * The SID of the application we should use to handle calls to the new phone number. If a `voice_application_sid` is present, we ignore all of the voice urls and use only those set on the application. Setting a `voice_application_sid` will automatically delete your `trunk_sid` and vice versa.
+     * The 34 character sid of the application Twilio should use to handle phone calls to the new number. If a `VoiceApplicationSid` is present, Twilio will ignore all of the voice urls above and use those set on the application. Setting a `VoiceApplicationSid` will automatically delete your `TrunkSid` and vice versa.
      * 
-     * @param string $voiceApplicationSid The SID of the application to handle the
-     *                                    new phone number
+     * @param string $voiceApplicationSid The 34 character sid of the application
+     *                                    Twilio should use to handle phone calls
+     *                                    to the new number.
      * @return $this Fluent Builder
      */
     public function setVoiceApplicationSid($voiceApplicationSid) {
@@ -311,9 +336,10 @@ class CreateLocalOptions extends Options {
     }
 
     /**
-     * Whether to lookup the caller's name from the CNAM database and post it to your app. Can be: `true` or `false` and defaults to `false`.
+     * Do a lookup of a caller's name from the CNAM database and post it to your app. Either `true` or `false`. Defaults to `false`.
      * 
-     * @param boolean $voiceCallerIdLookup Whether to lookup the caller's name
+     * @param boolean $voiceCallerIdLookup Do a lookup of a caller's name from the
+     *                                     CNAM database and post it to your app.
      * @return $this Fluent Builder
      */
     public function setVoiceCallerIdLookup($voiceCallerIdLookup) {
@@ -322,10 +348,10 @@ class CreateLocalOptions extends Options {
     }
 
     /**
-     * The HTTP method that we should use to call `voice_fallback_url`. Can be: `GET` or `POST` and defaults to `POST`.
+     * The HTTP method that should be used to request the `VoiceFallbackUrl`. Either `GET` or `POST`. Defaults to `POST`.
      * 
-     * @param string $voiceFallbackMethod The HTTP method used with
-     *                                    voice_fallback_url
+     * @param string $voiceFallbackMethod The HTTP method that should be used to
+     *                                    request the VoiceFallbackUrl.
      * @return $this Fluent Builder
      */
     public function setVoiceFallbackMethod($voiceFallbackMethod) {
@@ -334,10 +360,11 @@ class CreateLocalOptions extends Options {
     }
 
     /**
-     * The URL that we should call when an error occurs retrieving or executing the TwiML requested by `url`.
+     * A URL that Twilio will request if an error occurs requesting or executing the TwiML at `Url`.
      * 
-     * @param string $voiceFallbackUrl The URL we will call when an error occurs in
-     *                                 TwiML
+     * @param string $voiceFallbackUrl A URL that Twilio will request if an error
+     *                                 occurs requesting or executing the TwiML at
+     *                                 Url.
      * @return $this Fluent Builder
      */
     public function setVoiceFallbackUrl($voiceFallbackUrl) {
@@ -346,9 +373,10 @@ class CreateLocalOptions extends Options {
     }
 
     /**
-     * The HTTP method that we should use to call `voice_url`. Can be: `GET` or `POST` and defaults to `POST`.
+     * The HTTP method that should be used to request the `VoiceUrl`. Must be either `GET` or `POST`. Defaults to `POST`.
      * 
-     * @param string $voiceMethod The HTTP method used with the voice_url
+     * @param string $voiceMethod The HTTP method that should be used to request
+     *                            the VoiceUrl.
      * @return $this Fluent Builder
      */
     public function setVoiceMethod($voiceMethod) {
@@ -357,10 +385,10 @@ class CreateLocalOptions extends Options {
     }
 
     /**
-     * The URL that we should call to answer a call to the new phone number. The `voice_url` will not be called if a `voice_application_sid` or a `trunk_sid` is set.
+     * The URL that Twilio should request when somebody dials the new phone number. The VoiceURL will  no longer be used if a `VoiceApplicationSid` or a `TrunkSid` is set.
      * 
-     * @param string $voiceUrl The URL we should call when the phone number
-     *                         receives a call
+     * @param string $voiceUrl The URL that Twilio should request when somebody
+     *                         dials the new phone number.
      * @return $this Fluent Builder
      */
     public function setVoiceUrl($voiceUrl) {
@@ -369,10 +397,9 @@ class CreateLocalOptions extends Options {
     }
 
     /**
-     * The SID of the Identity resource that we should associate with the new phone number. Some regions require an identity to meet local regulations.
+     * The identity_sid
      * 
-     * @param string $identitySid The SID of the Identity resource to associate
-     *                            with the new phone number
+     * @param string $identitySid The identity_sid
      * @return $this Fluent Builder
      */
     public function setIdentitySid($identitySid) {
@@ -381,10 +408,10 @@ class CreateLocalOptions extends Options {
     }
 
     /**
-     * The SID of the Address resource we should associate with the new phone number. Some regions require addresses to meet local regulations.
+     * The 34 character sid of the address Twilio should associate with the number.
      * 
-     * @param string $addressSid The SID of the Address resource associated with
-     *                           the phone number
+     * @param string $addressSid The 34 character sid of the address Twilio should
+     *                           associate with the number.
      * @return $this Fluent Builder
      */
     public function setAddressSid($addressSid) {

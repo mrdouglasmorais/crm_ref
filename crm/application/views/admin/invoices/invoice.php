@@ -22,7 +22,7 @@
 	$(function(){
 		validate_invoice_form();
 	    // Init accountacy currency symbol
-	    init_currency();
+	    init_currency_symbol();
 	    // Project ajax search
 	    init_ajax_project_search_by_customer_id();
 	    // Maybe items ajax search

@@ -4,10 +4,10 @@ defined('BASEPATH') or exit('No direct script access allowed');
 
 $aColumns         = ['name', 'start_date', 'deadline', 'status'];
 $sIndexColumn     = 'id';
-$sTable           = db_prefix() . 'projects';
+$sTable           = 'tblprojects';
 $additionalSelect = ['id'];
 $join             = [
-    'JOIN ' . db_prefix() . 'clients ON ' . db_prefix() . 'clients.userid = ' . db_prefix() . 'projects.clientid',
+    'JOIN tblclients ON tblclients.userid = tblprojects.clientid',
     ];
 
 $where    = [];
@@ -18,7 +18,7 @@ if ($this->ci->input->post('staff_id')) {
     // Request from dashboard, finished and canceled not need to be shown
     array_push($where, ' AND status != 4 AND status != 5');
 }
-array_push($where, ' AND ' . db_prefix() . 'projects.id IN (SELECT project_id FROM ' . db_prefix() . 'project_members WHERE staff_id=' . $staff_id . ')');
+array_push($where, ' AND tblprojects.id IN (SELECT project_id FROM tblprojectmembers WHERE staff_id=' . $staff_id . ')');
 
 $result = data_tables_init($aColumns, $sIndexColumn, $sTable, $join, $where, $additionalSelect);
 

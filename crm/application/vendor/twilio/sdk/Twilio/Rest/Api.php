@@ -150,7 +150,7 @@ class Api extends Domain {
     }
 
     /**
-     * @param string $sid The unique string that identifies the resource
+     * @param string $sid The sid
      * @return \Twilio\Rest\Api\V2010\Account\AddressContext 
      */
     protected function contextAddresses($sid) {
@@ -165,7 +165,7 @@ class Api extends Domain {
     }
 
     /**
-     * @param string $sid The unique string that identifies the resource
+     * @param string $sid Fetch by unique Application Sid
      * @return \Twilio\Rest\Api\V2010\Account\ApplicationContext 
      */
     protected function contextApplications($sid) {
@@ -180,7 +180,7 @@ class Api extends Domain {
     }
 
     /**
-     * @param string $connectAppSid The SID of the Connect App to fetch
+     * @param string $connectAppSid The connect_app_sid
      * @return \Twilio\Rest\Api\V2010\Account\AuthorizedConnectAppContext 
      */
     protected function contextAuthorizedConnectApps($connectAppSid) {
@@ -195,8 +195,7 @@ class Api extends Domain {
     }
 
     /**
-     * @param string $countryCode The ISO country code of the country to fetch
-     *                            available phone number information about
+     * @param string $countryCode The country_code
      * @return \Twilio\Rest\Api\V2010\Account\AvailablePhoneNumberCountryContext 
      */
     protected function contextAvailablePhoneNumbers($countryCode) {
@@ -218,7 +217,7 @@ class Api extends Domain {
     }
 
     /**
-     * @param string $sid The unique string that identifies this resource
+     * @param string $sid Call Sid that uniquely identifies the Call to fetch
      * @return \Twilio\Rest\Api\V2010\Account\CallContext 
      */
     protected function contextCalls($sid) {
@@ -233,7 +232,7 @@ class Api extends Domain {
     }
 
     /**
-     * @param string $sid The unique string that identifies this resource
+     * @param string $sid Fetch by unique conference Sid
      * @return \Twilio\Rest\Api\V2010\Account\ConferenceContext 
      */
     protected function contextConferences($sid) {
@@ -248,7 +247,7 @@ class Api extends Domain {
     }
 
     /**
-     * @param string $sid The unique string that identifies the resource
+     * @param string $sid Fetch by unique connect-app Sid
      * @return \Twilio\Rest\Api\V2010\Account\ConnectAppContext 
      */
     protected function contextConnectApps($sid) {
@@ -263,7 +262,7 @@ class Api extends Domain {
     }
 
     /**
-     * @param string $sid The unique string that identifies the resource
+     * @param string $sid Fetch by unique incoming-phone-number Sid
      * @return \Twilio\Rest\Api\V2010\Account\IncomingPhoneNumberContext 
      */
     protected function contextIncomingPhoneNumbers($sid) {
@@ -322,7 +321,7 @@ class Api extends Domain {
     }
 
     /**
-     * @param string $sid The unique string that identifies the resource
+     * @param string $sid Fetch by unique notification Sid
      * @return \Twilio\Rest\Api\V2010\Account\NotificationContext 
      */
     protected function contextNotifications($sid) {
@@ -337,7 +336,7 @@ class Api extends Domain {
     }
 
     /**
-     * @param string $sid The unique string that identifies the resource
+     * @param string $sid Fetch by unique outgoing-caller-id Sid
      * @return \Twilio\Rest\Api\V2010\Account\OutgoingCallerIdContext 
      */
     protected function contextOutgoingCallerIds($sid) {
@@ -352,7 +351,7 @@ class Api extends Domain {
     }
 
     /**
-     * @param string $sid The unique string that identifies this resource
+     * @param string $sid Fetch by unique queue Sid
      * @return \Twilio\Rest\Api\V2010\Account\QueueContext 
      */
     protected function contextQueues($sid) {
@@ -404,7 +403,7 @@ class Api extends Domain {
     }
 
     /**
-     * @param string $sid The unique string that identifies this resource
+     * @param string $sid Fetch by unique short-code Sid
      * @return \Twilio\Rest\Api\V2010\Account\ShortCodeContext 
      */
     protected function contextShortCodes($sid) {

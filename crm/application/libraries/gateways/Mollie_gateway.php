@@ -54,6 +54,12 @@ class Mollie_gateway extends App_gateway
                 'label'         => 'settings_paymentmethod_testing_mode',
             ],
         ]);
+
+        /**
+         * REQUIRED
+         * Hook gateway with other online payment modes
+         */
+        add_action('before_add_online_payment_modes', [ $this, 'initMode' ]);
     }
 
     public function process_payment($data)
@@ -80,7 +86,7 @@ class Mollie_gateway extends App_gateway
 
         // Add the token to database
         $this->ci->db->where('id', $data['invoiceid']);
-        $this->ci->db->update(db_prefix().'invoices', [
+        $this->ci->db->update('tblinvoices', [
             'token' => $oResponse->getTransactionReference(),
         ]);
 

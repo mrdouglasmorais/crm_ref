@@ -1,9 +1,14 @@
 <?php
 
 defined('BASEPATH') or exit('No direct script access allowed');
-
-class Roles extends AdminController
+class Roles extends Admin_controller
 {
+    public function __construct()
+    {
+        parent::__construct();
+        // Model is autoloaded
+    }
+
     /* List all staff roles */
     public function index()
     {
@@ -47,16 +52,17 @@ class Roles extends AdminController
         if ($id == '') {
             $title = _l('add_new', _l('role_lowercase'));
         } else {
-            $data['role_staff'] = $this->roles_model->get_role_staff($id);
-            $role               = $this->roles_model->get($id);
-            $data['role']       = $role;
-            $title              = _l('edit', _l('role_lowercase')) . ' ' . $role->name;
+            $data['role_permissions'] = $this->roles_model->get_role_permissions($id);
+            $role                     = $this->roles_model->get($id);
+            $data['role']             = $role;
+            $title                    = _l('edit', _l('role_lowercase')) . ' ' . $role->name;
         }
-        $data['title'] = $title;
+        $data['permissions'] = $this->roles_model->get_permissions();
+        $data['title']       = $title;
         $this->load->view('admin/roles/role', $data);
     }
 
-    /* Delete role from database */
+    /* Delete staff role from database */
     public function delete($id)
     {
         if (!has_permission('roles', '', 'delete')) {

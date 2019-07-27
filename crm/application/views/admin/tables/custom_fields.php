@@ -11,7 +11,7 @@ $aColumns = [
     'active',
     ];
 $sIndexColumn = 'id';
-$sTable       = db_prefix().'customfields';
+$sTable       = 'tblcustomfields';
 
 $result  = data_tables_init($aColumns, $sIndexColumn, $sTable);
 $output  = $result['output'];

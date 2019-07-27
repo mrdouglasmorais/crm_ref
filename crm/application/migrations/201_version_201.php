@@ -19,8 +19,7 @@ class Migration_Version_201 extends CI_Migration
         $this->db->query("INSERT INTO `tblemailtemplates` (`type`, `slug`, `language`, `name`, `subject`, `message`, `fromname`, `fromemail`, `plaintext`, `active`, `order`) VALUES
 ('client', 'client-registration-confirmed', 'english', 'Customer Registration Confirmed', 'Your registration is confirmed', '<p>Dear {contact_firstname} {contact_lastname}<br /><br />We just wanted to let you know that your registration at&nbsp;{companyname} is successfully confirmed and your account is now active.<br /><br />You can login at&nbsp;<a href=\"{crm_url}\">{crm_url}</a> with the email and password you provided during registration.<br /><br />Please contact us if you need any help.<br /><br />Kind Regards, <br />{email_signature}</p>\r\n<p><br />(This is an automated email, so please don\'t reply to this email address)</p>', '{companyname} | CRM', '', 0, 1, 0);");
 
-
-        if (!table_exists('tblemailstracking')) {
+        if (!$this->db->table_exists('tblemailstracking')) {
             $this->db->query("CREATE TABLE `tblemailstracking` (
               `id` int(11) NOT NULL,
               `uid` varchar(32) NOT NULL,
@@ -39,15 +38,15 @@ class Migration_Version_201 extends CI_Migration
           MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;');
         }
 
-        $tracked_emails = $this->db->get(db_prefix().'emailstracking')->result_array();
+        $tracked_emails = $this->db->get('tblemailstracking')->result_array();
 
-        $this->db->empty_table(db_prefix().'emailstracking');
-        $this->db->query('ALTER TABLE tblemailstracking AUTO_INCREMENT = 1');
+        $this->db->empty_table('tblemailstracking');
+        $this->db->query('ALTER TABLE tblemailstracking AUTO_INCREMENT = 0');
 
         $this->db->query('ALTER TABLE `tblemailstracking` CHANGE `uid` `uid` VARCHAR(32) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL;');
 
         foreach ($tracked_emails as $tracked_email) {
-            $this->db->insert(db_prefix().'emailstracking', [
+            $this->db->insert('tblemailstracking', [
                 'uid'         => $tracked_email['uid'],
                 'rel_id'      => $tracked_email['rel_id'],
                 'rel_type'    => $tracked_email['rel_type'],
@@ -58,6 +57,15 @@ class Migration_Version_201 extends CI_Migration
                 'subject'     => $tracked_email['subject'],
             ]);
         }
+/*
+        @$files = list_files(APPPATH . 'libraries');
+        if (is_array($files)) {
+            foreach ($files as $file) {
+                if ($file === 'CRM_Form_Validation.php') {
+                    @unlink(APPPATH . 'libraries/' . $file);
+                }
+            }
+        }*/
 
         update_option('update_info_message', '<div class="col-md-12">
         <div class="alert alert-success bold">

@@ -56,7 +56,7 @@
         </td>
         <td data-order="<?php echo $note['dateadded']; ?>">
          <?php if(!empty($note['date_contacted'])){ ?>
-           <span data-toggle="tooltip" data-title="<?php echo html_escape(_dt($note['date_contacted'])); ?>">
+           <span data-toggle="tooltip" data-title="<?php echo _dt($note['date_contacted']); ?>">
               <i class="fa fa-phone-square text-success font-medium valign" aria-hidden="true"></i>
           </span>
           <?php } ?>

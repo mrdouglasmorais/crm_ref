@@ -2,7 +2,7 @@
 
 defined('BASEPATH') or exit('No direct script access allowed');
 
-class Contract_types_model extends App_Model
+class Contract_types_model extends CRM_Model
 {
     public function __construct()
     {
@@ -15,10 +15,10 @@ class Contract_types_model extends App_Model
     */
     public function add($data)
     {
-        $this->db->insert(db_prefix().'contracts_types', $data);
+        $this->db->insert('tblcontracttypes', $data);
         $insert_id = $this->db->insert_id();
         if ($insert_id) {
-            log_activity('New Contract Type Added [' . $data['name'] . ']');
+            logActivity('New Contract Type Added [' . $data['name'] . ']');
 
             return $insert_id;
         }
@@ -34,9 +34,9 @@ class Contract_types_model extends App_Model
     public function update($data, $id)
     {
         $this->db->where('id', $id);
-        $this->db->update(db_prefix().'contracts_types', $data);
+        $this->db->update('tblcontracttypes', $data);
         if ($this->db->affected_rows() > 0) {
-            log_activity('Contract Type Updated [' . $data['name'] . ', ID:' . $id . ']');
+            logActivity('Contract Type Updated [' . $data['name'] . ', ID:' . $id . ']');
 
             return true;
         }
@@ -54,14 +54,14 @@ class Contract_types_model extends App_Model
         if (is_numeric($id)) {
             $this->db->where('id', $id);
 
-            return $this->db->get(db_prefix().'contracts_types')->row();
+            return $this->db->get('tblcontracttypes')->row();
         }
 
-        $types = $this->app_object_cache->get('contract-types');
+        $types = $this->object_cache->get('contract-types');
 
         if (!$types && !is_array($types)) {
-            $types = $this->db->get(db_prefix().'contracts_types')->result_array();
-            $this->app_object_cache->add('contract-types', $types);
+            $types = $this->db->get('tblcontracttypes')->result_array();
+            $this->object_cache->add('contract-types', $types);
         }
 
         return $types;
@@ -74,15 +74,15 @@ class Contract_types_model extends App_Model
      */
     public function delete($id)
     {
-        if (is_reference_in_table('contract_type', db_prefix().'contracts', $id)) {
+        if (is_reference_in_table('contract_type', 'tblcontracts', $id)) {
             return [
                 'referenced' => true,
             ];
         }
         $this->db->where('id', $id);
-        $this->db->delete(db_prefix().'contracts_types');
+        $this->db->delete('tblcontracttypes');
         if ($this->db->affected_rows() > 0) {
-            log_activity('Contract Deleted [' . $id . ']');
+            logActivity('Contract Deleted [' . $id . ']');
 
             return true;
         }
@@ -112,7 +112,7 @@ class Contract_types_model extends App_Model
                     $total_rows_where['addedfrom'] = get_staff_user_id();
                 }
             }
-            $total_rows = total_rows(db_prefix().'contracts', $total_rows_where);
+            $total_rows = total_rows('tblcontracts', $total_rows_where);
             if ($total_rows == 0 && is_client_logged_in()) {
                 continue;
             }
@@ -159,7 +159,7 @@ class Contract_types_model extends App_Model
                 $where['where']['addedfrom'] = get_staff_user_id();
             }
 
-            $total = sum_from_table(db_prefix().'contracts', $where);
+            $total = sum_from_table('tblcontracts', $where);
             if ($total == null) {
                 $total = 0;
             }

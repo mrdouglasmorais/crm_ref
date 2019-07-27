@@ -2,7 +2,7 @@
 
 defined('BASEPATH') or exit('No direct script access allowed');
 
-class Gdpr extends AdminController
+class Gdpr extends Admin_controller
 {
     public function __construct()
     {
@@ -20,7 +20,7 @@ class Gdpr extends AdminController
         $data['save'] = true;
         if ($data['page'] == 'forgotten') {
             $data['requests'] = $this->gdpr_model->get_removal_requests();
-            $data['not_pending_requests'] = total_rows(db_prefix().'gdpr_requests', array('status '=>'pending'));
+            $data['not_pending_requests'] = total_rows('tblrequestsgdpr', array('status '=>'pending'));
         } elseif ($data['page'] == 'consent') {
             $data['consent_purposes'] = $this->gdpr_model->get_consent_purposes();
         }

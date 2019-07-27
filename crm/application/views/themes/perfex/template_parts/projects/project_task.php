@@ -22,12 +22,12 @@
                      <?php echo _l('task_single_start_date'); ?>: <?php echo _d($view_task->startdate); ?>
                   </h5>
                </div>
-               <div class="task-info pull-left <?php if(!$view_task->status != Tasks_model::STATUS_COMPLETE){echo ' text-danger'; }else{echo 'text-info';} ?><?php if(!$view_task->duedate){ echo ' hide';} ?>">
+               <div class="task-info pull-left <?php if(!$view_task->status != 5){echo ' text-danger'; }else{echo 'text-info';} ?><?php if(!$view_task->duedate){ echo ' hide';} ?>">
                   <h5 class="no-margin"><i class="fa fa-hourglass-end"></i>
                      <?php echo _l('task_single_due_date'); ?>: <?php echo _d($view_task->duedate); ?>
                   </h5>
                </div>
-               <?php if($view_task->status == Tasks_model::STATUS_COMPLETE){ ?>
+               <?php if($view_task->status == 5){ ?>
                <div class="pull-left task-info text-success">
                   <h5 class="no-margin"><i class="fa fa-check"></i>
                      <?php echo _l('task_single_finished'); ?>: <?php echo _dt($view_task->datefinished); ?>

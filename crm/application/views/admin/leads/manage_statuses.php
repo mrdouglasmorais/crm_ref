@@ -28,7 +28,7 @@
 									</td>
 									<td><a href="#" onclick="edit_status(this,<?php echo $status['id']; ?>);return false;" data-color="<?php echo $status['color']; ?>" data-name="<?php echo $status['name']; ?>" data-order="<?php echo $status['statusorder']; ?>"><?php echo $status['name']; ?></a><br />
 										<span class="text-muted">
-											<?php echo _l('leads_table_total',total_rows(db_prefix().'leads',array('status'=>$status['id']))); ?></span>
+											<?php echo _l('leads_table_total',total_rows('tblleads',array('status'=>$status['id']))); ?></span>
 										</td>
 										<td>
 											<a href="#" onclick="edit_status(this,<?php echo $status['id']; ?>);return false;" data-color="<?php echo $status['color']; ?>" data-name="<?php echo $status['name']; ?>" data-order="<?php echo $status['statusorder']; ?>" class="btn btn-default btn-icon"><i class="fa fa-pencil-square-o"></i></a>

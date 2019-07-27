@@ -26,8 +26,7 @@ class CredentialListContext extends InstanceContext {
      * Initialize the CredentialListContext
      * 
      * @param \Twilio\Version $version Version that contains the resource
-     * @param string $accountSid The unique id of the Account that is responsible
-     *                           for this resource.
+     * @param string $accountSid The account_sid
      * @param string $sid Fetch by unique credential list Sid
      * @return \Twilio\Rest\Api\V2010\Account\Sip\CredentialListContext 
      */

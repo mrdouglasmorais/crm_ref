@@ -60,6 +60,12 @@ class Payu_money_gateway extends App_gateway
                 'label'         => 'settings_paymentmethod_testing_mode',
                 ],
             ]);
+
+        /**
+         * REQUIRED
+         * Hook gateway with other online payment modes
+         */
+        add_action('before_add_online_payment_modes', [ $this, 'initMode' ]);
     }
 
     public function process_payment($data)

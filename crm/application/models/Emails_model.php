@@ -1,39 +1,26 @@
 <?php
 
 defined('BASEPATH') or exit('No direct script access allowed');
+define('EMAIL_TEMPLATE_SEND', true);
 
-class Emails_model extends App_Model
+class Emails_model extends CRM_Model
 {
     private $attachment = [];
 
-    /**
-     * @deprecated 2.3.0
-     */
     private $client_email_templates;
 
-    /**
-     * @deprecated 2.3.0
-     */
     private $staff_email_templates;
 
-    /**
-     * @deprecated 2.3.0
-     */
     private $rel_id;
 
-    /**
-     * @deprecated 2.3.0
-     */
     private $rel_type;
 
-    /**
-     * @deprecated 2.3.0
-     */
     private $staff_id;
 
     public function __construct()
     {
         parent::__construct();
+        $this->load->library('email');
         $this->client_email_templates = get_client_email_templates_slugs();
         $this->staff_email_templates  = get_staff_email_templates_slugs();
     }
@@ -43,11 +30,11 @@ class Emails_model extends App_Model
      * @return array
      * Get email template by type
      */
-    public function get($where = [], $result_type = 'result_array')
+    public function get($where = [])
     {
         $this->db->where($where);
 
-        return $this->db->get(db_prefix() . 'emailtemplates')->{$result_type}();
+        return $this->db->get('tblemailtemplates')->result_array();
     }
 
     /**
@@ -59,7 +46,7 @@ class Emails_model extends App_Model
     {
         $this->db->where('emailtemplateid', $id);
 
-        return $this->db->get(db_prefix() . 'emailtemplates')->row();
+        return $this->db->get('tblemailtemplates')->row();
     }
 
     /**
@@ -68,7 +55,7 @@ class Emails_model extends App_Model
      */
     public function add_template($data)
     {
-        $this->db->insert(db_prefix() . 'emailtemplates', $data);
+        $this->db->insert('tblemailtemplates', $data);
         $insert_id = $this->db->insert_id();
         if ($insert_id) {
             return $insert_id;
@@ -85,7 +72,11 @@ class Emails_model extends App_Model
      */
     public function update($data)
     {
-        $data['plaintext'] = isset($data['plaintext']) ? 1 : 0;
+        if (isset($data['plaintext'])) {
+            $data['plaintext'] = 1;
+        } else {
+            $data['plaintext'] = 0;
+        }
 
         if (isset($data['disabled'])) {
             $data['active'] = 0;
@@ -93,19 +84,17 @@ class Emails_model extends App_Model
         } else {
             $data['active'] = 1;
         }
-
         $main_id      = false;
         $affectedRows = 0;
         $i            = 0;
-
         foreach ($data['subject'] as $id => $val) {
             if ($i == 0) {
                 $main_id = $id;
             }
 
-            $_data             = [];
-            $_data['subject']  = $val;
-            $_data['fromname'] = $data['fromname'];
+            $_data              = [];
+            $_data['subject']   = $val;
+            $_data['fromname']  = $data['fromname'];
             // Two factor authentication email template  don't have fromemail
             $_data['fromemail'] = isset($data['fromemail']) ? $data['fromemail'] : '';
             $_data['message']   = $data['message'][$id];
@@ -113,7 +102,7 @@ class Emails_model extends App_Model
             $_data['active']    = $data['active'];
 
             $this->db->where('emailtemplateid', $id);
-            $this->db->update(db_prefix() . 'emailtemplates', $_data);
+            $this->db->update('tblemailtemplates', $_data);
             if ($this->db->affected_rows() > 0) {
                 $affectedRows++;
             }
@@ -123,7 +112,7 @@ class Emails_model extends App_Model
         $main_template = $this->get_email_template_by_id($main_id);
 
         if ($affectedRows > 0 && $main_template) {
-            log_activity('Email Template Updated [' . $main_template->name . ']');
+            logActivity('Email Template Updated [' . $main_template->name . ']');
 
             return true;
         }
@@ -140,7 +129,7 @@ class Emails_model extends App_Model
     public function mark_as($slug, $enabled)
     {
         $this->db->where('slug', $slug);
-        $this->db->update(db_prefix() . 'emailtemplates', ['active' => $enabled]);
+        $this->db->update('tblemailtemplates', ['active' => $enabled]);
 
         return $this->db->affected_rows() > 0 ? true : false;
     }
@@ -154,8 +143,8 @@ class Emails_model extends App_Model
     public function mark_as_by_type($type, $enabled)
     {
         $this->db->where('type', $type);
-        $this->db->where('slug !=', 'two-factor-authentication');
-        $this->db->update(db_prefix() . 'emailtemplates', ['active' => $enabled]);
+        $this->db->where('slug !=','two-factor-authentication');
+        $this->db->update('tblemailtemplates', ['active' => $enabled]);
 
         return $this->db->affected_rows() > 0 ? true : false;
     }
@@ -192,7 +181,7 @@ class Emails_model extends App_Model
 
         $cnf['message'] = check_for_links($cnf['message']);
 
-        $cnf = hooks()->apply_filters('before_send_simple_email', $cnf);
+        $cnf = do_action('before_send_simple_email', $cnf);
 
         if (isset($cnf['prevent_sending']) && $cnf['prevent_sending'] == true) {
             $this->clear_attachments();
@@ -254,7 +243,7 @@ class Emails_model extends App_Model
 
         $this->clear_attachments();
         if ($this->email->send()) {
-            log_activity('Email sent to: ' . $cnf['email'] . ' Subject: ' . $cnf['subject']);
+            logActivity('Email sent to: ' . $cnf['email'] . ' Subject: ' . $cnf['subject']);
 
             return true;
         }
@@ -264,7 +253,6 @@ class Emails_model extends App_Model
 
     /**
      * Send email template
-     * @deprecated 2.3.0
      * @param  string $template_slug email template slug
      * @param  string $email         email to send
      * @param  array $merge_fields  merge field
@@ -274,7 +262,7 @@ class Emails_model extends App_Model
      */
     public function send_email_template($template_slug, $email, $merge_fields, $ticketid = '', $cc = '')
     {
-        $email = hooks()->apply_filters('send_email_template_to', $email);
+        $email = do_action('send_email_template_to', $email);
 
         $template                     = get_email_template_for_sending($template_slug, $email);
         $staff_email_templates_slugs  = get_staff_email_templates_slugs();
@@ -287,9 +275,9 @@ class Emails_model extends App_Model
          * Do checking here
          */
         if (in_array($template_slug, $staff_email_templates_slugs)) {
-            $inactive_user_table_check = db_prefix() . 'staff';
+            $inactive_user_table_check = 'tblstaff';
         } elseif (in_array($template_slug, $client_email_templates_slugs)) {
-            $inactive_user_table_check = db_prefix() . 'contacts';
+            $inactive_user_table_check = 'tblcontacts';
         }
 
         /**
@@ -310,7 +298,7 @@ class Emails_model extends App_Model
          * Template not found?
          */
         if (!$template) {
-            log_activity('Failed to send email template [Template not found]');
+            logActivity('Failed to send email template [Template not found]');
             $this->clear_attachments();
             $this->set_staff_id(null);
 
@@ -326,26 +314,26 @@ class Emails_model extends App_Model
 
             $this->db->where('language', 'english');
             $this->db->where('slug', $template->slug);
-            $tmpTemplate = $this->db->get(db_prefix() . 'emailtemplates')->row();
+            $tmpTemplate = $this->db->get('tblemailtemplates')->row();
 
             if (!$tmpTemplate) {
-                log_activity('Failed to send email template [<a href="' . admin_url('emails/email_template/' . $tmpTemplate->emailtemplateid) . '">' . $template->name . '</a>] [Reason: Email template is disabled.]');
+                logActivity('Failed to send email template [<a href="' . admin_url('emails/email_template/' . $tmpTemplate->emailtemplateid) . '">' . $template->name . '</a>] [Reason: Email template is disabled.]');
             }
 
             return false;
         }
 
-        $template = hooks()->apply_filters('before_parse_email_template_message', $template);
+        $template = do_action('before_parse_email_template_message', $template);
 
         $template = parse_email_template($template, $merge_fields);
 
-        $template = hooks()->apply_filters('after_parse_email_template_message', $template);
+        $template = do_action('after_parse_email_template_message', $template);
 
         $template->message = get_option('email_header') . $template->message . get_option('email_footer');
 
         // Parse merge fields again in case there is merge fields found in email_header and email_footer option.
         // We cant parse this in parse_email_template function because in case the template content is send via $_POST wont work
-        $template = parse_email_template_merge_fields($template, $merge_fields);
+        $template = _parse_email_template_merge_fields($template, $merge_fields);
 
         /**
          * Template is plain text?
@@ -380,11 +368,11 @@ class Emails_model extends App_Model
                 $this->load->model('tickets_model');
             }
 
-            $this->db->select(db_prefix() . 'departments.email as department_email, email_from_header as dept_email_from_header')
+            $this->db->select('tbldepartments.email as department_email, email_from_header as dept_email_from_header')
             ->where('ticketid', $ticketid)
-            ->join(db_prefix() . 'departments', db_prefix() . 'departments.departmentid=' . db_prefix() . 'tickets.department', 'left');
+            ->join('tbldepartments', 'tbldepartments.departmentid=tbltickets.department', 'left');
 
-            $ticket = $this->db->get(db_prefix() . 'tickets')->row();
+            $ticket = $this->db->get('tbltickets')->row();
 
             if (!empty($ticket->department_email) && filter_var($ticket->department_email, FILTER_VALIDATE_EMAIL)) {
                 $reply_to               = $ticket->department_email;
@@ -405,7 +393,7 @@ class Emails_model extends App_Model
 
         $hook_data['template']->message = check_for_links($hook_data['template']->message);
 
-        $hook_data = hooks()->apply_filters('before_email_template_send', $hook_data);
+        $hook_data = do_action('before_email_template_send', $hook_data);
 
         $template    = $hook_data['template'];
         $email       = $hook_data['email'];
@@ -483,15 +471,15 @@ class Emails_model extends App_Model
         $this->set_staff_id(null);
 
         if ($this->email->send()) {
-            log_activity('Email Send To [Email: ' . $email . ', Template: ' . $template->name . ']');
-            hooks()->do_action('email_template_sent', ['template' => $template, 'email' => $email]);
+            logActivity('Email Send To [Email: ' . $email . ', Template: ' . $template->name . ']');
+            do_action('email_template_sent', ['template' => $template, 'email' => $email]);
 
             return true;
         }
-
         if (ENVIRONMENT !== 'production') {
-            log_activity('Failed to send email template - ' . $this->email->print_debugger());
+            logActivity('Failed to send email template - ' . $this->email->print_debugger());
         }
+
 
         return false;
     }
@@ -517,49 +505,31 @@ class Emails_model extends App_Model
         $this->attachment = [];
     }
 
-    /**
-     * @deprecated 2.3.0
-     */
     public function set_rel_id($rel_id)
     {
         $this->rel_id = $rel_id;
     }
 
-    /**
-     * @deprecated 2.3.0
-     */
     public function set_rel_type($rel_type)
     {
         $this->rel_type = $rel_type;
     }
 
-    /**
-     * @deprecated 2.3.0
-     */
     public function get_rel_id()
     {
         return $this->rel_id;
     }
 
-    /**
-     * @deprecated 2.3.0
-     */
     public function get_rel_type()
     {
         return $this->rel_type;
     }
 
-    /**
-     * @deprecated 2.3.0
-     */
     public function set_staff_id($id)
     {
         $this->staff_id = $id;
     }
 
-    /**
-     * @deprecated 2.3.0
-     */
     public function get_staff_id()
     {
         return $this->staff_id;

@@ -28,11 +28,9 @@ class AssignedAddOnContext extends InstanceContext {
      * Initialize the AssignedAddOnContext
      * 
      * @param \Twilio\Version $version Version that contains the resource
-     * @param string $accountSid The SID of the Account that created the resource
-     *                           to fetch
-     * @param string $resourceSid The SID of the Phone Number that installed this
-     *                            Add-on
-     * @param string $sid The unique string that identifies the resource
+     * @param string $accountSid The account_sid
+     * @param string $resourceSid The resource_sid
+     * @param string $sid The unique Installed Add-on Sid
      * @return \Twilio\Rest\Api\V2010\Account\IncomingPhoneNumber\AssignedAddOnContext 
      */
     public function __construct(Version $version, $accountSid, $resourceSid, $sid) {

@@ -18,8 +18,7 @@ abstract class RecordingOptions {
      * @param string $dateCreated Filter by date created
      * @param string $dateCreatedAfter Filter by date created
      * @param string $callSid Filter by call_sid
-     * @param string $conferenceSid The unique ID for the conference associated
-     *                              with the recording.
+     * @param string $conferenceSid The conference_sid
      * @return ReadRecordingOptions Options builder
      */
     public static function read($dateCreatedBefore = Values::NONE, $dateCreated = Values::NONE, $dateCreatedAfter = Values::NONE, $callSid = Values::NONE, $conferenceSid = Values::NONE) {
@@ -33,8 +32,7 @@ class ReadRecordingOptions extends Options {
      * @param string $dateCreated Filter by date created
      * @param string $dateCreatedAfter Filter by date created
      * @param string $callSid Filter by call_sid
-     * @param string $conferenceSid The unique ID for the conference associated
-     *                              with the recording.
+     * @param string $conferenceSid The conference_sid
      */
     public function __construct($dateCreatedBefore = Values::NONE, $dateCreated = Values::NONE, $dateCreatedAfter = Values::NONE, $callSid = Values::NONE, $conferenceSid = Values::NONE) {
         $this->options['dateCreatedBefore'] = $dateCreatedBefore;
@@ -89,10 +87,9 @@ class ReadRecordingOptions extends Options {
     }
 
     /**
-     * The unique ID for the conference associated with the recording, if the recording is of a conference.
+     * The conference_sid
      * 
-     * @param string $conferenceSid The unique ID for the conference associated
-     *                              with the recording.
+     * @param string $conferenceSid The conference_sid
      * @return $this Fluent Builder
      */
     public function setConferenceSid($conferenceSid) {

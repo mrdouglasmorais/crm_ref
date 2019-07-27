@@ -23,7 +23,7 @@
        <?php echo form_close(); ?>
      </div>
    </div>
-   <?php echo form_hidden('total_pages_newsfeed',hooks()->apply_filters('total_pages_newsfeed', total_rows(db_prefix().'newsfeed_posts') / 10)); ?>
+   <?php echo form_hidden('total_pages_newsfeed',do_action('total_pages_newsfeed',total_rows('tblposts') / 10)); ?>
    <div id="newsfeed_data"></div>
  </div>
 </div>

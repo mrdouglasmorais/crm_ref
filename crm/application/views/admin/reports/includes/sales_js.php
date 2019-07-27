@@ -82,7 +82,7 @@
    $('.table-proposals-report').on('draw.dt', function() {
      var proposalsReportTable = $(this).DataTable();
      var sums = proposalsReportTable.ajax.json().sums;
-      add_common_footer_sums($(this), sums);
+      add_common_footer_sums($(this),sums);
       <?php foreach($proposal_taxes as $key => $tax){ ?>
         $(this).find('tfoot td.total_tax_single_<?php echo $key; ?>').html(sums['total_tax_single_<?php echo $key; ?>']);
      <?php } ?>

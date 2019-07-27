@@ -12,7 +12,7 @@ class Migration_Version_200 extends CI_Migration
     public function up()
     {
         $this->db->where('name', 'clients_default_theme');
-        $theme = $this->db->get(db_prefix().'options')->row()->value;
+        $theme = $this->db->get('tbloptions')->row()->value;
 
         if ($theme != 'perfex') {
             $defPath         = APPPATH . 'views/themes/perfex/';
@@ -50,10 +50,10 @@ class Migration_Version_200 extends CI_Migration
 
         $this->db->where('slug', 'contract-expiration');
         $this->db->where('language', 'english');
-        $this->db->update(db_prefix().'emailtemplates', ['name' => 'Contract Expiration Reminder (Sent to Customer Contacts)']);
+        $this->db->update('tblemailtemplates', ['name' => 'Contract Expiration Reminder (Sent to Customer Contacts)']);
 
         $this->db->where('name', 'paymentmethod_stripe_bitcoin_enabled');
-        $this->db->delete(db_prefix().'options');
+        $this->db->delete('tbloptions');
 
         add_option('e_sign_legal_text', 'By clicking on "Sign", I consent to be legally bound by this electronic representation of my signature.');
         add_option('after_subscription_payment_captured', 'send_invoice_and_receipt');
@@ -94,7 +94,7 @@ class Migration_Version_200 extends CI_Migration
         add_option('gdpr_enable_terms_and_conditions_ticket_form', 0);
 
         $this->db->select('id,form_data');
-        $forms = $this->db->get(db_prefix().'webtolead')->result_array();
+        $forms = $this->db->get('tblwebtolead')->result_array();
         foreach ($forms as $form) {
             $data = $form['form_data'];
             if (!empty($data)) {
@@ -120,7 +120,7 @@ class Migration_Version_200 extends CI_Migration
                     if ($modified) {
                         $data = json_encode($data);
                         $this->db->where('id', $form['id']);
-                        $this->db->update(db_prefix().'webtolead', ['form_data' => $data]);
+                        $this->db->update('tblwebtolead', ['form_data' => $data]);
                     }
                 }
             }
@@ -142,16 +142,16 @@ class Migration_Version_200 extends CI_Migration
   MODIFY `umeta_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;');
 
         $this->db->select('staffid,dashboard_widgets_order,dashboard_widgets_visibility');
-        $this->db->from(db_prefix().'staff');
+        $this->db->from('tblstaff');
         $staff = $this->db->get()->result_array();
         foreach ($staff as $member) {
-            $this->db->insert(db_prefix().'usermeta', [
+            $this->db->insert('tblusermeta', [
                 'staff_id'   => $member['staffid'],
                 'meta_key'   => 'dashboard_widgets_order',
                 'meta_value' => $member['dashboard_widgets_order'],
             ]);
 
-            $this->db->insert(db_prefix().'usermeta', [
+            $this->db->insert('tblusermeta', [
                 'staff_id'   => $member['staffid'],
                 'meta_key'   => 'dashboard_widgets_visibility',
                 'meta_value' => $member['dashboard_widgets_visibility'],
@@ -160,7 +160,7 @@ class Migration_Version_200 extends CI_Migration
 
         $this->db->query('ALTER TABLE `tblstaff` DROP `dashboard_widgets_order`, DROP `dashboard_widgets_visibility`;');
 
-        if(!table_exists('tblemailstracking')){
+
         $this->db->query("CREATE TABLE `tblemailstracking` (
               `id` int(11) NOT NULL,
               `uid` varchar(32) NOT NULL,
@@ -178,7 +178,6 @@ class Migration_Version_200 extends CI_Migration
 
         $this->db->query('ALTER TABLE `tblemailstracking`
           MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;');
-        }
 
         $this->db->query('ALTER TABLE `tblestimates` ADD `signature` VARCHAR(40) NULL AFTER `acceptance_ip`;');
         $this->db->query('ALTER TABLE `tblproposals` ADD `signature` VARCHAR(40) NULL AFTER `acceptance_ip`;');
@@ -191,11 +190,11 @@ class Migration_Version_200 extends CI_Migration
         $this->db->query('ALTER TABLE `tblcontracts` ADD `acceptance_firstname` VARCHAR(50) NULL AFTER `signature`, ADD `acceptance_lastname` VARCHAR(50) NULL AFTER `acceptance_firstname`, ADD `acceptance_email` VARCHAR(100) NULL AFTER `acceptance_lastname`, ADD `acceptance_date` DATETIME NULL AFTER `acceptance_email`, ADD `acceptance_ip` VARCHAR(40) NULL AFTER `acceptance_date`;');
 
         $this->db->select('id');
-        $contracts = $this->db->get(db_prefix().'contracts')->result_array();
+        $contracts = $this->db->get('tblcontracts')->result_array();
 
         foreach ($contracts as $contract) {
             $this->db->where('id', $contract['id']);
-            $this->db->update(db_prefix().'contracts', ['hash' => app_generate_hash()]);
+            $this->db->update('tblcontracts', ['hash' => app_generate_hash()]);
         }
 
         $this->db->query('CREATE TABLE `tblcontractcomments` (
@@ -229,23 +228,23 @@ class Migration_Version_200 extends CI_Migration
 
         $this->db->select('id');
         $this->db->where('recurring !=', 0);
-        $recurring_invoices = $this->db->get(db_prefix().'invoices')->result_array();
+        $recurring_invoices = $this->db->get('tblinvoices')->result_array();
         foreach ($recurring_invoices as $invoice) {
-            $total_cycles = total_rows(db_prefix().'invoices', ['is_recurring_from' => $invoice['id']]);
+            $total_cycles = total_rows('tblinvoices', ['is_recurring_from' => $invoice['id']]);
             if ($total_cycles != 0) {
                 $this->db->where('id', $invoice['id']);
-                $this->db->update(db_prefix().'invoices', ['total_cycles' => $total_cycles]);
+                $this->db->update('tblinvoices', ['total_cycles' => $total_cycles]);
             }
         }
 
         $this->db->select('id');
         $this->db->where('recurring', 1);
-        $recurring_expenses = $this->db->get(db_prefix().'expenses')->result_array();
+        $recurring_expenses = $this->db->get('tblexpenses')->result_array();
         foreach ($recurring_expenses as $expense) {
-            $total_cycles = total_rows(db_prefix().'expenses', ['recurring_from' => $expense['id']]);
+            $total_cycles = total_rows('tblexpenses', ['recurring_from' => $expense['id']]);
             if ($total_cycles != 0) {
                 $this->db->where('id', $expense['id']);
-                $this->db->update(db_prefix().'expenses', ['total_cycles' => $total_cycles]);
+                $this->db->update('tblexpenses', ['total_cycles' => $total_cycles]);
             }
         }
 
@@ -321,7 +320,7 @@ class Migration_Version_200 extends CI_Migration
 
 
         $this->db->where('name', 'available_features');
-        $projectSettings = $this->db->get(db_prefix().'projectsettings')->result_array();
+        $projectSettings = $this->db->get('tblprojectsettings')->result_array();
         foreach ($projectSettings as $availableFeature) {
             @$setting = unserialize($availableFeature['value']);
             $modified = false;
@@ -331,7 +330,7 @@ class Migration_Version_200 extends CI_Migration
             }
             if ($modified) {
                 $this->db->where('id', $availableFeature['id']);
-                $this->db->update(db_prefix().'projectsettings', ['value' => serialize($setting)]);
+                $this->db->update('tblprojectsettings', ['value' => serialize($setting)]);
             }
         }
 
@@ -349,11 +348,11 @@ class Migration_Version_200 extends CI_Migration
         $this->db->query('ALTER TABLE `tblcreditnotes` ADD `deleted_customer_name` VARCHAR(100) NULL AFTER `clientid`;');
 
         $this->db->query('ALTER TABLE `tblknowledgebasegroups` ADD `group_slug` VARCHAR(300) NULL AFTER `name`;');
-        $kb_groups = $this->db->get(db_prefix().'knowledgebasegroups')->result_array();
+        $kb_groups = $this->db->get('tblknowledgebasegroups')->result_array();
         foreach ($kb_groups as $group) {
             $slug = slug_it($group['name']);
             $this->db->where('groupid', $group['groupid']);
-            $this->db->update(db_prefix().'knowledgebasegroups', ['group_slug' => $slug]);
+            $this->db->update('tblknowledgebasegroups', ['group_slug' => $slug]);
         }
 
         $this->db->query('ALTER TABLE `tbltickets` DROP `ip`;');
@@ -413,6 +412,7 @@ class Migration_Version_200 extends CI_Migration
   ADD KEY `purpose_id` (`purpose_id`),
   ADD KEY `contact_id` (`contact_id`),
   ADD KEY `lead_id` (`lead_id`);');
+        $this->db->query('ALTER TABLE `tblconsents` ADD FULLTEXT KEY `action` (`action`);');
 
         $this->db->query('ALTER TABLE `tblconsentpurposes`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;');

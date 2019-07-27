@@ -30,7 +30,7 @@ class Import_items extends App_import
 
                 if ($databaseFields[$i] == 'description' && $row[$i] == '') {
                     $row[$i] = '/';
-                } elseif (startsWith($databaseFields[$i], 'rate') && !is_numeric($row[$i])) {
+                } elseif (_startsWith($databaseFields[$i], 'rate') && !is_numeric($row[$i])) {
                     $row[$i] = 0;
                 } elseif ($databaseFields[$i] == 'group_id') {
                     $row[$i] = $this->groupValue($row[$i]);
@@ -54,7 +54,7 @@ class Import_items extends App_import
                 $id = null;
 
                 if (!$this->isSimulation()) {
-                    $this->ci->db->insert(db_prefix().'items', $insert);
+                    $this->ci->db->insert('tblitems', $insert);
                     $id = $this->ci->db->insert_id();
                 } else {
                     $this->simulationData[$rowNumber] = $this->formatValuesForSimulation($insert);
@@ -75,7 +75,7 @@ class Import_items extends App_import
 
         if (strtolower($field) == 'group_id') {
             return 'Group';
-        } elseif (startsWith($field, 'rate')) {
+        } elseif (_startsWith($field, 'rate')) {
             $str = 'Rate - ';
             // Base currency
             if ($field == 'rate') {
@@ -124,14 +124,14 @@ class Import_items extends App_import
     {
         $this->ci->db->where($field, $idOrName);
 
-        return $this->ci->db->get(db_prefix().'taxes')->row();
+        return $this->ci->db->get('tbltaxes')->row();
     }
 
     private function getGroupBy($field, $idOrName)
     {
         $this->ci->db->where($field, $idOrName);
 
-        return $this->ci->db->get(db_prefix().'items_groups')->row();
+        return $this->ci->db->get('tblitems_groups')->row();
     }
 
     private function taxValue($value)

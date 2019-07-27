@@ -54,76 +54,51 @@ $route['default_controller'] = 'clients';
 $route['404_override'] = '';
 $route['translate_uri_dashes'] = FALSE;
 
-/**
- * Dashboard clean route
- */
 $route['admin']  = "admin/dashboard";
-
-/**
- * Misc controller routes
- */
+// Misc controller rewrites
 $route['admin/access_denied']  = "admin/misc/access_denied";
 $route['admin/not_found']  = "admin/misc/not_found";
 
-/**
- * Staff Routes
- */
+// Staff rewrites
 $route['admin/profile']  = "admin/staff/profile";
 $route['admin/profile/(:num)']  = "admin/staff/profile/$1";
 $route['admin/tasks/view/(:any)']  = "admin/tasks/index/$1";
 
-/**
- * Items search rewrite
- */
+// Items search rewrite
 $route['admin/items/search'] = 'admin/invoice_items/search';
 
-/**
- * In case if client access directly to url without the arguments redirect to clients url
- */
+/* Clients links and routes */
+// // In case if client access directly to url without the arguments redirect to clients url
 $route['/']  = "clients";
 
-/**
- * @deprecated
- */
+// Deprecated
 $route['viewinvoice/(:num)/(:any)']  = "invoice/index/$1/$2";
 
-/**
- * @since 2.0.0
- */
+// New url from version 2.0.
 $route['invoice/(:num)/(:any)']  = "invoice/index/$1/$2";
 
-/**
- * @deprecated
- */
+// Deprecated
 $route['viewestimate/(:num)/(:any)']  = "estimate/index/$1/$2";
 
-/**
- * @since 2.0.0
- */
+// New url from version 2.0
 $route['estimate/(:num)/(:any)']  = "estimate/index/$1/$2";
+
 $route['subscription/(:any)']  = "subscription/index/$1";
 
-/**
- * @deprecated
- */
+// Deprecated
 $route['viewproposal/(:num)/(:any)']  = "proposal/index/$1/$2";
-
-/**
- * @since 2.0.0
- */
+// New url from version 2.0
 $route['proposal/(:num)/(:any)']  = "proposal/index/$1/$2";
 
-/**
- * @since 2.0.0
- */
+// Available from version 2.0
 $route['contract/(:num)/(:any)']  = "contract/index/$1/$2";
+$route['survey/(:num)/(:any)']  = "survey/index/$1/$2";
 
-// For backward compatilibilty
-$route['survey/(:num)/(:any)']  = "surveys/participate/index/$1/$2";
+// Deprecated
+//$route['knowledge_base']  = "knowledge_base/index";
+//$route['knowledge_base/(:any)']  = "knowledge_base/index/$1";
 
-/**
- * @since 2.0.0
- */
+// Available from version 2.0
 $route['knowledge-base']  = "knowledge_base/index";
 $route['knowledge-base/search']  = "knowledge_base/search";
 $route['knowledge-base/article']  = "knowledge_base/index";
@@ -131,50 +106,25 @@ $route['knowledge-base/article/(:any)']  = "knowledge_base/article/$1";
 $route['knowledge-base/category']  = "knowledge_base/index";
 $route['knowledge-base/category/(:any)']  = "knowledge_base/category/$1";
 
-/**
- * @deprecated 2.2.0
- */
+// Deprecated
 if(isset($_SERVER['REQUEST_URI']) && strpos($_SERVER['REQUEST_URI'],'add_kb_answer') === false) {
     $route['knowledge-base/(:any)']  = "knowledge_base/article/$1";
     $route['knowledge_base/(:any)']  = "knowledge_base/article/$1";
     $route['clients/knowledge_base/(:any)']  = "knowledge_base/article/$1";
     $route['clients/knowledge-base/(:any)']  = "knowledge_base/article/$1";
 }
+// $route['knowledge-base/(:any)']  = "knowledge_base/index/$1";
+$route['terms-and-conditions']  = "terms_and_conditions";
+$route['privacy-policy']  = "privacy_policy";
 
-/**
- * @deprecated 2.2.0
- * Fallback for auth clients area, changed in version 2.2.0
- */
+// Fallback for auth clients area, changed in version 2.2.0
+// Deprecated
 $route['clients/reset_password'] = 'authentication/reset_password';
 $route['clients/forgot_password'] = 'authentication/forgot_password';
 $route['clients/logout'] = 'authentication/logout';
 $route['clients/register'] = 'authentication/register';
 $route['clients/login'] = 'authentication/login';
 
-/**
- * Terms and conditions and Privacy Policy routes
- */
-$route['terms-and-conditions']  = "terms_and_conditions";
-$route['privacy-policy']  = "privacy_policy";
-
-/**
- * @since 2.3.0
- * Routes for admin/modules URL because Modules.php class is used in application/third_party/MX
- */
-$route['admin/modules']  = "admin/mods";
-$route['admin/modules/(:any)']  = "admin/mods/$1";
-$route['admin/modules/(:any)/(:any)']  = "admin/mods/$1/$2";
-
-/**
- * @since  2.3.0
- * Route for clients set password URL, because it's using the same controller for staff to
- * If user addded block /admin by .htaccess this won't work, so we need to rewrite the URL
- * In future if there is implementation for clients set password, this route should be removed
- */
-$route['authentication/set_password/(:num)/(:num)/(:any)'] = 'admin/authentication/set_password/$1/$2/$3';
-
 if(file_exists(APPPATH.'config/my_routes.php')){
     include_once(APPPATH.'config/my_routes.php');
 }
-
-

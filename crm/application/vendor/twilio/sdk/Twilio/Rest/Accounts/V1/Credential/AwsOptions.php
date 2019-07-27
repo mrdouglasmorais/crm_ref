@@ -14,9 +14,8 @@ use Twilio\Values;
 
 abstract class AwsOptions {
     /**
-     * @param string $friendlyName A human readable description of this resource
-     * @param string $accountSid The Subaccount this Credential should be
-     *                           associated with.
+     * @param string $friendlyName The friendly_name
+     * @param string $accountSid The account_sid
      * @return CreateAwsOptions Options builder
      */
     public static function create($friendlyName = Values::NONE, $accountSid = Values::NONE) {
@@ -24,7 +23,7 @@ abstract class AwsOptions {
     }
 
     /**
-     * @param string $friendlyName A human readable description of this resource
+     * @param string $friendlyName The friendly_name
      * @return UpdateAwsOptions Options builder
      */
     public static function update($friendlyName = Values::NONE) {
@@ -34,9 +33,8 @@ abstract class AwsOptions {
 
 class CreateAwsOptions extends Options {
     /**
-     * @param string $friendlyName A human readable description of this resource
-     * @param string $accountSid The Subaccount this Credential should be
-     *                           associated with.
+     * @param string $friendlyName The friendly_name
+     * @param string $accountSid The account_sid
      */
     public function __construct($friendlyName = Values::NONE, $accountSid = Values::NONE) {
         $this->options['friendlyName'] = $friendlyName;
@@ -44,9 +42,9 @@ class CreateAwsOptions extends Options {
     }
 
     /**
-     * A human readable description of this resource, up to 64 characters.
+     * The friendly_name
      * 
-     * @param string $friendlyName A human readable description of this resource
+     * @param string $friendlyName The friendly_name
      * @return $this Fluent Builder
      */
     public function setFriendlyName($friendlyName) {
@@ -55,10 +53,9 @@ class CreateAwsOptions extends Options {
     }
 
     /**
-     * The Subaccount this Credential should be associated with. Needs to be a valid Subaccount of the account issuing the request
+     * The account_sid
      * 
-     * @param string $accountSid The Subaccount this Credential should be
-     *                           associated with.
+     * @param string $accountSid The account_sid
      * @return $this Fluent Builder
      */
     public function setAccountSid($accountSid) {
@@ -84,16 +81,16 @@ class CreateAwsOptions extends Options {
 
 class UpdateAwsOptions extends Options {
     /**
-     * @param string $friendlyName A human readable description of this resource
+     * @param string $friendlyName The friendly_name
      */
     public function __construct($friendlyName = Values::NONE) {
         $this->options['friendlyName'] = $friendlyName;
     }
 
     /**
-     * A human readable description of this resource, up to 64 characters.
+     * The friendly_name
      * 
-     * @param string $friendlyName A human readable description of this resource
+     * @param string $friendlyName The friendly_name
      * @return $this Fluent Builder
      */
     public function setFriendlyName($friendlyName) {

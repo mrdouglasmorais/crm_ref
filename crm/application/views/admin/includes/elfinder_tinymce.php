@@ -9,14 +9,12 @@
     <script src="<?php echo base_url('assets/plugins/jquery-ui/jquery-ui.min.js'); ?>"></script>
     <!-- elFinder JS (REQUIRED) -->
     <script src="<?php echo base_url('assets/plugins/elFinder/js/elfinder.min.js?v='.get_app_version()); ?>"></script>
-    <?php
-
-    echo app_compile_css('editor-media');
-
+    <link rel="stylesheet" type="text/css" href="<?php echo base_url('assets/plugins/elFinder/themes/Material/css/theme-gray.css?v='.get_app_version()); ?>">
+    <?php echo app_stylesheet('assets/css','style.css');
     if($mediaLocale != 'en' && file_exists(FCPATH.'assets/plugins/elFinder/js/i18n/elfinder.'.$mediaLocale.'.js')){ ?>
         <script src="<?php echo base_url('assets/plugins/elFinder/js/i18n/elfinder.'.$mediaLocale.'.js?v='.get_app_version()); ?>"></script>
     <?php } ?>
-    <?php hooks()->do_action('elfinder_tinymce_head'); ?>
+    <?php do_action('elfinder_tinymce_head'); ?>
     <script>
         var site_url = '<?php echo site_url(); ?>';
         var FileBrowserDialogue = {
@@ -37,7 +35,6 @@
     <div>
         <div id="elfinder"></div>
     </div>
-<link rel="stylesheet" type="text/css" href="<?php echo base_url('assets/plugins/elFinder/themes/Material/css/theme-gray.css?v='.get_app_version()); ?>">
 <script src="//cdnjs.cloudflare.com/ajax/libs/require.js/2.3.2/require.min.js"></script>
 <script>
     define('elFinderConfig', {
@@ -115,6 +112,7 @@
                      },
                      opts = {
                          height: 700,
+                         cssAutoLoad: [site_url + 'assets/plugins/elFinder/themes/Material/css/theme-gray.css'],
                          customData: elfEditorCustomData,
                          getFileCallback: function(file, fm) {
                              FileBrowserDialogue.mySubmit(file);
@@ -125,7 +123,6 @@
                                 'rm', '|', 'edit', 'rename', '|', 'archive', 'extract'
                               ]
                          },
-                         ui: ['toolbar', 'tree', 'path', 'stat'],
                          uiOptions: {
                              // toolbar configuration
                              toolbar: [
@@ -195,7 +192,7 @@
 
      // config of RequireJS (REQUIRED)
      require.config({
-         baseUrl: site_url + 'assets/plugins/elFinder/js',
+         baseUrl: '//cdnjs.cloudflare.com/ajax/libs/elfinder/' + elver + '/js',
          paths: {
              'jquery': '//cdnjs.cloudflare.com/ajax/libs/jquery/' + (ie8 ? '1.12.4' : jqver) + '/jquery.min',
              'jquery-ui': '//cdnjs.cloudflare.com/ajax/libs/jqueryui/' + uiver + '/jquery-ui.min',

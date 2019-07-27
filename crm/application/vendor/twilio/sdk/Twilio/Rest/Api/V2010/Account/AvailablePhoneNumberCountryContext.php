@@ -43,10 +43,8 @@ class AvailablePhoneNumberCountryContext extends InstanceContext {
      * Initialize the AvailablePhoneNumberCountryContext
      * 
      * @param \Twilio\Version $version Version that contains the resource
-     * @param string $accountSid The SID of the Account requesting the available
-     *                           phone number Country resource
-     * @param string $countryCode The ISO country code of the country to fetch
-     *                            available phone number information about
+     * @param string $accountSid The account_sid
+     * @param string $countryCode The country_code
      * @return \Twilio\Rest\Api\V2010\Account\AvailablePhoneNumberCountryContext 
      */
     public function __construct(Version $version, $accountSid, $countryCode) {

@@ -71,7 +71,7 @@
 <?php init_tail(); ?>
 <script>
 	$(function(){
-		appValidateForm($('form'),{name:'required'},manage_ticket_priorities);
+		_validate_form($('form'),{name:'required'},manage_ticket_priorities);
 		$('#priority').on('hidden.bs.modal', function(event) {
 			$('#additional').html('');
 			$('#priority input[name="name"]').val('');

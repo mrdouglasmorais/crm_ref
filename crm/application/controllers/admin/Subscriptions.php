@@ -2,7 +2,7 @@
 
 defined('BASEPATH') or exit('No direct script access allowed');
 
-class Subscriptions extends AdminController
+class Subscriptions extends Admin_controller
 {
     public function __construct()
     {
@@ -65,7 +65,7 @@ class Subscriptions extends AdminController
             if ($this->stripe_subscriptions->has_api_key()) {
                 $data['subscription_error'] = $e->getMessage();
             } else {
-                $data['subscription_error'] = _l('api_key_not_set_error_message', '<a href="'.admin_url('settings?group=payment_gateways&tab=online_payments_stripe_tab').'">Stripe Checkout</a>');
+                $data['subscription_error'] = check_for_links(_l('api_key_not_set_error_message', admin_url('settings?group=online_payment_modes&tab=online_payments_stripe_tab')));
             }
         }
 
@@ -92,7 +92,6 @@ class Subscriptions extends AdminController
         if (!$subscription || (!has_permission('subscriptions', '', 'view') && $subscription->created_from != get_staff_user_id())) {
             show_404();
         }
-        $data = [];
 
         $stripeSubscriptionId = $subscription->stripe_subscription_id;
 
@@ -160,11 +159,30 @@ class Subscriptions extends AdminController
             if ($this->stripe_subscriptions->has_api_key()) {
                 $data['subscription_error'] = $e->getMessage();
             } else {
-                $data['subscription_error'] = check_for_links(_l('api_key_not_set_error_message', admin_url('settings?group=payment_gateways&tab=online_payments_stripe_tab')));
+                $data['subscription_error'] = check_for_links(_l('api_key_not_set_error_message', admin_url('settings?group=online_payment_modes&tab=online_payments_stripe_tab')));
             }
         }
 
-        $data = array_merge($data, prepare_mail_preview_data('subscription_send_to_customer', $subscription->clientid));
+        $template_name = 'send-subscription';
+        $contact       = $this->clients_model->get_contact(get_primary_contact_user_id($subscription->clientid));
+        $email         = '';
+        if ($contact) {
+            $email = $contact->email;
+        }
+
+        $data['template']      = get_email_template_for_sending($template_name, $email);
+        $data['template_name'] = $template_name;
+        $this->db->where('slug', $template_name);
+        $this->db->where('language', 'english');
+        $template_result = $this->db->get('tblemailtemplates')->row();
+
+        $data['template_system_name'] = $template_result->name;
+        $data['template_id']          = $template_result->emailtemplateid;
+
+        $data['template_disabled'] = false;
+        if (total_rows('tblemailtemplates', ['slug' => $data['template_name'], 'active' => 0]) > 0) {
+            $data['template_disabled'] = true;
+        }
 
         $data['child_invoices'] = $this->subscriptions_model->get_child_invoices($id);
         $data['subscription']   = $subscription;
@@ -209,8 +227,7 @@ class Subscriptions extends AdminController
             $ends_at = time();
             if ($type == 'immediately') {
                 $this->stripe_subscriptions->cancel($subscription->stripe_subscription_id);
-                // The mail sent via the webhook
-                // $this->subscriptions_model->send_email_template($subscription->id, '', 'subscription_cancelled_to_customer');
+                $this->subscriptions_model->send_email_template($subscription->id, '', 'subscription-canceled');
             } elseif ($type == 'at_period_end') {
                 $ends_at = $this->stripe_subscriptions->cancel_at_end_of_billing_period($subscription->stripe_subscription_id);
             } else {

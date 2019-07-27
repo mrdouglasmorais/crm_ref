@@ -2,7 +2,6 @@
 
 namespace Money\Parser;
 
-use Money\Currency;
 use Money\Exception;
 use Money\MoneyParser;
 
@@ -41,11 +40,6 @@ final class AggregateMoneyParser implements MoneyParser
      */
     public function parse($money, $forceCurrency = null)
     {
-        if ($forceCurrency !== null && !$forceCurrency instanceof Currency) {
-            @trigger_error('Passing a currency as string is deprecated since 3.1 and will be removed in 4.0. Please pass a '.Currency::class.' instance instead.', E_USER_DEPRECATED);
-            $forceCurrency = new Currency($forceCurrency);
-        }
-
         foreach ($this->parsers as $parser) {
             try {
                 return $parser->parse($money, $forceCurrency);

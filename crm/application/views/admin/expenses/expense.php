@@ -117,13 +117,11 @@
                   <h4 class="no-margin"><?php echo _l('advanced_options'); ?></h4>
                   <hr class="hr-panel-heading" />
                   <?php
-                     $currency_attr = array('disabled'=>true,'data-show-subtext'=>true);
-
-                     $currency_attr = apply_filters_deprecated('expense_currency_disabled', [$currency_attr], '2.3.0', 'expense_currency_attributes');
-
+                     $s_attrs = array('disabled'=>true,'data-show-subtext'=>true);
+                     $s_attrs = do_action('expense_currency_disabled',$s_attrs);
                      foreach($currencies as $currency){
                       if($currency['isdefault'] == 1){
-                        $currency_attr['data-base'] = $currency['id'];
+                        $s_attrs['data-base'] = $currency['id'];
                       }
                       if(isset($expense)){
                         if($currency['id'] == $expense->currency){
@@ -149,10 +147,9 @@
                         }
                       }
                      }
-                     $currency_attr = hooks()->apply_filters('expense_currency_attributes', $currency_attr);
                      ?>
                   <div id="expense_currency">
-                     <?php echo render_select('currency', $currencies, array('id','name','symbol'), 'expense_currency', $selected, $currency_attr); ?>
+                     <?php echo render_select('currency',$currencies,array('id','name','symbol'),'expense_currency',$selected,$s_attrs); ?>
                   </div>
                   <div class="row">
                      <div class="col-md-6">
@@ -229,15 +226,9 @@
                         <?php echo render_input('reference_no','expense_add_edit_reference_no',$value); ?>
                      </div>
                   </div>
-                  <div class="form-group select-placeholder"<?php if(isset($expense) && !empty($expense->recurring_from)){ ?> data-toggle="tooltip" data-title="<?php echo _l('create_recurring_from_child_error_message', [_l('expense_lowercase'),_l('expense_lowercase'), _l('expense_lowercase')]); ?>"<?php } ?>>
+                  <div class="form-group select-placeholder">
                      <label for="repeat_every" class="control-label"><?php echo _l('expense_repeat_every'); ?></label>
-                     <select
-                     name="repeat_every"
-                     id="repeat_every"
-                     class="selectpicker"
-                     data-width="100%"
-                     data-none-selected-text="<?php echo _l('dropdown_non_selected_tex'); ?>"
-                     <?php if(isset($expense) && !empty($expense->recurring_from)){ ?> disabled <?php } ?>>
+                     <select name="repeat_every" id="repeat_every" class="selectpicker" data-width="100%" data-none-selected-text="<?php echo _l('dropdown_non_selected_tex'); ?>">
                         <option value=""></option>
                         <option value="1-week" <?php if(isset($expense) && $expense->repeat_every == 1 && $expense->recurring_type == 'week'){echo 'selected';} ?>><?php echo _l('week'); ?></option>
                         <option value="2-week" <?php if(isset($expense) && $expense->repeat_every == 2 && $expense->recurring_type == 'week'){echo 'selected';} ?>>2 <?php echo _l('weeks'); ?></option>
@@ -321,22 +312,9 @@
      var customer_currency = '<?php echo $customer_currency; ?>';
    <?php } ?>
      $(function(){
-        $('body').on('change','#project_id', function(){
-          var project_id = $(this).val();
-          if(project_id != '') {
-           if (customer_currency != 0) {
-             selectCurrency.val(customer_currency);
-             selectCurrency.selectpicker('refresh');
-           } else {
-             set_base_currency();
-           }
-         } else {
-          do_billable_checkbox();
-        }
-      });
 
      if($('#dropzoneDragArea').length > 0){
-        expenseDropzone = new Dropzone("#expense-form", appCreateDropzoneOptions({
+        expenseDropzone = new Dropzone("#expense-form",  $.extend({},_dropzone_defaults(),{
           autoProcessQueue: false,
           clickable: '#dropzoneDragArea',
           previewsContainer: '.dropzone-previews',
@@ -351,13 +329,7 @@
        }));
      }
 
-     appValidateForm($('#expense-form'),{
-      category:'required',
-      date:'required',
-      amount:'required',
-      currency:'required',
-      repeat_every_custom: { min: 1},
-    },expenseSubmitHandler);
+     _validate_form($('#expense-form'),{category:'required',date:'required',amount:'required',currency:'required'},expenseSubmitHandler);
 
      $('input[name="billable"]').on('change',function(){
        do_billable_checkbox();
@@ -410,8 +382,8 @@
                       totalTaxPercentExclude += taxPercent2;
                     }
 
-                    var totalExclude = accounting.toFixed(total - exclude_tax_from_amount(totalTaxPercentExclude, total), app.options.decimal_places);
-                    $('#tax_subtract_total').html(accounting.toFixed(totalExclude, app.options.decimal_places));
+                    var totalExclude = accounting.toFixed(total - exclude_tax_from_amount(totalTaxPercentExclude, total), app_decimal_places);
+                    $('#tax_subtract_total').html(accounting.toFixed(totalExclude, app_decimal_places));
                 } else {
                    $('#tax_subtract').addClass('hide');
                 }
@@ -500,7 +472,7 @@
          } else {
            projectsWrapper.addClass('hide');
          }
-         var client_currency = parseInt(response.client_currency);
+         client_currency = parseInt(response.client_currency);
          if (client_currency != 0) {
            customer_currency = client_currency;
            do_billable_checkbox();
@@ -551,14 +523,11 @@
             selectCurrency.val(customer_currency);
             selectCurrency.selectpicker('refresh');
           } else {
-            set_base_currency();
+           set_base_currency();
          }
        } else {
         $('.billable_recurring_options').addClass('hide');
-        // When project is selected, the project currency will be used, either customer currency or base currency
-        if($('#project_id').selectpicker('val') == ''){
-            set_base_currency();
-        }
+        set_base_currency();
       }
     } else {
       set_base_currency();

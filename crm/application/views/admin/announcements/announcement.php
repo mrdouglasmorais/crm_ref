@@ -42,7 +42,7 @@
 <?php init_tail(); ?>
 <script>
 	$(function(){
-		appValidateForm($('form'),{name:'required'});
+		_validate_form($('form'),{name:'required'});
 	});
 </script>
 </body>

@@ -16,7 +16,7 @@ class SIMGateway extends AIMGateway
     {
         $parameters = parent::getDefaultParameters();
         $parameters = array_merge($parameters, array(
-            'signatureKey' => null,
+            'hashSecret' => '',
             'liveEndpoint' => 'https://secure2.authorize.net/gateway/transact.dll',
             'developerEndpoint' => 'https://test.authorize.net/gateway/transact.dll'
         ));
@@ -33,14 +33,14 @@ class SIMGateway extends AIMGateway
         return $this->setParameter('apiLoginId', $value);
     }
 
-    public function getSignatureKey()
+    public function getTransactionKey()
     {
-        return $this->getParameter('signatureKey');
+        return $this->getParameter('transactionKey');
     }
 
-    public function setSignatureKey($value)
+    public function setTransactionKey($value)
     {
-        return $this->setParameter('signatureKey', $value);
+        return $this->setParameter('transactionKey', $value);
     }
 
     public function getDeveloperMode()

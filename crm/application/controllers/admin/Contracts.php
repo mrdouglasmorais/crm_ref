@@ -2,7 +2,7 @@
 
 defined('BASEPATH') or exit('No direct script access allowed');
 
-class Contracts extends AdminController
+class Contracts extends Admin_controller
 {
     public function __construct()
     {
@@ -69,16 +69,57 @@ class Contracts extends AdminController
         } else {
             $data['contract']                 = $this->contracts_model->get($id, [], true);
             $data['contract_renewal_history'] = $this->contracts_model->get_contract_renewal_history($id);
-            $data['totalNotes']               = total_rows(db_prefix().'notes', ['rel_id' => $id, 'rel_type' => 'contract']);
+            $data['totalNotes']            = total_rows('tblnotes', ['rel_id' => $id, 'rel_type' => 'contract']);
             if (!$data['contract'] || (!has_permission('contracts', '', 'view') && $data['contract']->addedfrom != get_staff_user_id())) {
                 blank_page(_l('contract_not_found'));
             }
+            $contract_merge_fields  = get_available_merge_fields();
+            $_contract_merge_fields = [];
+            foreach ($contract_merge_fields as $key => $val) {
+                foreach ($val as $type => $f) {
+                    if ($type == 'contract') {
+                        foreach ($f as $available) {
+                            foreach ($available['available'] as $av) {
+                                if ($av == 'contract') {
+                                    array_push($_contract_merge_fields, $f);
 
-            $data['contract_merge_fields'] = $this->app_merge_fields->get_flat('contract', ['other', 'client'], '{email_signature}');
+                                    break;
+                                }
+                            }
 
-            $title = $data['contract']->subject;
+                            break;
+                        }
+                    } elseif ($type == 'other') {
+                        array_push($_contract_merge_fields, $f);
+                    } elseif ($type == 'clients') {
+                        array_push($_contract_merge_fields, $f);
+                    }
+                }
+            }
+            $data['contract_merge_fields'] = $_contract_merge_fields;
+            $title                         = $data['contract']->subject;
 
-            $data = array_merge($data, prepare_mail_preview_data('contract_send_to_customer', $data['contract']->client));
+            $contact = $this->clients_model->get_contact(get_primary_contact_user_id($data['contract']->client));
+            $email   = '';
+            if ($contact) {
+                $email = $contact->email;
+            }
+
+            $template_name         = 'send-contract';
+            $data['template']      = get_email_template_for_sending($template_name, $email);
+            $data['template_name'] = $template_name;
+
+            $this->db->where('slug', $template_name);
+            $this->db->where('language', 'english');
+            $template_result = $this->db->get('tblemailtemplates')->row();
+
+            $data['template_system_name'] = $template_result->name;
+            $data['template_id']          = $template_result->emailtemplateid;
+
+            $data['template_disabled'] = false;
+            if (total_rows('tblemailtemplates', ['slug' => $data['template_name'], 'active' => 0]) > 0) {
+                $data['template_disabled'] = true;
+            }
         }
 
         if ($this->input->get('customer_id')) {
@@ -185,7 +226,7 @@ class Contracts extends AdminController
         $message = '';
 
         $this->db->where('id', $this->input->post('contract_id'));
-        $this->db->update(db_prefix().'contracts', [
+        $this->db->update('tblcontracts', [
                 'content' => $this->input->post('content', false),
         ]);
 
@@ -226,7 +267,7 @@ class Contracts extends AdminController
     public function remove_comment($id)
     {
         $this->db->where('id', $id);
-        $comment = $this->db->get(db_prefix().'contract_comments')->row();
+        $comment = $this->db->get('tblcontractcomments')->row();
         if ($comment) {
             if ($comment->staffid != get_staff_user_id() && !is_admin()) {
                 echo json_encode([
@@ -391,8 +432,7 @@ class Contracts extends AdminController
                 $this->input->post('contract_id'),
                 'contract',
                 $this->input->post('files'),
-                $this->input->post('external')
-            );
+                $this->input->post('external'));
         }
     }
 

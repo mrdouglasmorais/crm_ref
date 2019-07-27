@@ -1,9 +1,16 @@
 elFinder
 ========
 
-**WARNING: IF YOU HAVE OLDER (IN PARTICULAR 2.1.48 OR EARLIER) VERSIONS OF ELFINDER ON PUBLIC SERVERS, IT MAY CAUSE SERIOUS DAMAGE TO YOUR SERVER AND VISITED USER. YOU SHOULD UPDATE TO THE LATEST VERSION OR REMOVE IT FROM THE SERVER.**
+**WARNING: IF YOU HAVE OLDER (IN PARTICULAR 2.1.38 OR EARLIER) VERSIONS OF ELFINDER ON PUBLIC SERVERS, IT MAY CAUSE SERIOUS DAMAGE TO YOUR SERVER AND VISITED USER. YOU SHOULD UPDATE TO THE LATEST VERSION OR REMOVE IT FROM THE SERVER.**
 
-[![elFinder file manager for the Web](https://studio-42.github.io/elFinder/images/elFinderScr.png "elFinder file manager for the Web")](https://studio-42.github.io/elFinder/)
+<pre>
+      _ ______ _           _           
+     | |  ____(_)         | |          
+  ___| | |__   _ _ __   __| | ___ _ __ 
+ / _ \ |  __| | | '_ \ / _` |/ _ \ '__|
+|  __/ | |    | | | | | (_| |  __/ |   
+ \___|_|_|    |_|_| |_|\__,_|\___|_|   
+</pre>
 
 elFinder is an open-source file manager for web, written in JavaScript using
 jQuery UI. Creation is inspired by simplicity and convenience of Finder program
@@ -47,8 +54,7 @@ Features
    upload, create folder/file, rename, etc.)
  * High performance server backend and light client UI
  * Multi-root support
- * Local file system, MySQL, FTP, Box, Dropbox, GoogleDrive and OneDrive volume storage drivers
- * Support AWS S3, Azure, Digital Ocean Spaces and more with [League\Flysystem](https://github.com/barryvdh/elfinder-flysystem-driver) Flysystem driver
+ * Local file system, MySQL, FTP volume storage drivers
  * Cloud storage (Box, Dropbox, GoogleDrive and OneDrive) drivers
  * Background file/folder upload with Drag & Drop HTML5 support
  * Chunked file upload for large file
@@ -86,9 +92,7 @@ Requirements
 ------------
 ### jQuery / jQuery UI
  * jQuery 1.8.0+
- * jQuery UI 1.9.0+
-    * Required: draggable, droppable, resizable, selectable, button and slider
-    * Recommend: sorter (To make sortable the List column and the Places)
+ * jQuery UI 1.9.0+ (require draggable, droppable, resizable, selectable and slider)
 
 **However, we recommend newest version.**
 
@@ -124,7 +128,7 @@ Installation
 Downloads
 ------------
 **Stable releases** ([Changelog](https://github.com/Studio-42/elFinder/blob/master/Changelog))
- + [elFinder 2.1.49](https://github.com/Studio-42/elFinder/archive/2.1.49.zip)
+ + [elFinder 2.1.42](https://github.com/Studio-42/elFinder/archive/2.1.42.zip)
  + [elFinder 2.0.9](https://github.com/Studio-42/elFinder/archive/2.0.9.zip) (deprecated)
 
 **Nightly builds**
@@ -157,14 +161,14 @@ You can create or modify the language file to use translation tool. Please refer
  * [ASP.NET Core](https://github.com/gordon-matt/elFinder.NetCore)
  * [ASP.NET](https://github.com/leniel/elFinder.Net)
  * [Java Servlet](https://github.com/trustsystems/elfinder-java-connector)
- * [JavaScript/Efw](https://github.com/efwGrp/efw3.X/blob/master/help/tag.elfinder.md)
+ * [JavaScript/Efw](https://github.com/efwGrp/efw3.X/blob/master/help/api_efw_tag.md#elfinder-tag)
  * [Nodejs](https://github.com/dekyfin/elfinder-node)
  * [Python](https://github.com/Studio-42/elfinder-python)
  * [Ruby/Rails](https://github.com/phallstrom/el_finder)
 
 3rd party Volume Drivers
 --------------------
- * [League\Flysystem (PHP)](https://github.com/barryvdh/elfinder-flysystem-driver) (for elFinder 2.1+) driver for the [Flysystem](https://github.com/thephpleague/flysystem)
+ * [League\Flysystem (PHP)](https://github.com/barryvdh/elfinder-flysystem-driver) (for elFinder 2.1+)
 
 3rd party Themes
 --------------------
@@ -200,7 +204,6 @@ Support
 Authors
 -------
 
- * Current main developer: Naoki Sawada <hypweb+elfinder@gmail.com>
  * Chief developer: Dmitry "dio" Levashov <dio@std42.ru>
  * Maintainer: Troex Nevelin <troex@fury.scancode.ru>
  * Developers: Alexey Sukhotin <strogg@yandex.ru>, Naoki Sawada <hypweb+elfinder@gmail.com>

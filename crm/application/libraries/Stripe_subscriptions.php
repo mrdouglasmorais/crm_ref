@@ -131,11 +131,7 @@ class Stripe_subscriptions extends Stripe_core
         ], $params));
     }
 
-    /**
-     * @todo
-     * Perhaps when Paypal is added make is as contract? E.q. for preview invoice add new method and use this to insert the invoice in database
-     */
-    public function create_invoice($data) {
-
+    public function create_invoice($data)
+    {
     }
 }

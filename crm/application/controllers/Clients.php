@@ -2,20 +2,24 @@
 
 defined('BASEPATH') or exit('No direct script access allowed');
 
-use app\services\ValidatesContact;
-
-class Clients extends ClientsController
+class Clients extends Clients_controller
 {
-    /**
-     * @since  2.3.3
-     */
-    use ValidatesContact;
-
     public function __construct()
     {
         parent::__construct();
+        do_action('after_clients_area_init', $this);
 
-        hooks()->do_action('after_clients_area_init', $this);
+        /**
+         * The Clients.php controller methods requires a logged in contact
+         */
+        if (!is_client_logged_in()) {
+            redirect_after_login_to_current_url();
+            redirect(site_url('authentication/login'));
+        }
+
+        if (is_client_logged_in() && !is_contact_email_verified()) {
+            redirect(site_url('verification'));
+        }
     }
 
     public function index()
@@ -26,8 +30,8 @@ class Clients extends ClientsController
 
         $data['project_statuses'] = $this->projects_model->get_project_statuses();
         $data['title']            = get_company_name(get_client_user_id());
-        $this->data($data);
-        $this->view('home');
+        $this->data               = $data;
+        $this->view               = 'home';
         $this->layout();
     }
 
@@ -35,8 +39,8 @@ class Clients extends ClientsController
     {
         $data['title']         = _l('announcements');
         $data['announcements'] = $this->announcements_model->get();
-        $this->data($data);
-        $this->view('announcements');
+        $this->data            = $data;
+        $this->view            = 'announcements';
         $this->layout();
     }
 
@@ -44,16 +48,16 @@ class Clients extends ClientsController
     {
         $data['announcement'] = $this->announcements_model->get($id);
         $data['title']        = $data['announcement']->name;
-        $this->data($data);
-        $this->view('announcement');
+        $this->data           = $data;
+        $this->view           = 'announcement';
         $this->layout();
     }
 
     public function calendar()
     {
         $data['title'] = _l('calendar');
-        $this->view('calendar');
-        $this->data($data);
+        $this->view    = 'calendar';
+        $this->data    = $data;
         $this->layout();
     }
 
@@ -98,8 +102,8 @@ class Clients extends ClientsController
         $data['list_statuses'] = is_numeric($status) ? [$status] : $listStatusesIds;
         $data['projects']      = $this->projects_model->get('', $where);
         $data['title']         = _l('clients_my_projects');
-        $this->data($data);
-        $this->view('projects');
+        $this->data            = $data;
+        $this->view            = 'projects';
         $this->layout();
     }
 
@@ -164,7 +168,7 @@ class Clients extends ClientsController
                         }
                     } else {
                         if ($project->settings->edit_tasks == 1
-                            && total_rows(db_prefix() . 'tasks', ['is_added_from_contact' => 1, 'addedfrom' => get_contact_user_id()]) > 0) {
+                            && total_rows('tblstafftasks', ['is_added_from_contact' => 1, 'addedfrom' => get_contact_user_id()]) > 0) {
                             $affectedRows = 0;
                             $updated      = $this->tasks_model->update($data, $task_id, true);
                             if ($updated) {
@@ -185,7 +189,7 @@ class Clients extends ClientsController
                              */
                             if ($totalAssignees == 0 && $project->settings->view_team_members == 1) {
                                 $this->db->where('taskid', $task_id);
-                                $this->db->delete(db_prefix() . 'task_assigned');
+                                $this->db->delete('tblstafftaskassignees');
                             } elseif ($totalAssignees > 0 && $project->settings->view_team_members == 1) {
                                 foreach ($currentAssignees as $assigned) {
                                     if (!in_array($assigned['assigneeid'], $assignees)) {
@@ -347,29 +351,25 @@ class Clients extends ClientsController
                         $data['project_time_left_percent'] = 0;
                     }
                 }
-                $total_tasks = total_rows(db_prefix() . 'tasks', [
-                    'rel_id'            => $id,
-                    'rel_type'          => 'project',
-                    'visible_to_client' => 1,
-                ]);
-                $total_tasks = hooks()->apply_filters('client_project_total_tasks', $total_tasks, $id);
+                $total_tasks = total_rows('tblstafftasks', [
+            'rel_id'            => $id,
+            'rel_type'          => 'project',
+            'visible_to_client' => 1,
+        ]);
 
-                $data['tasks_not_completed'] = total_rows(db_prefix() . 'tasks', [
-                'status !='         => 5,
-                'rel_id'            => $id,
-                'rel_type'          => 'project',
-                'visible_to_client' => 1,
-            ]);
+                $data['tasks_not_completed'] = total_rows('tblstafftasks', [
+            'status !='         => 5,
+            'rel_id'            => $id,
+            'rel_type'          => 'project',
+            'visible_to_client' => 1,
+        ]);
 
-                $data['tasks_not_completed'] = hooks()->apply_filters('client_project_tasks_not_completed', $data['tasks_not_completed'], $id);
-
-                $data['tasks_completed'] = total_rows(db_prefix() . 'tasks', [
-                'status'            => 5,
-                'rel_id'            => $id,
-                'rel_type'          => 'project',
-                'visible_to_client' => 1,
-            ]);
-                $data['tasks_completed'] = hooks()->apply_filters('client_project_tasks_completed', $data['tasks_completed'], $id);
+                $data['tasks_completed'] = total_rows('tblstafftasks', [
+            'status'            => 5,
+            'rel_id'            => $id,
+            'rel_type'          => 'project',
+            'visible_to_client' => 1,
+        ]);
 
                 $data['total_tasks']                  = $total_tasks;
                 $data['tasks_not_completed_progress'] = ($total_tasks > 0 ? number_format(($data['tasks_completed'] * 100) / $total_tasks, 2) : 0);
@@ -413,16 +413,15 @@ class Clients extends ClientsController
                 $data['tickets'] = [];
                 if (has_contact_permission('support')) {
                     $where_tickets = [
-                        db_prefix() . 'tickets.userid' => get_client_user_id(),
-                        'project_id'                   => $id,
+                        'tbltickets.userid' => get_client_user_id(),
+                        'project_id'        => $id,
                     ];
 
-                    if (!!can_logged_in_contact_view_all_tickets()) {
-                        $where_tickets[db_prefix() . 'tickets.contactid'] = get_contact_user_id();
+                    if (!is_primary_contact() && get_option('only_show_contact_tickets') == 1) {
+                        $where_tickets['tbltickets.contactid'] = get_contact_user_id();
                     }
 
-                    $data['tickets']                 = $this->tickets_model->get('', $where_tickets);
-                    $data['show_submitter_on_table'] = show_ticket_submitter_on_clients_area_table();
+                    $data['tickets'] = $this->tickets_model->get('', $where_tickets);
                 }
             } elseif ($group == 'project_estimates') {
                 $data['estimates'] = [];
@@ -445,8 +444,7 @@ class Clients extends ClientsController
                 $data['title'] = $data['view_task']->name;
             }
         } elseif ($group == 'edit_task') {
-            $data['milestones'] = $this->projects_model->get_milestones($id);
-            $data['task']       = $this->tasks_model->get($this->input->get('taskid'), [
+            $data['task'] = $this->tasks_model->get($this->input->get('taskid'), [
                     'rel_id'                => $project->id,
                     'rel_type'              => 'project',
                     'addedfrom'             => get_contact_user_id(),
@@ -458,23 +456,23 @@ class Clients extends ClientsController
         $data['currency'] = $this->projects_model->get_currency($id);
         $data['members']  = $this->projects_model->get_project_members($id);
 
-        $this->data($data);
-        $this->view('project');
+        $this->data = $data;
+        $this->view = 'project';
         $this->layout();
     }
 
     public function files()
     {
-        $files_where = 'visible_to_customer = 1 AND id IN (SELECT file_id FROM ' . db_prefix() . 'shared_customer_files WHERE contact_id =' . get_contact_user_id() . ')';
+        $files_where = 'visible_to_customer = 1 AND id IN (SELECT file_id FROM tblcustomerfiles_shares WHERE contact_id =' . get_contact_user_id() . ')';
 
-        $files_where = hooks()->apply_filters('customers_area_files_where', $files_where);
+        $files_where = do_action('customers_area_files_where', $files_where);
 
         $files = $this->clients_model->get_customer_files(get_client_user_id(), $files_where);
 
         $data['files'] = $files;
         $data['title'] = _l('customer_attachments');
-        $this->data($data);
-        $this->view('files');
+        $this->data    = $data;
+        $this->view    = 'files';
         $this->layout();
     }
 
@@ -563,14 +561,13 @@ class Clients extends ClientsController
             redirect(site_url());
         }
 
-        $where = db_prefix() . 'tickets.userid=' . get_client_user_id();
-        if (!can_logged_in_contact_view_all_tickets()) {
-            $where .= ' AND ' . db_prefix() . 'tickets.contactid=' . get_contact_user_id();
+        $where = 'tbltickets.userid=' . get_client_user_id();
+
+        if (!is_primary_contact() && get_option('only_show_contact_tickets') == 1) {
+            $where .= ' AND tbltickets.contactid=' . get_contact_user_id();
         }
 
-        $data['show_submitter_on_table'] = show_ticket_submitter_on_clients_area_table();
-
-        $defaultStatuses = hooks()->apply_filters('customers_area_list_default_ticket_statuses', [1, 2, 3, 4]);
+        $defaultStatuses = do_action('customers_area_list_default_ticket_statuses', [1, 2, 3, 4]);
         // By default only open tickets
         if (!is_numeric($status)) {
             $where .= ' AND status IN (' . implode(', ', $defaultStatuses) . ')';
@@ -582,8 +579,8 @@ class Clients extends ClientsController
         $data['bodyclass']     = 'tickets';
         $data['tickets']       = $this->tickets_model->get('', $where);
         $data['title']         = _l('clients_tickets_heading');
-        $this->data($data);
-        $this->view('tickets');
+        $this->data            = $data;
+        $this->view            = 'tickets';
         $this->layout();
     }
 
@@ -591,10 +588,8 @@ class Clients extends ClientsController
     {
         if (has_contact_permission('support')) {
             $post_data = $this->input->post();
-            if (can_change_ticket_status_in_clients_area($post_data['status_id'])) {
-                $response = $this->tickets_model->change_ticket_status($post_data['ticket_id'], $post_data['status_id']);
-                set_alert($response['alert'], $response['message']);
-            }
+            $response  = $this->tickets_model->change_ticket_status($post_data['ticket_id'], $post_data['status_id']);
+            set_alert('alert-' . $response['alert'], $response['message']);
         }
     }
 
@@ -619,8 +614,8 @@ class Clients extends ClientsController
 
         $data['proposals'] = $this->proposals_model->get('', $where);
         $data['title']     = _l('proposals');
-        $this->data($data);
-        $this->view('proposals');
+        $this->data        = $data;
+        $this->view        = 'proposals';
         $this->layout();
     }
 
@@ -675,8 +670,8 @@ class Clients extends ClientsController
         $data             = [];
         $data['projects'] = $this->projects_model->get_projects_for_ticket(get_client_user_id());
         $data['title']    = _l('new_ticket');
-        $this->data($data);
-        $this->view('open_ticket');
+        $this->data       = $data;
+        $this->view       = 'open_ticket';
         $this->layout();
     }
 
@@ -716,8 +711,8 @@ class Clients extends ClientsController
 
         $data['ticket_replies'] = $this->tickets_model->get_ticket_replies($id);
         $data['title']          = $data['ticket']->subject;
-        $this->data($data);
-        $this->view('single_ticket');
+        $this->data             = $data;
+        $this->view             = 'single_ticket';
         $this->layout();
     }
 
@@ -735,8 +730,8 @@ class Clients extends ClientsController
 
         $data['contracts_by_type_chart'] = json_encode($this->contracts_model->get_contracts_types_chart_data());
         $data['title']                   = _l('clients_contracts');
-        $this->data($data);
-        $this->view('contracts');
+        $this->data                      = $data;
+        $this->view                      = 'contracts';
         $this->layout();
     }
 
@@ -756,21 +751,21 @@ class Clients extends ClientsController
         }
 
         if (isset($where['status'])) {
-            if ($where['status'] == Invoices_model::STATUS_DRAFT
+            if ($where['status'] == 6
                 && get_option('exclude_invoice_from_client_area_with_draft_status') == 1) {
                 unset($where['status']);
-                $where['status !='] = Invoices_model::STATUS_DRAFT;
+                $where['status !='] = 6;
             }
         } else {
             if (get_option('exclude_invoice_from_client_area_with_draft_status') == 1) {
-                $where['status !='] = Invoices_model::STATUS_DRAFT;
+                $where['status !='] = 6;
             }
         }
 
         $data['invoices'] = $this->invoices_model->get('', $where);
         $data['title']    = _l('clients_my_invoices');
-        $this->data($data);
-        $this->view('invoices');
+        $this->data       = $data;
+        $this->view       = 'invoices';
         $this->layout();
     }
 
@@ -840,8 +835,8 @@ class Clients extends ClientsController
         $data['custom_period'] = ($this->input->get('custom_period') ? true : false);
 
         $data['title'] = _l('customer_statement');
-        $this->data($data);
-        $this->view('statement');
+        $this->data    = $data;
+        $this->view    = 'statement';
         $this->layout();
     }
 
@@ -901,8 +896,8 @@ class Clients extends ClientsController
         }
         $data['estimates'] = $this->estimates_model->get('', $where);
         $data['title']     = _l('clients_my_estimates');
-        $this->data($data);
-        $this->view('estimates');
+        $this->data        = $data;
+        $this->view        = 'estimates';
         $this->layout();
     }
 
@@ -976,8 +971,8 @@ class Clients extends ClientsController
             }
         }
         $data['title'] = _l('client_company_info');
-        $this->data($data);
-        $this->view('company_profile');
+        $this->data    = $data;
+        $this->view    = 'company_profile';
         $this->layout();
     }
 
@@ -1087,8 +1082,8 @@ class Clients extends ClientsController
             }
         }
         $data['title'] = _l('clients_profile_heading');
-        $this->data($data);
-        $this->view('profile');
+        $this->data    = $data;
+        $this->view    = 'profile';
         $this->layout();
     }
 
@@ -1096,14 +1091,14 @@ class Clients extends ClientsController
     {
         $id = get_contact_user_id();
 
-        hooks()->do_action('before_remove_contact_profile_image', $id);
+        do_action('before_remove_contact_profile_image', $id);
 
         if (file_exists(get_upload_path_by_type('contact_profile_images') . $id)) {
             delete_dir(get_upload_path_by_type('contact_profile_images') . $id);
         }
 
         $this->db->where('id', $id);
-        $this->db->update(db_prefix() . 'contacts', [
+        $this->db->update('tblcontacts', [
             'profile_image' => null,
         ]);
 
@@ -1120,7 +1115,8 @@ class Clients extends ClientsController
 
     public function credit_card()
     {
-        if (!can_logged_in_contact_update_credit_card()) {
+        if (!is_primary_contact(get_contact_user_id())
+            || $this->stripe_gateway->getSetting('allow_primary_contact_to_update_credit_card') == 0) {
             redirect(site_url());
         }
 
@@ -1144,26 +1140,27 @@ class Clients extends ClientsController
         $data['bodyclass'] = 'customer-credit-card';
         $data['title']     = _l('credit_card');
 
-        $this->data($data);
-        $this->view('credit_card');
+        $this->data = $data;
+        $this->view = 'credit_card';
         $this->layout();
     }
 
     public function subscriptions()
     {
-        if (!can_logged_in_contact_view_subscriptions()) {
+        if (!is_primary_contact(get_contact_user_id())
+            || get_option('show_subscriptions_in_customers_area') != '1') {
             redirect(site_url());
         }
 
         $this->load->model('subscriptions_model');
         $data['subscriptions'] = $this->subscriptions_model->get(['clientid' => get_client_user_id()]);
 
-        $data['show_projects'] = total_rows(db_prefix() . 'subscriptions', 'project_id != 0 AND clientid=' . get_client_user_id()) > 0 && has_contact_permission('projects');
+        $data['show_projects'] = total_rows('tblsubscriptions', 'project_id != 0 AND clientid=' . get_client_user_id()) > 0 && has_contact_permission('projects');
 
         $data['title']     = _l('subscriptions');
         $data['bodyclass'] = 'subscriptions';
-        $this->data($data);
-        $this->view('subscriptions');
+        $this->data        = $data;
+        $this->view        = 'subscriptions';
         $this->layout();
     }
 
@@ -1247,29 +1244,27 @@ class Clients extends ClientsController
                 'clientid'     => get_client_user_id(),
             ]);
             if ($success) {
-                send_gdpr_email_template('gdpr_removal_request_by_customer', get_contact_user_id());
+                send_gdpr_email_template('gdpr-removal-request', get_contact_user_id(), 'contact');
                 set_alert('success', _l('data_removal_request_sent'));
             }
             redirect(site_url('clients/gdpr'));
         }
 
         $data['title'] = _l('gdpr');
-        $this->data($data);
-        $this->view('gdpr');
+        $this->data    = $data;
+        $this->view    = 'gdpr';
         $this->layout();
     }
 
     public function change_language($lang = '')
     {
-        if (!can_logged_in_contact_change_language()) {
+        if (!is_primary_contact()) {
             redirect(site_url());
         }
 
-        hooks()->do_action('before_customer_change_language', $lang);
-
+        $lang = do_action('before_customer_change_language', $lang);
         $this->db->where('userid', get_client_user_id());
-        $this->db->update(db_prefix() . 'clients', ['default_language' => $lang]);
-
+        $this->db->update('tblclients', ['default_language' => $lang]);
         if (isset($_SERVER['HTTP_REFERER']) && !empty($_SERVER['HTTP_REFERER'])) {
             redirect($_SERVER['HTTP_REFERER']);
         } else {
@@ -1285,8 +1280,7 @@ class Clients extends ClientsController
             show_error('This page is currently disabled, check back later.');
         }
 
-        $this->load->library('gdpr/gdpr_contact');
-        $this->gdpr_contact->export(get_contact_user_id());
+        export_contact_data(get_contact_user_id());
     }
 
     /**
@@ -1313,7 +1307,7 @@ class Clients extends ClientsController
             ];
         foreach ($statuses as $status) {
             $this->db->select('total as amount, date');
-            $this->db->from(db_prefix() . 'invoices');
+            $this->db->from('tblinvoices');
             $this->db->where('clientid', get_client_user_id());
             $this->db->where('status', $status);
             $by_currency = $this->input->post('report_currency');
@@ -1321,7 +1315,7 @@ class Clients extends ClientsController
                 $this->db->where('currency', $by_currency);
             }
             if ($this->input->post('year')) {
-                $this->db->where('YEAR(' . db_prefix() . 'invoices.date)', $this->input->post('year'));
+                $this->db->where('YEAR(tblinvoices.date)', $this->input->post('year'));
             }
             $payments      = $this->db->get()->result_array();
             $data          = [];
@@ -1364,6 +1358,6 @@ class Clients extends ClientsController
 
     public function contact_email_profile_unique($email)
     {
-        return total_rows(db_prefix() . 'contacts', 'id !=' . get_contact_user_id() . ' AND email="' . $email . '"') > 0 ? false : true;
+        return total_rows('tblcontacts', 'id !=' . get_contact_user_id() . ' AND email="' . $email . '"') > 0 ? false : true;
     }
 }

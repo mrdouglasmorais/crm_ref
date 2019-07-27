@@ -26,7 +26,7 @@
                     ?>
                 </td>
                 <td><?php echo _d($payment['date']); ?></td>
-                <td><?php echo app_format_money($payment['amount'], $invoice->currency_name); ?></td>
+                <td><?php echo format_money($payment['amount'],$invoice->symbol); ?></td>
                 <td>
                     <a href="<?php echo admin_url('payments/payment/'.$payment['paymentid']); ?>" class="btn btn-default btn-icon"><i class="fa fa-pencil-square-o"></i></a>
                     <?php if(has_permission('payments','','delete')){ ?>

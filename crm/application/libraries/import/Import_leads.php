@@ -5,36 +5,15 @@ require_once(APPPATH . 'libraries/import/App_import.php');
 
 class Import_leads extends App_import
 {
-    private $uniqueValidationFields = [];
-
     protected $notImportableFields = [];
 
     protected $requiredFields = ['name'];
 
     public function __construct()
     {
-        $this->notImportableFields = hooks()->apply_filters('not_importable_leads_fields', ['id', 'source', 'assigned', 'status', 'dateadded', 'last_status_change', 'addedfrom', 'leadorder', 'date_converted', 'lost', 'junk', 'is_imported_from_email_integration', 'email_integration_uid', 'is_public', 'dateassigned', 'client_id', 'lastcontact', 'last_lead_status', 'from_form_id', 'default_language', 'hash']);
+        $this->notImportableFields = do_action('not_importable_leads_fields', ['id', 'source', 'assigned', 'status', 'dateadded', 'last_status_change', 'addedfrom', 'leadorder', 'date_converted', 'lost', 'junk', 'is_imported_from_email_integration', 'email_integration_uid', 'is_public', 'dateassigned', 'client_id', 'lastcontact', 'last_lead_status', 'from_form_id', 'default_language', 'hash']);
 
-        $uniqueValidationFields = json_decode(get_option('lead_unique_validation'));
-        if (count($uniqueValidationFields) > 0) {
-            $this->uniqueValidationFields = $uniqueValidationFields;
-            $message                      = '';
-            foreach ($uniqueValidationFields as $key => $field) {
-                if ($key === 0) {
-                    $message .= 'Based on your leads <b class="text-danger">unique validation</b> configured <a href="' . admin_url('settings?group=leads#unique_validation_wrapper') . '" target="_blank">options</a>, the lead <b>won\'t</b> be imported if:<br />';
-                }
-
-                $message .= '<br />&nbsp;&nbsp;&nbsp; - Lead <b>' . $field . '</b> already exists OR';
-            }
-
-            if ($message != '') {
-                $message = substr($message, 0, -3);
-            }
-
-            $message .= '<br /><br />If you still want to import all leads, uncheck all unique validation field';
-
-            $this->addImportGuidelinesInfo($message);
-        }
+        $this->addImportGuidelinesInfo('Duplicate email rows won\'t be imported.', true);
 
         parent::__construct();
     }
@@ -72,30 +51,22 @@ class Import_leads extends App_import
                 $id = null;
 
                 if (!$this->isSimulation()) {
-                    if (!isset($insert['dateadded'])) {
-                        $insert['dateadded'] = date('Y-m-d H:i:s');
-                    }
-
-                    if (!isset($insert['addedfrom'])) {
-                        $insert['addedfrom'] = get_staff_user_id();
-                    }
-
-                    $insert['status'] = $this->ci->input->post('status');
-                    $insert['source'] = $this->ci->input->post('source');
+                    $insert['dateadded'] = date('Y-m-d H:i:s');
+                    $insert['addedfrom'] = get_staff_user_id();
+                    $insert['status']    = $this->ci->input->post('status');
+                    $insert['source']    = $this->ci->input->post('source');
 
                     if ($this->ci->input->post('responsible')) {
                         $insert['assigned'] = $this->ci->input->post('responsible');
                     }
 
                     $tags = '';
-                    if (isset($insert['tags']) || is_null($insert['tags'])) {
-                        if (!is_null($insert['tags'])) {
-                            $tags = $insert['tags'];
-                        }
+                    if (isset($insert['tags'])) {
+                        $tags = $insert['tags'];
                         unset($insert['tags']);
                     }
 
-                    $this->ci->db->insert(db_prefix() . 'leads', $insert);
+                    $this->ci->db->insert('tblleads', $insert);
                     $id = $this->ci->db->insert_id();
 
                     if ($id) {
@@ -128,21 +99,20 @@ class Import_leads extends App_import
         return parent::formatFieldNameForHeading($field);
     }
 
-    protected function email_formatSampleData()
-    {
-        return uniqid() . '@example.com';
-    }
-
     protected function failureRedirectURL()
     {
         return admin_url('leads/import');
     }
 
+    private function leadEmailExists($email)
+    {
+        return total_rows('tblleads', ['email' => $email]) > 0;
+    }
+
     private function isDuplicateLead($data)
     {
-        foreach ($this->uniqueValidationFields as $field) {
-            if ((isset($data[$field]) && $data[$field] != '')
-                && total_rows(db_prefix() . 'leads', [$field => $data[$field]]) > 0) {
+        if (isset($data['email']) && $data['email'] != '') {
+            if ($this->leadEmailExists($data['email'])) {
                 return true;
             }
         }
@@ -174,7 +144,7 @@ class Import_leads extends App_import
             $this->ci->db->where('country_id', $id);
         }
 
-        return  $this->ci->db->get(db_prefix() . 'countries')->row();
+        return  $this->ci->db->get('tblcountries')->row();
     }
 
     private function countryValue($value)

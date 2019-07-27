@@ -3,7 +3,7 @@
 <div class="modal fade" id="contact" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
-            <?php echo form_open(admin_url('clients/form_contact/'.$customer_id.'/'.$contactid),array('id'=>'contact-form','autocomplete'=>'off')); ?>
+            <?php echo form_open('admin/clients/contact/'.$customer_id.'/'.$contactid,array('id'=>'contact-form','autocomplete'=>'off')); ?>
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                 <h4 class="modal-title" id="myModalLabel"><?php echo $title; ?><br /><small class="color-white" id=""><?php echo get_company_name($customer_id,true); ?></small></h4>
@@ -85,12 +85,12 @@
                 </div>
                 <hr />
                 <div class="checkbox checkbox-primary">
-                    <input type="checkbox" name="is_primary" id="contact_primary" <?php if((!isset($contact) && total_rows(db_prefix().'contacts',array('is_primary'=>1,'userid'=>$customer_id)) == 0) || (isset($contact) && $contact->is_primary == 1)){echo 'checked';}; ?> <?php if((isset($contact) && total_rows(db_prefix().'contacts',array('is_primary'=>1,'userid'=>$customer_id)) == 1 && $contact->is_primary == 1)){echo 'disabled';} ?>>
+                    <input type="checkbox" name="is_primary" id="contact_primary" <?php if((!isset($contact) && total_rows('tblcontacts',array('is_primary'=>1,'userid'=>$customer_id)) == 0) || (isset($contact) && $contact->is_primary == 1)){echo 'checked';}; ?> <?php if((isset($contact) && total_rows('tblcontacts',array('is_primary'=>1,'userid'=>$customer_id)) == 1 && $contact->is_primary == 1)){echo 'disabled';} ?>>
                     <label for="contact_primary">
                         <?php echo _l( 'contact_primary'); ?>
                     </label>
                 </div>
-                <?php if(!isset($contact) && total_rows(db_prefix().'emailtemplates',array('slug'=>'new-client-created','active'=>0)) == 0){ ?>
+                <?php if(!isset($contact) && total_rows('tblemailtemplates',array('slug'=>'new-client-created','active'=>0)) == 0){ ?>
                 <div class="checkbox checkbox-primary">
                     <input type="checkbox" name="donotsendwelcomeemail" id="donotsendwelcomeemail">
                     <label for="donotsendwelcomeemail">
@@ -98,7 +98,7 @@
                     </label>
                 </div>
                 <?php } ?>
-                <?php if(total_rows(db_prefix().'emailtemplates',array('slug'=>'contact-set-password','active'=>0)) == 0){ ?>
+                <?php if(total_rows('tblemailtemplates',array('slug'=>'contact-set-password','active'=>0)) == 0){ ?>
                 <div class="checkbox checkbox-primary">
                     <input type="checkbox" name="send_set_password_email" id="send_set_password_email">
                     <label for="send_set_password_email">

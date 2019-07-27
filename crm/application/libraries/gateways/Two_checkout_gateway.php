@@ -60,9 +60,15 @@ class Two_checkout_gateway extends App_gateway
         ]);
 
         /**
+        * REQUIRED
+        * Hook gateway with other online payment modes
+        */
+        add_action('before_add_online_payment_modes', [ $this, 'initMode' ]);
+
+        /**
          * Add ssl notice
          */
-        hooks()->add_action('before_render_payment_gateway_settings', 'two_checkout_ssl_notice');
+        add_action('before_render_payment_gateway_settings', 'two_checkout_ssl_notice');
 
         $line_address_2_required                     = $this->required_address_line_2_country_codes;
         $this->required_address_line_2_country_codes = [];
@@ -149,6 +155,5 @@ function two_checkout_ssl_notice($gateway)
 {
     if ($gateway['id'] == 'two_checkout') {
         echo '<p class="text-warning">' . _l('2checkout_usage_notice') . '</p>';
-        echo '<p class="alert alert-warning bold">2Checkout payment gateway is deprecated and will be removed or replaced in future updates.</p>';
     }
 }

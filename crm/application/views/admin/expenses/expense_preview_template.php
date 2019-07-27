@@ -15,7 +15,7 @@
                      <?php echo _l('expense'); ?>
                      </a>
                   </li>
-                  <?php if(count($child_expenses) > 0 || $expense->recurring != 0) { ?>
+                  <?php if($expense->recurring > 0) { ?>
                   <li role="presentation">
                      <a href="#tab_child_expenses" aria-controls="tab_child_expenses" role="tab" data-toggle="tab">
                      <?php echo _l('child_expenses'); ?>
@@ -31,7 +31,7 @@
                      <a href="#tab_reminders" onclick="initDataTable('.table-reminders', admin_url + 'misc/get_reminders/' + <?php echo $expense->id ;?> + '/' + 'expense', undefined, undefined,undefined,[1,'ASC']); return false;" aria-controls="tab_reminders" role="tab" data-toggle="tab">
                      <?php echo _l('expenses_reminders'); ?>
                      <?php
-                        $total_reminders = total_rows(db_prefix().'reminders',
+                        $total_reminders = total_rows('tblreminders',
                           array(
                            'isnotified'=>0,
                            'staff'=>get_staff_user_id(),
@@ -54,7 +54,7 @@
          </div>
          <div class="row">
             <div class="col-md-6" id="expenseHeadings">
-               <h3 class="bold bold mbot5 no-mtop" id="expenseCategory"><?php echo $expense->category_name; ?></h3>
+               <h3 class="bold no-margin" id="expenseCategory"><?php echo $expense->category_name; ?></h3>
                <?php if(!empty($expense->expense_name)){ ?>
                <h4 class="text-muted font-medium no-mtop" id="expenseName"><?php echo $expense->expense_name; ?></h4>
                <?php } ?>
@@ -93,60 +93,55 @@
          <div class="tab-content">
             <div role="tabpanel" class="tab-pane ptop10 active" id="tab_expense" data-empty-note="<?php echo empty($expense->note); ?>" data-empty-name="<?php echo empty($expense->expense_name); ?>">
                <div class="row">
-                <?php
-                if($expense->recurring > 0 || $expense->recurring_from != NULL) {
-                  echo '<div class="col-md-12">';
+                  <?php
+                     if($expense->recurring > 0 || $expense->recurring_from != NULL) {
+                      echo '<div class="col-md-12">';
+                      $recurring_expense = $expense;
+                      $next_recurring_date_compare = $recurring_expense->date;
+                      if($recurring_expense->last_recurring_date){
+                        $next_recurring_date_compare = $recurring_expense->last_recurring_date;
+                      }
+                      if($expense->recurring_from != NULL){
+                        $recurring_expense = $this->expenses_model->get($expense->recurring_from);
+                        $next_recurring_date_compare = $recurring_expense->last_recurring_date;
+                      }
 
-                  $recurring_expense = $expense;
-                  $show_recurring_expense_info = true;
+                      $next_date = date('Y-m-d', strtotime('+' . $recurring_expense->recurring . ' ' . strtoupper($recurring_expense->recurring_type),strtotime($next_recurring_date_compare)));
 
-                  if($expense->recurring_from != NULL){
-                    $recurring_expense = $this->expenses_model->get($expense->recurring_from);
-                         // Maybe recurring expense not longer recurring?
-                    if($recurring_expense->recurring == 0) {
-                      $show_recurring_expense_info = false;
-                    } else {
-                      $next_recurring_date_compare = $recurring_expense->last_recurring_date;
-                    }
-                  } else {
-                    $next_recurring_date_compare = $recurring_expense->date;
-                    if($recurring_expense->last_recurring_date){
-                      $next_recurring_date_compare = $recurring_expense->last_recurring_date;
-                    }
-                  }
-                  if($show_recurring_expense_info){
-                   $next_date = date('Y-m-d', strtotime('+' . $recurring_expense->recurring . ' ' . strtoupper($recurring_expense->recurring_type),strtotime($next_recurring_date_compare)));
-                 }
-                 ?>
-                 <?php if($expense->recurring_from == null && $recurring_expense->cycles > 0 && $recurring_expense->cycles == $recurring_expense->total_cycles) { ?>
+                      ?>
+                  <?php if($expense->recurring_from == null && $recurring_expense->cycles > 0 && $recurring_expense->cycles == $recurring_expense->total_cycles) { ?>
                   <div class="alert alert-info mbot15">
-                   <?php echo _l('recurring_has_ended', _l('expense_lowercase')); ?>
-                 </div>
-               <?php } else  if($show_recurring_expense_info){ ?>
-                <span class="label label-default padding-5">
+                     <?php echo _l('recurring_has_ended', _l('expense_lowercase')); ?>
+                  </div>
+                  <?php } else { ?>
+                  <span class="label label-default padding-5">
                   <?php echo _l('cycles_remaining'); ?>:
                   <b>
-                   <?php
-                     echo $recurring_expense->cycles == 0 ? _l('cycles_infinity') : $recurring_expense->cycles - $recurring_expense->total_cycles;
-                   ?>
-                 </b>
-               </span>
-               <?php if($recurring_expense->cycles == 0 || $recurring_expense->cycles != $recurring_expense->total_cycles){
-                echo '<span class="label label-default padding-5 mleft5"><i class="fa fa-question-circle fa-fw" data-toggle="tooltip" data-title="'._l('recurring_recreate_hour_notice',_l('expense')).'"></i> ' . _l('next_expense_date','<b>'._d($next_date).'</b>') .'</span>';
-              }
-            }
-            if($expense->recurring_from != NULL){ ?>
-              <?php echo '<p class="text-muted no-mbot'.($show_recurring_expense_info ? ' mtop15': '').'">'._l('expense_recurring_from','<a href="'.admin_url('expenses/list_expenses/'.$expense->recurring_from).'" onclick="init_expense('.$expense->recurring_from.');return false;">'.$recurring_expense->category_name.(!empty($recurring_expense->expense_name) ? ' ('.$recurring_expense->expense_name.')' : '').'</a></p>'); ?>
-            <?php } ?>
-          </div>
-          <div class="clearfix"></div>
-          <hr class="hr-panel-heading" />
-        <?php } ?>
+                  <?php
+                     if($recurring_expense->cycles == 0){
+                         echo _l('cycles_infinity');
+                        } else {
+                         echo $recurring_expense->cycles - $recurring_expense->total_cycles;
+                        }
+                      ?>
+                  </b>
+                  </span>
+                  <?php } ?>
+                  <?php if($recurring_expense->cycles == 0 || $recurring_expense->cycles != $recurring_expense->total_cycles){ ?>
+                  <?php echo '<span class="label label-default padding-5 mleft5"><i class="fa fa-question-circle fa-fw" data-toggle="tooltip" data-title="'._l('recurring_recreate_hour_notice',_l('expense')).'"></i> ' . _l('next_expense_date','<b>'._d($next_date).'</b>') .'</span>'; ?>
+                  <?php } ?>
+                  <?php
+                     if($expense->recurring_from != NULL){ ?>
+                  <?php echo '<p class="text-muted mtop15 no-mbot">'._l('expense_recurring_from','<a href="'.admin_url('expenses/list_expenses/'.$expense->recurring_from).'" onclick="init_expense('.$expense->recurring_from.');return false;">'.$recurring_expense->category_name.(!empty($recurring_expense->expense_name) ? ' ('.$recurring_expense->expense_name.')' : '').'</a></p>'); ?>
+                  <?php } ?>
+               </div>
+               <div class="clearfix"></div>
+               <hr class="hr-panel-heading" />
+               <?php } ?>
                <div class="col-md-6">
                   <p>
                     <div id="amountWrapper">
-                      <span class="bold font-medium"><?php echo _l('expense_amount'); ?></span>
-                      <span class="text-danger bold font-medium"><?php echo app_format_money($expense->amount, $expense->currency_data); ?></span>
+                      <span class="bold font-medium"><?php echo _l('expense_amount'); ?></span> <span class="text-danger bold font-medium"><?php echo format_money($expense->amount,$expense->currency_data->symbol); ?></span>
                     </div>
                      <?php if($expense->paymentmode != '0' && !empty($expense->paymentmode)){
                         ?>
@@ -163,7 +158,7 @@
                          $total += ($expense->amount / 100 * $expense->taxrate2);
                         }
                         if($expense->tax != 0 || $expense->tax2 != 0){
-                          echo '<p class="font-medium bold text-danger">' . _l('total_with_tax') . ': ' . app_format_money($total ,$expense->currency_data) . '</p>';
+                        echo '<p class="font-medium bold text-danger">' . _l('total_with_tax') . ': ' . format_money($total,$expense->currency_data->symbol) . '</p>';
                         }
                         ?>
                            <p><span class="bold"><?php echo _l('expense_date'); ?></span> <span class="text-muted"><?php echo _d($expense->date); ?></span></p>
@@ -235,10 +230,11 @@
                </div>
             </div>
          </div>
-          <?php if(count($child_expenses) > 0 || $expense->recurring != 0){ ?>
+         <?php if($expense->recurring > 0){ ?>
          <div role="tabpanel" class="tab-pane" id="tab_child_expenses">
-            <?php if(count($child_expenses) > 0){ ?>
-            <h4 class="mbot25 mtop25"><?php echo _l('expenses_created_from_this_recurring_expense'); ?></h4>
+            <?php if(count($child_expenses)){ ?>
+            <p class="mtop30 bold"><?php echo _l('expenses_created_from_this_recurring_expense'); ?></p>
+            <br />
             <ul class="list-group">
                <?php foreach($child_expenses as $recurring){ ?>
                <li class="list-group-item">
@@ -247,8 +243,7 @@
                   <br />
                   <span class="inline-block mtop10">
                      <?php echo '<span class="bold">'._d($recurring->date).'</span>'; ?><br />
-                     <p><span class="bold font-medium"><?php echo _l('expense_amount'); ?></span>
-                      <span class="text-danger bold font-medium"><?php echo app_format_money($recurring->amount, $recurring->currency_data); ?></span>
+                     <p><span class="bold font-medium"><?php echo _l('expense_amount'); ?></span> <span class="text-danger bold font-medium"><?php echo format_money($recurring->amount,$recurring->currency_data->symbol); ?></span>
                         <?php
                            if($recurring->tax != 0){
                             echo '<br /><span class="bold">'._l('tax_1') .':</span> ' . $recurring->taxrate . '% ('.$recurring->tax_name.')';
@@ -260,7 +255,7 @@
                             $total += ($recurring->amount / 100 * $recurring->taxrate2);
                            }
                            if($recurring->tax != 0 || $recurring->tax2 != 0){
-                           echo '<p class="font-medium bold text-danger">' . _l('total_with_tax') . ': ' . app_format_money($total, $recurring->currency_data) . '</p>';
+                           echo '<p class="font-medium bold text-danger">' . _l('total_with_tax') . ': ' . format_money($total,$recurring->currency_data->symbol) . '</p>';
                            }
                            ?>
                   </span>
@@ -296,7 +291,7 @@
      if(typeof(expensePreviewDropzone) != 'undefined'){
        expensePreviewDropzone.destroy();
      }
-     expensePreviewDropzone = new Dropzone("#expense-receipt-upload", appCreateDropzoneOptions({
+     expensePreviewDropzone = new Dropzone("#expense-receipt-upload",  $.extend({},_dropzone_defaults(),{
        clickable: '#dropzoneDragArea',
        maxFiles: 1,
        success:function(file,response){

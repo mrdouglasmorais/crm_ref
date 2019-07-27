@@ -12,7 +12,7 @@ namespace Stripe;
  *
  * @package Stripe
  */
-class Collection extends StripeObject implements \IteratorAggregate
+class Collection extends StripeObject
 {
 
     const OBJECT_NAME = "list";
@@ -66,15 +66,6 @@ class Collection extends StripeObject implements \IteratorAggregate
         );
         $this->_requestParams = $params;
         return Util\Util::convertToStripeObject($response, $opts);
-    }
-
-    /**
-     * @return \ArrayIterator An iterator that can be used to iterate
-     *    across objects in the current page.
-     */
-    public function getIterator()
-    {
-        return new \ArrayIterator($this->data);
     }
 
     /**

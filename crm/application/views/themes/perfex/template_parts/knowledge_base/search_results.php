@@ -1,7 +1,7 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed');
 if(count($articles) > 0){
 	?>
-	<div class="col-md-12 kb-search-results">
+	<div class="col-md-12">
 		<h2><?php echo $title; ?></h2>
 		<hr />
 	</div>

@@ -47,14 +47,14 @@ ob_end_clean();
                </li>
             <?php } ?>
          </ul>
-         <div class="mobile-navbar collapse" id="mobile-collapse" aria-expanded="false" style="height: 0px;" role="navigation">
+         <div class="mobile-navbar collapse" id="mobile-collapse" aria-expanded="false" style="height: 0px;" role="navigation" >
             <ul class="nav navbar-nav">
                <li class="header-my-profile"><a href="<?php echo admin_url('profile'); ?>"><?php echo _l('nav_my_profile'); ?></a></li>
                <li class="header-my-timesheets"><a href="<?php echo admin_url('staff/timesheets'); ?>"><?php echo _l('my_timesheets'); ?></a></li>
                <li class="header-edit-profile"><a href="<?php echo admin_url('staff/edit_profile'); ?>"><?php echo _l('nav_edit_profile'); ?></a></li>
                <?php if(is_staff_member()){ ?>
                   <li class="header-newsfeed">
-                   <a href="#" class="open_newsfeed mobile">
+                   <a href="#" class="open_newsfeed">
                      <?php echo _l('whats_on_your_mind'); ?>
                   </a>
                </li>
@@ -68,7 +68,7 @@ ob_end_clean();
       if(!is_mobile()){
        echo $top_search_area;
     } ?>
-    <?php hooks()->do_action('after_render_top_search'); ?>
+    <?php do_action('after_render_top_search'); ?>
     <li class="icon header-user-profile" data-toggle="tooltip" title="<?php echo get_staff_full_name(); ?>" data-placement="bottom">
       <a href="#" class="dropdown-toggle profile" data-toggle="dropdown" aria-expanded="false">
          <?php echo staff_profile_image($current_user->staffid,array('img','img-responsive','staff-profile-image-small','pull-left')); ?>
@@ -96,7 +96,7 @@ ob_end_clean();
    </li>
    <?php if(is_staff_member()){ ?>
       <li class="icon header-newsfeed">
-         <a href="#" class="open_newsfeed desktop" data-toggle="tooltip" title="<?php echo _l('whats_on_your_mind'); ?>" data-placement="bottom"><i class="fa fa-share fa-fw fa-lg" aria-hidden="true"></i></a>
+         <a href="#" class="open_newsfeed" data-toggle="tooltip" title="<?php echo _l('whats_on_your_mind'); ?>" data-placement="bottom"><i class="fa fa-share fa-fw fa-lg" aria-hidden="true"></i></a>
       </li>
    <?php } ?>
    <li class="icon header-todo">

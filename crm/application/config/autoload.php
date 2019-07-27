@@ -61,12 +61,16 @@ $autoload['packages'] = [];
 */
 $autoload['libraries'] = [
     'database',
+    'app_scripts',
+    'app_css',
     'user_agent',
     'image_lib',
     'encryption',
+    'object_cache',
+    'email',
     'app',
     'gateways/app_gateway',
-    'email', // As last because it's using get_option via $this->app library
+    'sms',
 ];
 
 $CI = &get_instance();
@@ -105,37 +109,27 @@ $autoload['drivers'] = ['session'];
 |
 |   $autoload['helper'] = array('url', 'file');
 */
-
-/*
-* @deprecated version 2.3.0
- */
-include_once(APPPATH.'third_party/action_hooks.php');
-
 $autoload['helper'] = [
         'url',
         'file',
         'form',
-        'settings',
-        'modules',
-        'core_hooks',
-        'admin',
+        'action_hooks',
         'assets',
         'user_meta',
         'emails_tracking',
-        'staff',
-        'countries',
-        'payment_gateways',
         'general',
         'misc',
         'func',
         'gdpr',
         'datatables',
         'custom_fields',
-        'menu',
-        'template',
+        'defaults',
+        'merge_fields',
+        'app_html',
         'email_templates',
         'invoices',
         'subscriptions',
+        'expenses',
         'estimates',
         'contracts',
         'credit_notes',
@@ -153,11 +147,16 @@ $autoload['helper'] = [
         'upload',
         'sales',
         'themes',
+        'theme_style',
         'pre_query_data_formatters',
         'widgets',
         'sms',
         'deprecated',
     ];
+
+if (file_exists(APPPATH . 'helpers/system_messages_helper.php')) {
+    array_push($autoload['helper'], 'system_messages');
+}
 
 if (file_exists(APPPATH . 'helpers/my_functions_helper.php')) {
     array_push($autoload['helper'], 'my_functions');

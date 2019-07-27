@@ -2,7 +2,7 @@
 
 defined('BASEPATH') or exit('No direct script access allowed');
 
-class Leads_model extends App_Model
+class Leads_model extends CRM_Model
 {
     public function __construct()
     {
@@ -16,14 +16,14 @@ class Leads_model extends App_Model
      */
     public function get($id = '', $where = [])
     {
-        $this->db->select('*,' . db_prefix() . 'leads.name, ' . db_prefix() . 'leads.id,' . db_prefix() . 'leads_status.name as status_name,' . db_prefix() . 'leads_sources.name as source_name');
-        $this->db->join(db_prefix() . 'leads_status', db_prefix() . 'leads_status.id=' . db_prefix() . 'leads.status', 'left');
-        $this->db->join(db_prefix() . 'leads_sources', db_prefix() . 'leads_sources.id=' . db_prefix() . 'leads.source', 'left');
+        $this->db->select('*,tblleads.name, tblleads.id,tblleadsstatus.name as status_name,tblleadssources.name as source_name');
+        $this->db->join('tblleadsstatus', 'tblleadsstatus.id=tblleads.status', 'left');
+        $this->db->join('tblleadssources', 'tblleadssources.id=tblleads.source', 'left');
 
         $this->db->where($where);
         if (is_numeric($id)) {
-            $this->db->where(db_prefix() . 'leads.id', $id);
-            $lead = $this->db->get(db_prefix() . 'leads')->row();
+            $this->db->where('tblleads.id', $id);
+            $lead = $this->db->get('tblleads')->row();
             if ($lead) {
                 if ($lead->from_form_id != 0) {
                     $lead->form_data = $this->get_form([
@@ -37,7 +37,7 @@ class Leads_model extends App_Model
             return $lead;
         }
 
-        return $this->db->get(db_prefix() . 'leads')->result_array();
+        return $this->db->get('tblleads')->result_array();
     }
 
     public function do_kanban_query($status, $search = '', $page = 1, $sort = [], $count = false)
@@ -47,22 +47,22 @@ class Leads_model extends App_Model
         $default_leads_kanban_sort_type = get_option('default_leads_kanban_sort_type');
         $has_permission_view            = has_permission('leads', '', 'view');
 
-        $this->db->select(db_prefix() . 'leads.title, ' . db_prefix() . 'leads.website, ' . db_prefix() . 'leads.address, ' . db_prefix() . 'leads.city, ' . db_prefix() . 'leads.state, ' . db_prefix() . 'leads.country, ' . db_prefix() . 'leads.zip, ' . db_prefix() . 'leads.name as lead_name,' . db_prefix() . 'leads_sources.name as source_name,' . db_prefix() . 'leads.id as id,' . db_prefix() . 'leads.assigned,' . db_prefix() . 'leads.email,' . db_prefix() . 'leads.phonenumber,' . db_prefix() . 'leads.company,' . db_prefix() . 'leads.dateadded,' . db_prefix() . 'leads.status,' . db_prefix() . 'leads.lastcontact,(SELECT COUNT(*) FROM ' . db_prefix() . 'clients WHERE leadid=' . db_prefix() . 'leads.id) as is_lead_client, (SELECT COUNT(id) FROM ' . db_prefix() . 'files WHERE rel_id=' . db_prefix() . 'leads.id AND rel_type="lead") as total_files, (SELECT COUNT(id) FROM ' . db_prefix() . 'notes WHERE rel_id=' . db_prefix() . 'leads.id AND rel_type="lead") as total_notes,(SELECT GROUP_CONCAT(name SEPARATOR ",") FROM ' . db_prefix() . 'taggables JOIN ' . db_prefix() . 'tags ON ' . db_prefix() . 'taggables.tag_id = ' . db_prefix() . 'tags.id WHERE rel_id = ' . db_prefix() . 'leads.id and rel_type="lead" ORDER by tag_order ASC) as tags');
-        $this->db->from(db_prefix() . 'leads');
-        $this->db->join(db_prefix() . 'leads_sources', db_prefix() . 'leads_sources.id=' . db_prefix() . 'leads.source');
-        $this->db->join(db_prefix() . 'staff', db_prefix() . 'staff.staffid=' . db_prefix() . 'leads.assigned', 'left');
+        $this->db->select('tblleads.title, tblleads.website, tblleads.address, tblleads.city, tblleads.state, tblleads.country, tblleads.zip, tblleads.name as lead_name,tblleadssources.name as source_name,tblleads.id as id,tblleads.assigned,tblleads.email,tblleads.phonenumber,tblleads.company,tblleads.dateadded,tblleads.status,tblleads.lastcontact,(SELECT COUNT(*) FROM tblclients WHERE leadid=tblleads.id) as is_lead_client, (SELECT COUNT(id) FROM tblfiles WHERE rel_id=tblleads.id AND rel_type="lead") as total_files, (SELECT COUNT(id) FROM tblnotes WHERE rel_id=tblleads.id AND rel_type="lead") as total_notes,(SELECT GROUP_CONCAT(name SEPARATOR ",") FROM tbltags_in JOIN tbltags ON tbltags_in.tag_id = tbltags.id WHERE rel_id = tblleads.id and rel_type="lead" ORDER by tag_order ASC) as tags');
+        $this->db->from('tblleads');
+        $this->db->join('tblleadssources', 'tblleadssources.id=tblleads.source', 'left');
+        $this->db->join('tblstaff', 'tblstaff.staffid=tblleads.assigned', 'left');
         $this->db->where('status', $status);
         if (!$has_permission_view) {
             $this->db->where('(assigned = ' . get_staff_user_id() . ' OR addedfrom=' . get_staff_user_id() . ' OR is_public=1)');
         }
         if ($search != '') {
-            if (!startsWith($search, '#')) {
-                $this->db->where('(' . db_prefix() . 'leads.name LIKE "%' . $search . '%" OR ' . db_prefix() . 'leads_sources.name LIKE "%' . $search . '%" OR ' . db_prefix() . 'leads.email LIKE "%' . $search . '%" OR ' . db_prefix() . 'leads.phonenumber LIKE "%' . $search . '%" OR ' . db_prefix() . 'leads.company LIKE "%' . $search . '%" OR CONCAT(' . db_prefix() . 'staff.firstname, \' \', ' . db_prefix() . 'staff.lastname) LIKE "%' . $search . '%")');
+            if (!_startsWith($search, '#')) {
+                $this->db->where('(tblleads.name LIKE "%' . $search . '%" OR tblleadssources.name LIKE "%' . $search . '%" OR tblleads.email LIKE "%' . $search . '%" OR tblleads.phonenumber LIKE "%' . $search . '%" OR tblleads.company LIKE "%' . $search . '%" OR CONCAT(tblstaff.firstname, \' \', tblstaff.lastname) LIKE "%' . $search . '%")');
             } else {
-                $this->db->where(db_prefix() . 'leads.id IN
-                (SELECT rel_id FROM ' . db_prefix() . 'taggables WHERE tag_id IN
-                (SELECT id FROM ' . db_prefix() . 'tags WHERE name="' . strafter($search, '#') . '")
-                AND ' . db_prefix() . 'taggables.rel_type=\'lead\' GROUP BY rel_id HAVING COUNT(tag_id) = 1)
+                $this->db->where('tblleads.id IN
+                (SELECT rel_id FROM tbltags_in WHERE tag_id IN
+                (SELECT id FROM tbltags WHERE name="' . strafter($search, '#') . '")
+                AND tbltags_in.rel_type=\'lead\' GROUP BY rel_id HAVING COUNT(tag_id) = 1)
                 ');
             }
         }
@@ -124,7 +124,7 @@ class Leads_model extends App_Model
         $data['dateadded']   = date('Y-m-d H:i:s');
         $data['addedfrom']   = get_staff_user_id();
 
-        $data = hooks()->apply_filters('before_lead_added', $data);
+        $data = do_action('before_lead_added', $data);
 
         $tags = '';
         if (isset($data['tags'])) {
@@ -141,10 +141,10 @@ class Leads_model extends App_Model
         $data['address'] = nl2br($data['address']);
 
         $data['email'] = trim($data['email']);
-        $this->db->insert(db_prefix() . 'leads', $data);
+        $this->db->insert('tblleads', $data);
         $insert_id = $this->db->insert_id();
         if ($insert_id) {
-            log_activity('New Lead Added [ID: ' . $insert_id . ']');
+            logActivity('New Lead Added [ID: ' . $insert_id . ']');
             $this->log_lead_activity($insert_id, 'not_lead_activity_created');
 
             handle_tags_save($tags, $insert_id, 'lead');
@@ -152,9 +152,8 @@ class Leads_model extends App_Model
             if (isset($custom_fields)) {
                 handle_custom_fields_post($insert_id, $custom_fields);
             }
-
             $this->lead_assigned_member_notification($insert_id, $data['assigned']);
-            hooks()->do_action('lead_created', $insert_id);
+            do_action('lead_created', $insert_id);
 
             return $insert_id;
         }
@@ -171,7 +170,7 @@ class Leads_model extends App_Model
                 }
             }
 
-            $name = $this->db->select('name')->from(db_prefix() . 'leads')->where('id', $lead_id)->get()->row()->name;
+            $name = $this->db->select('name')->from('tblleads')->where('id', $lead_id)->get()->row()->name;
 
             $notification_data = [
                 'description'     => ($integration == false) ? 'not_assigned_lead_to_you' : 'not_lead_assigned_from_form',
@@ -190,14 +189,16 @@ class Leads_model extends App_Model
                 pusher_trigger_notification([$assigned]);
             }
 
-            $this->db->select('email');
             $this->db->where('staffid', $assigned);
-            $email = $this->db->get(db_prefix() . 'staff')->row()->email;
+            $email = $this->db->get('tblstaff')->row()->email;
 
-            send_mail_template('lead_assigned', $lead_id, $email);
+            $this->load->model('emails_model');
+            $merge_fields = [];
+            $merge_fields = array_merge($merge_fields, get_lead_merge_fields($lead_id));
+            $this->emails_model->send_email_template('new-lead-assigned', $email, $merge_fields);
 
             $this->db->where('id', $lead_id);
-            $this->db->update(db_prefix() . 'leads', [
+            $this->db->update('tblleads', [
                 'dateassigned' => date('Y-m-d'),
             ]);
 
@@ -295,12 +296,12 @@ class Leads_model extends App_Model
         $data['email'] = trim($data['email']);
 
         $this->db->where('id', $id);
-        $this->db->update(db_prefix() . 'leads', $data);
+        $this->db->update('tblleads', $data);
         if ($this->db->affected_rows() > 0) {
             $affectedRows++;
             if (isset($data['status']) && $current_status_id != $data['status']) {
                 $this->db->where('id', $id);
-                $this->db->update(db_prefix() . 'leads', [
+                $this->db->update('tblleads', [
                     'last_status_change' => date('Y-m-d H:i:s'),
                 ]);
                 $new_status_name = $this->get_status($data['status'])->name;
@@ -310,16 +311,12 @@ class Leads_model extends App_Model
                     $new_status_name,
                 ]));
 
-                hooks()->do_action('lead_status_changed', [
-                    'lead_id'    => $id,
-                    'old_status' => $current_status_id,
-                    'new_status' => $data['status'],
-                ]);
+                do_action('lead_status_changed', ['lead_id' => $id, 'old_status' => $current_status_id, 'new_status' => $data['status']]);
             }
 
             if (($current_lead_data->junk == 1 || $current_lead_data->lost == 1) && $data['status'] != 0) {
                 $this->db->where('id', $id);
-                $this->db->update(db_prefix() . 'leads', [
+                $this->db->update('tblleads', [
                     'junk' => 0,
                     'lost' => 0,
                 ]);
@@ -330,7 +327,7 @@ class Leads_model extends App_Model
                     $this->lead_assigned_member_notification($id, $data['assigned']);
                 }
             }
-            log_activity('Lead Updated [ID: ' . $id . ']');
+            logActivity('Lead Updated [ID: ' . $id . ']');
 
             return true;
         }
@@ -350,14 +347,14 @@ class Leads_model extends App_Model
     {
         $affectedRows = 0;
 
-        hooks()->do_action('before_lead_deleted', $id);
+        do_action('before_lead_deleted', $id);
 
         $lead = $this->get($id);
 
         $this->db->where('id', $id);
-        $this->db->delete(db_prefix() . 'leads');
+        $this->db->delete('tblleads');
         if ($this->db->affected_rows() > 0) {
-            log_activity('Lead Deleted [Deleted by: ' . get_staff_full_name() . ', ID: ' . $id . ']');
+            logActivity('Lead Deleted [Deleted by: ' . get_staff_full_name() . ', ID: ' . $id . ']');
 
             $attachments = $this->get_lead_attachments($id);
             foreach ($attachments as $attachment) {
@@ -367,30 +364,30 @@ class Leads_model extends App_Model
             // Delete the custom field values
             $this->db->where('relid', $id);
             $this->db->where('fieldto', 'leads');
-            $this->db->delete(db_prefix() . 'customfieldsvalues');
+            $this->db->delete('tblcustomfieldsvalues');
 
             $this->db->where('leadid', $id);
-            $this->db->delete(db_prefix() . 'lead_activity_log');
+            $this->db->delete('tblleadactivitylog');
 
             $this->db->where('leadid', $id);
-            $this->db->delete(db_prefix() . 'lead_integration_emails');
+            $this->db->delete('tblleadsemailintegrationemails');
 
             $this->db->where('rel_id', $id);
             $this->db->where('rel_type', 'lead');
-            $this->db->delete(db_prefix() . 'notes');
+            $this->db->delete('tblnotes');
 
             $this->db->where('rel_type', 'lead');
             $this->db->where('rel_id', $id);
-            $this->db->delete(db_prefix() . 'reminders');
+            $this->db->delete('tblreminders');
 
             $this->db->where('rel_type', 'lead');
             $this->db->where('rel_id', $id);
-            $this->db->delete(db_prefix() . 'taggables');
+            $this->db->delete('tbltags_in');
 
             $this->load->model('proposals_model');
             $this->db->where('rel_id', $id);
             $this->db->where('rel_type', 'lead');
-            $proposals = $this->db->get(db_prefix() . 'proposals')->result_array();
+            $proposals = $this->db->get('tblproposals')->result_array();
 
             foreach ($proposals as $proposal) {
                 $this->proposals_model->delete($proposal['id']);
@@ -399,14 +396,14 @@ class Leads_model extends App_Model
             // Get related tasks
             $this->db->where('rel_type', 'lead');
             $this->db->where('rel_id', $id);
-            $tasks = $this->db->get(db_prefix() . 'tasks')->result_array();
+            $tasks = $this->db->get('tblstafftasks')->result_array();
             foreach ($tasks as $task) {
                 $this->tasks_model->delete_task($task['id']);
             }
 
             if (is_gdpr()) {
                 $this->db->where('(description LIKE "%' . $lead->email . '%" OR description LIKE "%' . $lead->name . '%" OR description LIKE "%' . $lead->phonenumber . '%")');
-                $this->db->delete(db_prefix() . 'activity_log');
+                $this->db->delete('tblactivitylog');
             }
 
             $affectedRows++;
@@ -426,24 +423,21 @@ class Leads_model extends App_Model
     public function mark_as_lost($id)
     {
         $this->db->select('status');
-        $this->db->from(db_prefix() . 'leads');
+        $this->db->from('tblleads');
         $this->db->where('id', $id);
         $last_lead_status = $this->db->get()->row()->status;
 
         $this->db->where('id', $id);
-        $this->db->update(db_prefix() . 'leads', [
+        $this->db->update('tblleads', [
             'lost'               => 1,
             'status'             => 0,
             'last_status_change' => date('Y-m-d H:i:s'),
             'last_lead_status'   => $last_lead_status,
         ]);
-
         if ($this->db->affected_rows() > 0) {
             $this->log_lead_activity($id, 'not_lead_activity_marked_lost');
-
-            log_activity('Lead Marked as Lost [ID: ' . $id . ']');
-
-            hooks()->do_action('lead_marked_as_lost', $id);
+            logActivity('Lead Marked as Lost [ID: ' . $id . ']');
+            do_action('lead_marked_as_lost', $id);
 
             return true;
         }
@@ -459,19 +453,18 @@ class Leads_model extends App_Model
     public function unmark_as_lost($id)
     {
         $this->db->select('last_lead_status');
-        $this->db->from(db_prefix() . 'leads');
+        $this->db->from('tblleads');
         $this->db->where('id', $id);
         $last_lead_status = $this->db->get()->row()->last_lead_status;
 
         $this->db->where('id', $id);
-        $this->db->update(db_prefix() . 'leads', [
+        $this->db->update('tblleads', [
             'lost'   => 0,
             'status' => $last_lead_status,
         ]);
         if ($this->db->affected_rows() > 0) {
             $this->log_lead_activity($id, 'not_lead_activity_unmarked_lost');
-
-            log_activity('Lead Unmarked as Lost [ID: ' . $id . ']');
+            logActivity('Lead Unmarked as Lost [ID: ' . $id . ']');
 
             return true;
         }
@@ -487,24 +480,21 @@ class Leads_model extends App_Model
     public function mark_as_junk($id)
     {
         $this->db->select('status');
-        $this->db->from(db_prefix() . 'leads');
+        $this->db->from('tblleads');
         $this->db->where('id', $id);
         $last_lead_status = $this->db->get()->row()->status;
 
         $this->db->where('id', $id);
-        $this->db->update(db_prefix() . 'leads', [
+        $this->db->update('tblleads', [
             'junk'               => 1,
             'status'             => 0,
             'last_status_change' => date('Y-m-d H:i:s'),
             'last_lead_status'   => $last_lead_status,
         ]);
-
         if ($this->db->affected_rows() > 0) {
             $this->log_lead_activity($id, 'not_lead_activity_marked_junk');
-
-            log_activity('Lead Marked as Junk [ID: ' . $id . ']');
-
-            hooks()->do_action('lead_marked_as_junk', $id);
+            logActivity('Lead Marked as Junk [ID: ' . $id . ']');
+            do_action('lead_marked_as_junk', $id);
 
             return true;
         }
@@ -520,18 +510,18 @@ class Leads_model extends App_Model
     public function unmark_as_junk($id)
     {
         $this->db->select('last_lead_status');
-        $this->db->from(db_prefix() . 'leads');
+        $this->db->from('tblleads');
         $this->db->where('id', $id);
         $last_lead_status = $this->db->get()->row()->last_lead_status;
 
         $this->db->where('id', $id);
-        $this->db->update(db_prefix() . 'leads', [
+        $this->db->update('tblleads', [
             'junk'   => 0,
             'status' => $last_lead_status,
         ]);
         if ($this->db->affected_rows() > 0) {
             $this->log_lead_activity($id, 'not_lead_activity_unmarked_junk');
-            log_activity('Lead Unmarked as Junk [ID: ' . $id . ']');
+            logActivity('Lead Unmarked as Junk [ID: ' . $id . ']');
 
             return true;
         }
@@ -552,13 +542,13 @@ class Leads_model extends App_Model
         if (is_numeric($attachment_id) || $idIsHash) {
             $this->db->where($idIsHash ? 'attachment_key' : 'id', $attachment_id);
 
-            return $this->db->get(db_prefix() . 'files')->row();
+            return $this->db->get('tblfiles')->row();
         }
         $this->db->where('rel_id', $id);
         $this->db->where('rel_type', 'lead');
         $this->db->order_by('dateadded', 'DESC');
 
-        return $this->db->get(db_prefix() . 'files')->result_array();
+        return $this->db->get('tblfiles')->result_array();
     }
 
     public function add_attachment_to_database($lead_id, $attachment, $external = false, $form_activity = false)
@@ -616,10 +606,10 @@ class Leads_model extends App_Model
                 unlink(get_upload_path_by_type('lead') . $attachment->rel_id . '/' . $attachment->file_name);
             }
             $this->db->where('id', $attachment->id);
-            $this->db->delete(db_prefix() . 'files');
+            $this->db->delete('tblfiles');
             if ($this->db->affected_rows() > 0) {
                 $deleted = true;
-                log_activity('Lead Attachment Deleted [ID: ' . $attachment->rel_id . ']');
+                logActivity('Lead Attachment Deleted [ID: ' . $attachment->rel_id . ']');
             }
 
             if (is_dir(get_upload_path_by_type('lead') . $attachment->rel_id)) {
@@ -647,12 +637,10 @@ class Leads_model extends App_Model
         if (is_numeric($id)) {
             $this->db->where('id', $id);
 
-            return $this->db->get(db_prefix() . 'leads_sources')->row();
+            return $this->db->get('tblleadssources')->row();
         }
 
-        $this->db->order_by('name', 'asc');
-
-        return $this->db->get(db_prefix() . 'leads_sources')->result_array();
+        return $this->db->get('tblleadssources')->result_array();
     }
 
     /**
@@ -661,10 +649,10 @@ class Leads_model extends App_Model
      */
     public function add_source($data)
     {
-        $this->db->insert(db_prefix() . 'leads_sources', $data);
+        $this->db->insert('tblleadssources', $data);
         $insert_id = $this->db->insert_id();
         if ($insert_id) {
-            log_activity('New Leads Source Added [SourceID: ' . $insert_id . ', Name: ' . $data['name'] . ']');
+            logActivity('New Leads Source Added [SourceID: ' . $insert_id . ', Name: ' . $data['name'] . ']');
         }
 
         return $insert_id;
@@ -679,9 +667,9 @@ class Leads_model extends App_Model
     public function update_source($data, $id)
     {
         $this->db->where('id', $id);
-        $this->db->update(db_prefix() . 'leads_sources', $data);
+        $this->db->update('tblleadssources', $data);
         if ($this->db->affected_rows() > 0) {
-            log_activity('Leads Source Updated [SourceID: ' . $id . ', Name: ' . $data['name'] . ']');
+            logActivity('Leads Source Updated [SourceID: ' . $id . ', Name: ' . $data['name'] . ']');
 
             return true;
         }
@@ -698,18 +686,18 @@ class Leads_model extends App_Model
     {
         $current = $this->get_source($id);
         // Check if is already using in table
-        if (is_reference_in_table('source', db_prefix() . 'leads', $id) || is_reference_in_table('lead_source', db_prefix() . 'leads_email_integration', $id)) {
+        if (is_reference_in_table('source', 'tblleads', $id) || is_reference_in_table('lead_source', 'tblleadsintegration', $id)) {
             return [
                 'referenced' => true,
             ];
         }
         $this->db->where('id', $id);
-        $this->db->delete(db_prefix() . 'leads_sources');
+        $this->db->delete('tblleadssources');
         if ($this->db->affected_rows() > 0) {
             if (get_option('leads_default_source') == $id) {
                 update_option('leads_default_source', '');
             }
-            log_activity('Leads Source Deleted [SourceID: ' . $id . ']');
+            logActivity('Leads Source Deleted [SourceID: ' . $id . ']');
 
             return true;
         }
@@ -730,19 +718,20 @@ class Leads_model extends App_Model
         if (is_numeric($id)) {
             $this->db->where('id', $id);
 
-            return $this->db->get(db_prefix() . 'leads_status')->row();
+            return $this->db->get('tblleadsstatus')->row();
         }
 
-        $statuses = $this->app_object_cache->get('leads-all-statuses');
+        $statuses = $this->object_cache->get('leads-all-statuses');
 
-        if (!$statuses) {
+        if(!$statuses) {
             $this->db->order_by('statusorder', 'asc');
 
-            $statuses = $this->db->get(db_prefix() . 'leads_status')->result_array();
-            $this->app_object_cache->add('leads-all-statuses', $statuses);
+            $statuses = $this->db->get('tblleadsstatus')->result_array();
+            $this->object_cache->add('leads-all-statuses', $statuses);
         }
 
         return $statuses;
+
     }
 
     /**
@@ -752,17 +741,17 @@ class Leads_model extends App_Model
     public function add_status($data)
     {
         if (isset($data['color']) && $data['color'] == '') {
-            $data['color'] = hooks()->apply_filters('default_lead_status_color', '#757575');
+            $data['color'] = do_action('default_lead_status_color', '#757575');
         }
 
         if (!isset($data['statusorder'])) {
-            $data['statusorder'] = total_rows(db_prefix() . 'leads_status') + 1;
+            $data['statusorder'] = total_rows('tblleadsstatus') + 1;
         }
 
-        $this->db->insert(db_prefix() . 'leads_status', $data);
+        $this->db->insert('tblleadsstatus', $data);
         $insert_id = $this->db->insert_id();
         if ($insert_id) {
-            log_activity('New Leads Status Added [StatusID: ' . $insert_id . ', Name: ' . $data['name'] . ']');
+            logActivity('New Leads Status Added [StatusID: ' . $insert_id . ', Name: ' . $data['name'] . ']');
 
             return $insert_id;
         }
@@ -773,9 +762,9 @@ class Leads_model extends App_Model
     public function update_status($data, $id)
     {
         $this->db->where('id', $id);
-        $this->db->update(db_prefix() . 'leads_status', $data);
+        $this->db->update('tblleadsstatus', $data);
         if ($this->db->affected_rows() > 0) {
-            log_activity('Leads Status Updated [StatusID: ' . $id . ', Name: ' . $data['name'] . ']');
+            logActivity('Leads Status Updated [StatusID: ' . $id . ', Name: ' . $data['name'] . ']');
 
             return true;
         }
@@ -792,19 +781,19 @@ class Leads_model extends App_Model
     {
         $current = $this->get_status($id);
         // Check if is already using in table
-        if (is_reference_in_table('status', db_prefix() . 'leads', $id) || is_reference_in_table('lead_status', db_prefix() . 'leads_email_integration', $id)) {
+        if (is_reference_in_table('status', 'tblleads', $id) || is_reference_in_table('lead_status', 'tblleadsintegration', $id)) {
             return [
                 'referenced' => true,
             ];
         }
 
         $this->db->where('id', $id);
-        $this->db->delete(db_prefix() . 'leads_status');
+        $this->db->delete('tblleadsstatus');
         if ($this->db->affected_rows() > 0) {
             if (get_option('leads_default_status') == $id) {
                 update_option('leads_default_status', '');
             }
-            log_activity('Leads Status Deleted [StatusID: ' . $id . ']');
+            logActivity('Leads Status Deleted [StatusID: ' . $id . ']');
 
             return true;
         }
@@ -821,7 +810,7 @@ class Leads_model extends App_Model
     {
         $this->db->select('status');
         $this->db->where('id', $data['leadid']);
-        $_old = $this->db->get(db_prefix() . 'leads')->row();
+        $_old = $this->db->get('tblleads')->row();
 
         $old_status = '';
 
@@ -836,7 +825,7 @@ class Leads_model extends App_Model
         $current_status = $this->get_status($data['status'])->name;
 
         $this->db->where('id', $data['leadid']);
-        $this->db->update(db_prefix() . 'leads', [
+        $this->db->update('tblleads', [
             'status' => $data['status'],
         ]);
 
@@ -852,21 +841,17 @@ class Leads_model extends App_Model
                     $current_status,
                 ]);
 
-                hooks()->do_action('lead_status_changed', [
-                    'lead_id'    => $data['leadid'],
-                    'old_status' => $old_status,
-                    'new_status' => $current_status,
-                ]);
+                do_action('lead_status_changed', ['lead_id' => $data['leadid'], 'old_status' => $old_status, 'new_status' => $current_status]);
             }
             $this->db->where('id', $data['leadid']);
-            $this->db->update(db_prefix() . 'leads', [
+            $this->db->update('tblleads', [
                 'last_status_change' => date('Y-m-d H:i:s'),
             ]);
         }
         if (isset($data['order'])) {
             foreach ($data['order'] as $order_data) {
                 $this->db->where('id', $order_data[0]);
-                $this->db->update(db_prefix() . 'leads', [
+                $this->db->update('tblleads', [
                     'leadorder' => $order_data[1],
                 ]);
             }
@@ -892,12 +877,12 @@ class Leads_model extends App_Model
      */
     public function get_lead_activity_log($id)
     {
-        $sorting = hooks()->apply_filters('lead_activity_log_default_sort', 'ASC');
+        $sorting = do_action('lead_activity_log_default_sort', 'ASC');
 
         $this->db->where('leadid', $id);
         $this->db->order_by('date', $sorting);
 
-        return $this->db->get(db_prefix() . 'lead_activity_log')->result_array();
+        return $this->db->get('tblleadactivitylog')->result_array();
     }
 
     public function staff_can_access_lead($id, $staff_id = '')
@@ -908,7 +893,7 @@ class Leads_model extends App_Model
             return true;
         }
 
-        if (total_rows(db_prefix() . 'leads', 'id="' . $id . '" AND (assigned=' . $staff_id . ' OR is_public=1 OR addedfrom=' . $staff_id . ')') > 0) {
+        if (total_rows('tblleads', 'id="' . $id . '" AND (assigned=' . $staff_id . ' OR is_public=1 OR addedfrom=' . $staff_id . ')') > 0) {
             return true;
         }
 
@@ -935,7 +920,7 @@ class Leads_model extends App_Model
             $log['full_name'] = '[CRON]';
         }
 
-        $this->db->insert(db_prefix() . 'lead_activity_log', $log);
+        $this->db->insert('tblleadactivitylog', $log);
 
         return $this->db->insert_id();
     }
@@ -948,7 +933,7 @@ class Leads_model extends App_Model
     {
         $this->db->where('id', 1);
 
-        return $this->db->get(db_prefix() . 'leads_email_integration')->row();
+        return $this->db->get('tblleadsintegration')->row();
     }
 
     /**
@@ -961,7 +946,7 @@ class Leads_model extends App_Model
         $this->db->where('leadid', $id);
         $this->db->order_by('dateadded', 'asc');
 
-        return $this->db->get(db_prefix() . 'lead_integration_emails')->result_array();
+        return $this->db->get('tblleadsemailintegrationemails')->result_array();
     }
 
     /**
@@ -972,7 +957,7 @@ class Leads_model extends App_Model
     public function update_email_integration($data)
     {
         $this->db->where('id', 1);
-        $original_settings = $this->db->get(db_prefix() . 'leads_email_integration')->row();
+        $original_settings = $this->db->get('tblleadsintegration')->row();
 
         $data['create_task_if_customer']        = isset($data['create_task_if_customer']) ? 1 : 0;
         $data['active']                         = isset($data['active']) ? 1 : 0;
@@ -1034,7 +1019,7 @@ class Leads_model extends App_Model
         }
 
         $this->db->where('id', 1);
-        $this->db->update(db_prefix() . 'leads_email_integration', $data);
+        $this->db->update('tblleadsintegration', $data);
         if ($this->db->affected_rows() > 0) {
             return true;
         }
@@ -1045,7 +1030,7 @@ class Leads_model extends App_Model
     public function change_status_color($data)
     {
         $this->db->where('id', $data['status_id']);
-        $this->db->update(db_prefix() . 'leads_status', [
+        $this->db->update('tblleadsstatus', [
             'color' => $data['color'],
         ]);
     }
@@ -1054,7 +1039,7 @@ class Leads_model extends App_Model
     {
         foreach ($data['order'] as $status) {
             $this->db->where('id', $status[0]);
-            $this->db->update(db_prefix() . 'leads_status', [
+            $this->db->update('tblleadsstatus', [
                 'statusorder' => $status[1],
             ]);
         }
@@ -1064,7 +1049,7 @@ class Leads_model extends App_Model
     {
         $this->db->where($where);
 
-        return $this->db->get(db_prefix() . 'web_to_lead')->row();
+        return $this->db->get('tblwebtolead')->row();
     }
 
     public function add_form($data)
@@ -1074,7 +1059,7 @@ class Leads_model extends App_Model
         $data['form_key']           = app_generate_hash();
 
         $data['create_task_on_duplicate'] = (int) isset($data['create_task_on_duplicate']);
-        $data['mark_public']              = (int) isset($data['mark_public']);
+        $data['mark_public'] = (int) isset($data['mark_public']);
 
         if (isset($data['allow_duplicate'])) {
             $data['allow_duplicate']           = 1;
@@ -1087,10 +1072,10 @@ class Leads_model extends App_Model
 
         $data['dateadded'] = date('Y-m-d H:i:s');
 
-        $this->db->insert(db_prefix() . 'web_to_lead', $data);
+        $this->db->insert('tblwebtolead', $data);
         $insert_id = $this->db->insert_id();
         if ($insert_id) {
-            log_activity('New Web to Lead Form Added [' . $data['name'] . ']');
+            logActivity('New Web to Lead Form Added [' . $data['name'] . ']');
 
             return $insert_id;
         }
@@ -1104,7 +1089,7 @@ class Leads_model extends App_Model
         $data['success_submit_msg'] = nl2br($data['success_submit_msg']);
 
         $data['create_task_on_duplicate'] = (int) isset($data['create_task_on_duplicate']);
-        $data['mark_public']              = (int) isset($data['mark_public']);
+        $data['mark_public'] = (int) isset($data['mark_public']);
 
         if (isset($data['allow_duplicate'])) {
             $data['allow_duplicate']           = 1;
@@ -1116,7 +1101,7 @@ class Leads_model extends App_Model
         }
 
         $this->db->where('id', $id);
-        $this->db->update(db_prefix() . 'web_to_lead', $data);
+        $this->db->update('tblwebtolead', $data);
 
         return ($this->db->affected_rows() > 0 ? true : false);
     }
@@ -1124,15 +1109,15 @@ class Leads_model extends App_Model
     public function delete_form($id)
     {
         $this->db->where('id', $id);
-        $this->db->delete(db_prefix() . 'web_to_lead');
+        $this->db->delete('tblwebtolead');
 
         $this->db->where('from_form_id', $id);
-        $this->db->update(db_prefix() . 'leads', [
+        $this->db->update('tblleads', [
             'from_form_id' => 0,
         ]);
 
         if ($this->db->affected_rows() > 0) {
-            log_activity('Lead Form Deleted [' . $id . ']');
+            logActivity('Lead Form Deleted [' . $id . ']');
 
             return true;
         }

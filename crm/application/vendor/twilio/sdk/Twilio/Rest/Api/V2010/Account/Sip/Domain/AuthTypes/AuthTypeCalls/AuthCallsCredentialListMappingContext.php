@@ -18,11 +18,9 @@ class AuthCallsCredentialListMappingContext extends InstanceContext {
      * Initialize the AuthCallsCredentialListMappingContext
      * 
      * @param \Twilio\Version $version Version that contains the resource
-     * @param string $accountSid The SID of the Account that created the resource
-     *                           to fetch
-     * @param string $domainSid The SID of the SIP domain that contains the
-     *                          resource to fetch
-     * @param string $sid The unique string that identifies the resource
+     * @param string $accountSid The account_sid
+     * @param string $domainSid The domain_sid
+     * @param string $sid Fetch by unique credential list Sid
      * @return \Twilio\Rest\Api\V2010\Account\Sip\Domain\AuthTypes\AuthTypeCalls\AuthCallsCredentialListMappingContext 
      */
     public function __construct(Version $version, $accountSid, $domainSid, $sid) {

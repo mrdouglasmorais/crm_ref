@@ -2,8 +2,15 @@
 
 defined('BASEPATH') or exit('No direct script access allowed');
 
-class Clients extends AdminController
+class Clients extends Admin_controller
 {
+    public $pdf_zip;
+
+    public function __construct()
+    {
+        parent::__construct();
+    }
+
     /* List all clients */
     public function index()
     {
@@ -34,7 +41,7 @@ class Clients extends AdminController
 
         $whereContactsLoggedIn = '';
         if (!has_permission('customers', '', 'view')) {
-            $whereContactsLoggedIn = ' AND userid IN (SELECT customer_id FROM '.db_prefix().'customer_admins WHERE staff_id=' . get_staff_user_id() . ')';
+            $whereContactsLoggedIn = ' AND userid IN (SELECT customer_id FROM tblcustomeradmins WHERE staff_id=' . get_staff_user_id() . ')';
         }
 
         $data['contacts_logged_in_today'] = $this->clients_model->get_contacts('', 'last_login LIKE "' . date('Y-m-d') . '%"' . $whereContactsLoggedIn);
@@ -120,32 +127,30 @@ class Clients extends AdminController
             }
         }
 
-        $group         = !$this->input->get('group') ? 'profile' : $this->input->get('group');
-        $data['group'] = $group;
+        if (!$this->input->get('group')) {
+            $group = 'profile';
+        } else {
+            $group = $this->input->get('group');
+        }
 
         if ($group != 'contacts' && $contact_id = $this->input->get('contactid')) {
             redirect(admin_url('clients/client/' . $id . '?group=contacts&contactid=' . $contact_id));
         }
 
+        // View group
+        $data['group'] = $group;
         // Customer groups
         $data['groups'] = $this->clients_model->get_groups();
 
         if ($id == '') {
             $title = _l('add_new', _l('client_lowercase'));
         } else {
-            $client                = $this->clients_model->get($id);
-            $data['customer_tabs'] = get_customer_profile_tabs();
-
+            $client = $this->clients_model->get($id);
             if (!$client) {
-                show_404();
+                blank_page('Client Not Found');
             }
 
             $data['contacts'] = $this->clients_model->get_contacts($id);
-            $data['tab']      = isset($data['customer_tabs'][$group]) ? $data['customer_tabs'][$group] : null;
-
-            if (!$data['tab']) {
-                show_404();
-            }
 
             // Fetch data based on groups
             if ($group == 'profile') {
@@ -154,8 +159,7 @@ class Clients extends AdminController
             } elseif ($group == 'attachments') {
                 $data['attachments'] = get_all_customer_attachments($id);
             } elseif ($group == 'vault') {
-                $data['vault_entries'] = hooks()->apply_filters('check_vault_entries_visibility', $this->clients_model->get_vault_entries($id));
-
+                $data['vault_entries'] = do_action('check_vault_entries_visibility', $this->clients_model->get_vault_entries($id));
                 if ($data['vault_entries'] === -1) {
                     $data['vault_entries'] = [];
                 }
@@ -182,23 +186,26 @@ class Clients extends AdminController
                     set_alert('danger', _l('access_denied'));
                     redirect(admin_url('clients/client/' . $id));
                 }
+                $contact = $this->clients_model->get_contact(get_primary_contact_user_id($id));
+                $email   = '';
+                if ($contact) {
+                    $email = $contact->email;
+                }
 
-                $data = array_merge($data, prepare_mail_preview_data('customer_statement', $id));
-            } elseif ($group == 'map') {
-                if (get_option('google_api_key') != '' && !empty($client->latitude) && !empty($client->longitude)) {
+                $template_name    = 'client-statement';
+                $data['template'] = get_email_template_for_sending($template_name, $email);
 
-                    $this->app_scripts->add('map-js', base_url($this->app_scripts->core_file('assets/js', 'map.js')) . '?v=' . $this->app_css->core_version());
+                $data['template_name'] = $template_name;
+                $this->db->where('slug', $template_name);
+                $this->db->where('language', 'english');
+                $template_result = $this->db->get('tblemailtemplates')->row();
 
-                    $this->app_scripts->add('google-maps-api-js', [
-                        'path'       => 'https://maps.googleapis.com/maps/api/js?key=' . get_option('google_api_key') . '&callback=initMap',
-                        'attributes' => [
-                            'async',
-                            'defer',
-                            'latitude'       => "$client->latitude",
-                            'longitude'      => "$client->longitude",
-                            'mapMarkerTitle' => "$client->company",
-                        ],
-                        ]);
+                $data['template_system_name'] = $template_result->name;
+                $data['template_id']          = $template_result->emailtemplateid;
+
+                $data['template_disabled'] = false;
+                if (total_rows('tblemailtemplates', ['slug' => $data['template_name'], 'active' => 0]) > 0) {
+                    $data['template_disabled'] = true;
                 }
             }
 
@@ -246,14 +253,6 @@ class Clients extends AdminController
             }
 
             $data['customer_currency'] = $customer_currency;
-
-            $slug_zip_folder = (
-                $client->company != ''
-                ? $client->company
-                : get_contact_full_name(get_primary_contact_user_id($client->userid))
-            );
-
-            $data['zip_in_folder'] = slug_it($slug_zip_folder);
         }
 
         $data['bodyclass'] = 'customer-profile dynamic-create-groups';
@@ -265,8 +264,7 @@ class Clients extends AdminController
     public function export($contact_id)
     {
         if (is_admin()) {
-            $this->load->library('gdpr/gdpr_contact');
-            $this->gdpr_contact->export($contact_id);
+            export_contact_data($contact_id);
         }
     }
 
@@ -276,7 +274,7 @@ class Clients extends AdminController
         if (has_permission('customers', '', 'create')) {
             $companyName = trim($this->input->post('company'));
             $response    = [
-                'exists'  => (bool) total_rows(db_prefix().'clients', ['company' => $companyName]) > 0,
+                'exists'  => (bool) total_rows('tblclients', ['company' => $companyName]) > 0,
                 'message' => _l('company_exists_info', '<b>' . $companyName . '</b>'),
             ];
             echo json_encode($response);
@@ -292,7 +290,7 @@ class Clients extends AdminController
         }
 
         $this->db->where('userid', $client_id);
-        $this->db->update(db_prefix().'clients', [
+        $this->db->update('tblclients', [
             'longitude' => $this->input->post('longitude'),
             'latitude'  => $this->input->post('latitude'),
         ]);
@@ -303,7 +301,7 @@ class Clients extends AdminController
         }
     }
 
-    public function form_contact($customer_id, $contact_id = '')
+    public function contact($customer_id, $contact_id = '')
     {
         if (!has_permission('customers', '', 'view')) {
             if (!is_customer_admin($customer_id)) {
@@ -340,8 +338,8 @@ class Clients extends AdminController
                 echo json_encode([
                     'success'             => $success,
                     'message'             => $message,
-                    'has_primary_contact' => (total_rows(db_prefix().'contacts', ['userid' => $customer_id, 'is_primary' => 1]) > 0 ? true : false),
-                    'is_individual'       => is_empty_customer_company($customer_id) && total_rows(db_prefix().'contacts', ['userid' => $customer_id]) == 1,
+                    'has_primary_contact' => (total_rows('tblcontacts', ['userid' => $customer_id, 'is_primary' => 1]) > 0 ? true : false),
+                    'is_individual'       => is_empty_customer_company($customer_id) && total_rows('tblcontacts', ['userid' => $customer_id]) == 1,
                 ]);
                 die;
             }
@@ -380,7 +378,7 @@ class Clients extends AdminController
             }
             if ($updated == true) {
                 $contact = $this->clients_model->get_contact($contact_id);
-                if (total_rows(db_prefix().'proposals', [
+                if (total_rows('tblproposals', [
                         'rel_type' => 'customer',
                         'rel_id' => $contact->userid,
                         'email' => $original_contact->email,
@@ -394,7 +392,7 @@ class Clients extends AdminController
                     'proposal_warning'    => $proposal_warning,
                     'message'             => $message,
                     'original_email'      => $original_email,
-                    'has_primary_contact' => (total_rows(db_prefix().'contacts', ['userid' => $customer_id, 'is_primary' => 1]) > 0 ? true : false),
+                    'has_primary_contact' => (total_rows('tblcontacts', ['userid' => $customer_id, 'is_primary' => 1]) > 0 ? true : false),
                 ]);
             die;
         }
@@ -440,10 +438,10 @@ class Clients extends AdminController
             }
 
             $this->db->where('file_id', $file_id);
-            $this->db->delete(db_prefix().'shared_customer_files');
+            $this->db->delete('tblcustomerfiles_shares');
 
             foreach ($share_contacts_id as $share_contact_id) {
-                $this->db->insert(db_prefix().'shared_customer_files', [
+                $this->db->insert('tblcustomerfiles_shares', [
                     'file_id'    => $file_id,
                     'contact_id' => $share_contact_id,
                 ]);
@@ -453,12 +451,12 @@ class Clients extends AdminController
 
     public function delete_contact_profile_image($contact_id)
     {
-        hooks()->do_action('before_remove_contact_profile_image');
+        do_action('before_remove_contact_profile_image');
         if (file_exists(get_upload_path_by_type('contact_profile_images') . $contact_id)) {
             delete_dir(get_upload_path_by_type('contact_profile_images') . $contact_id);
         }
         $this->db->where('id', $contact_id);
-        $this->db->update(db_prefix().'contacts', [
+        $this->db->update('tblcontacts', [
             'profile_image' => null,
         ]);
     }
@@ -466,7 +464,7 @@ class Clients extends AdminController
     public function mark_as_active($id)
     {
         $this->db->where('userid', $id);
-        $this->db->update(db_prefix().'clients', [
+        $this->db->update('tblclients', [
             'active' => 1,
         ]);
         redirect(admin_url('clients/client/' . $id));
@@ -497,7 +495,7 @@ class Clients extends AdminController
 
             $this->db->select('email,userid');
             $this->db->where('id', $contact_id);
-            $contact = $this->db->get(db_prefix().'contacts')->row();
+            $contact = $this->db->get('tblcontacts')->row();
 
             $proposals = $this->proposals_model->get('', [
                 'rel_type' => 'customer',
@@ -508,7 +506,7 @@ class Clients extends AdminController
 
             foreach ($proposals as $proposal) {
                 $this->db->where('id', $proposal['id']);
-                $this->db->update(db_prefix().'proposals', [
+                $this->db->update('tblproposals', [
                     'email' => $contact->email,
                 ]);
                 if ($this->db->affected_rows() > 0) {
@@ -550,7 +548,7 @@ class Clients extends AdminController
 
         $this->db->where('customer_id', $customer_id);
         $this->db->where('staff_id', $staff_id);
-        $this->db->delete(db_prefix().'customer_admins');
+        $this->db->delete('tblcustomeradmins');
         redirect(admin_url('clients/client/' . $customer_id) . '?tab=customer_admins');
     }
 
@@ -564,7 +562,7 @@ class Clients extends AdminController
         $contact      = $this->clients_model->get_contact($id);
         $hasProposals = false;
         if ($contact && is_gdpr()) {
-            if (total_rows(db_prefix().'proposals', ['email' => $contact->email]) > 0) {
+            if (total_rows('tblproposals', ['email' => $contact->email]) > 0) {
                 $hasProposals = true;
             }
         }
@@ -629,7 +627,7 @@ class Clients extends AdminController
         if (is_admin()) {
             login_as_client($id);
         }
-        hooks()->do_action('after_contact_login');
+        do_action('after_contact_login');
         redirect(site_url());
     }
 
@@ -666,88 +664,262 @@ class Clients extends AdminController
         }
 
         if ($this->input->post()) {
-            $this->load->library('app_bulk_pdf_export', [
-                'export_type'       => 'credit_notes',
-                'status'            => $this->input->post('credit_note_zip_status'),
-                'date_from'         => $this->input->post('zip-from'),
-                'date_to'           => $this->input->post('zip-to'),
-                'redirect_on_error' => admin_url('clients/client/' . $id . '?group=credit_notes'),
-            ]);
+            $status        = $this->input->post('credit_note_zip_status');
+            $zip_file_name = $this->input->post('file_name');
+            if ($this->input->post('zip-to') && $this->input->post('zip-from')) {
+                $from_date = to_sql_date($this->input->post('zip-from'));
+                $to_date   = to_sql_date($this->input->post('zip-to'));
+                if ($from_date == $to_date) {
+                    $this->db->where('date', $from_date);
+                } else {
+                    $this->db->where('date BETWEEN "' . $from_date . '" AND "' . $to_date . '"');
+                }
+            }
+            $this->db->select('id');
+            $this->db->from('tblcreditnotes');
+            if ($status != 'all') {
+                $this->db->where('status', $status);
+            }
+            $this->db->where('clientid', $id);
+            $this->db->order_by('number', 'desc');
 
-            $this->app_bulk_pdf_export->set_client_id($id);
-            $this->app_bulk_pdf_export->in_folder($this->input->post('file_name'));
-            $this->app_bulk_pdf_export->export();
+            if (!$has_permission_view) {
+                $this->db->where('addedfrom', get_staff_user_id());
+            }
+            $credit_notes = $this->db->get()->result_array();
+
+            $this->load->model('credit_notes_model');
+
+            $this->load->helper('file');
+            if (!is_really_writable(TEMP_FOLDER)) {
+                show_error('/temp folder is not writable. You need to change the permissions to 755');
+            }
+
+            $dir = TEMP_FOLDER . $zip_file_name;
+
+            if (is_dir($dir)) {
+                delete_dir($dir);
+            }
+
+            if (count($credit_notes) == 0) {
+                set_alert('warning', _l('client_zip_no_data_found', _l('credit_notes')));
+                redirect(admin_url('clients/client/' . $id . '?group=credit_notes'));
+            }
+
+            mkdir($dir, 0755);
+
+            foreach ($credit_notes as $credit_note) {
+                $credit_note     = $this->credit_notes_model->get($credit_note['id']);
+                $this->pdf_zip   = credit_note_pdf($credit_note);
+                $_temp_file_name = slug_it(format_credit_note_number($credit_note->id));
+                $file_name       = $dir . '/' . strtoupper($_temp_file_name);
+                $this->pdf_zip->Output($file_name . '.pdf', 'F');
+            }
+
+            $this->load->library('zip');
+            // Read the credit notes
+            $this->zip->read_dir($dir, false);
+            // Delete the temp directory for the client
+            delete_dir($dir);
+            $this->zip->download(slug_it(get_option('companyname')) . '-credit-notes-' . $zip_file_name . '.zip');
+            $this->zip->clear_data();
         }
     }
 
     public function zip_invoices($id)
     {
         $has_permission_view = has_permission('invoices', '', 'view');
-        if (!$has_permission_view && !has_permission('invoices', '', 'view_own')
-            && get_option('allow_staff_view_invoices_assigned') == '0') {
+        if (!$has_permission_view && !has_permission('invoices', '', 'view_own') && get_option('allow_staff_view_invoices_assigned') == '0') {
             access_denied('Zip Customer Invoices');
         }
-
         if ($this->input->post()) {
-            $this->load->library('app_bulk_pdf_export', [
-                'export_type'       => 'invoices',
-                'status'            => $this->input->post('invoice_zip_status'),
-                'date_from'         => $this->input->post('zip-from'),
-                'date_to'           => $this->input->post('zip-to'),
-                'redirect_on_error' => admin_url('clients/client/' . $id . '?group=invoices'),
-            ]);
+            $status        = $this->input->post('invoice_zip_status');
+            $zip_file_name = $this->input->post('file_name');
+            if ($this->input->post('zip-to') && $this->input->post('zip-from')) {
+                $from_date = to_sql_date($this->input->post('zip-from'));
+                $to_date   = to_sql_date($this->input->post('zip-to'));
+                if ($from_date == $to_date) {
+                    $this->db->where('date', $from_date);
+                } else {
+                    $this->db->where('date BETWEEN "' . $from_date . '" AND "' . $to_date . '"');
+                }
+            }
+            $this->db->select('id');
+            $this->db->from('tblinvoices');
+            if ($status != 'all') {
+                $this->db->where('status', $status);
+            }
+            $this->db->where('clientid', $id);
+            $this->db->order_by('number,YEAR(date)', 'desc');
 
-            $this->app_bulk_pdf_export->set_client_id($id);
-            $this->app_bulk_pdf_export->in_folder($this->input->post('file_name'));
-            $this->app_bulk_pdf_export->export();
+            if (!$has_permission_view) {
+                $this->db->where(get_invoices_where_sql_for_staff(get_staff_user_id()));
+            }
+
+            $invoices = $this->db->get()->result_array();
+            $this->load->model('invoices_model');
+            $this->load->helper('file');
+            if (!is_really_writable(TEMP_FOLDER)) {
+                show_error('/temp folder is not writable. You need to change the permissions to 755');
+            }
+            $dir = TEMP_FOLDER . $zip_file_name;
+            if (is_dir($dir)) {
+                delete_dir($dir);
+            }
+            if (count($invoices) == 0) {
+                set_alert('warning', _l('client_zip_no_data_found', _l('invoices')));
+                redirect(admin_url('clients/client/' . $id . '?group=invoices'));
+            }
+            mkdir($dir, 0755);
+            foreach ($invoices as $invoice) {
+                $invoice_data    = $this->invoices_model->get($invoice['id']);
+                $this->pdf_zip   = invoice_pdf($invoice_data);
+                $_temp_file_name = slug_it(format_invoice_number($invoice_data->id));
+                $file_name       = $dir . '/' . strtoupper($_temp_file_name);
+                $this->pdf_zip->Output($file_name . '.pdf', 'F');
+            }
+            $this->load->library('zip');
+            // Read the invoices
+            $this->zip->read_dir($dir, false);
+            // Delete the temp directory for the client
+            delete_dir($dir);
+            $this->zip->download(slug_it(get_option('companyname')) . '-invoices-' . $zip_file_name . '.zip');
+            $this->zip->clear_data();
         }
     }
 
-    /* Since version 1.0.2 zip client estimates */
+    /* Since version 1.0.2 zip client invoices */
     public function zip_estimates($id)
     {
         $has_permission_view = has_permission('estimates', '', 'view');
-        if (!$has_permission_view && !has_permission('estimates', '', 'view_own')
-            && get_option('allow_staff_view_estimates_assigned') == '0') {
+        if (!$has_permission_view && !has_permission('estimates', '', 'view_own') && get_option('allow_staff_view_estimates_assigned') == '0') {
             access_denied('Zip Customer Estimates');
         }
 
         if ($this->input->post()) {
-            $this->load->library('app_bulk_pdf_export', [
-                'export_type'       => 'estimates',
-                'status'            => $this->input->post('estimate_zip_status'),
-                'date_from'         => $this->input->post('zip-from'),
-                'date_to'           => $this->input->post('zip-to'),
-                'redirect_on_error' => admin_url('clients/client/' . $id . '?group=estimates'),
-            ]);
-
-            $this->app_bulk_pdf_export->set_client_id($id);
-            $this->app_bulk_pdf_export->in_folder($this->input->post('file_name'));
-            $this->app_bulk_pdf_export->export();
+            $status        = $this->input->post('estimate_zip_status');
+            $zip_file_name = $this->input->post('file_name');
+            if ($this->input->post('zip-to') && $this->input->post('zip-from')) {
+                $from_date = to_sql_date($this->input->post('zip-from'));
+                $to_date   = to_sql_date($this->input->post('zip-to'));
+                if ($from_date == $to_date) {
+                    $this->db->where('date', $from_date);
+                } else {
+                    $this->db->where('date BETWEEN "' . $from_date . '" AND "' . $to_date . '"');
+                }
+            }
+            $this->db->select('id');
+            $this->db->from('tblestimates');
+            if ($status != 'all') {
+                $this->db->where('status', $status);
+            }
+            if (!$has_permission_view) {
+                $this->db->where(get_estimates_where_sql_for_staff(get_staff_user_id()));
+            }
+            $this->db->where('clientid', $id);
+            $this->db->order_by('number,YEAR(date)', 'desc');
+            $estimates = $this->db->get()->result_array();
+            $this->load->helper('file');
+            if (!is_really_writable(TEMP_FOLDER)) {
+                show_error('/temp folder is not writable. You need to change the permissions to 0755');
+            }
+            $this->load->model('estimates_model');
+            $dir = TEMP_FOLDER . $zip_file_name;
+            if (is_dir($dir)) {
+                delete_dir($dir);
+            }
+            if (count($estimates) == 0) {
+                set_alert('warning', _l('client_zip_no_data_found', _l('estimates')));
+                redirect(admin_url('clients/client/' . $id . '?group=estimates'));
+            }
+            mkdir($dir, 0755);
+            foreach ($estimates as $estimate) {
+                $estimate_data   = $this->estimates_model->get($estimate['id']);
+                $this->pdf_zip   = estimate_pdf($estimate_data);
+                $_temp_file_name = slug_it(format_estimate_number($estimate_data->id));
+                $file_name       = $dir . '/' . strtoupper($_temp_file_name);
+                $this->pdf_zip->Output($file_name . '.pdf', 'F');
+            }
+            $this->load->library('zip');
+            // Read the invoices
+            $this->zip->read_dir($dir, false);
+            // Delete the temp directory for the client
+            delete_dir($dir);
+            $this->zip->download(slug_it(get_option('companyname')) . '-estimates-' . $zip_file_name . '.zip');
+            $this->zip->clear_data();
         }
     }
 
     public function zip_payments($id)
     {
-        $has_permission_view = has_permission('payments', '', 'view');
+        if (!$id) {
+            die('Invoice ID not passed');
+        }
 
-        if (!$has_permission_view && !has_permission('invoices', '', 'view_own')
-            && get_option('allow_staff_view_invoices_assigned') == '0') {
+        $has_permission_view = has_permission('payments', '', 'view');
+        if (!$has_permission_view && !has_permission('invoices', '', 'view_own') && get_option('allow_staff_view_invoices_assigned') == '0') {
             access_denied('Zip Customer Payments');
         }
 
-        $this->load->library('app_bulk_pdf_export', [
-                'export_type'       => 'payments',
-                'payment_mode'      => $this->input->post('paymentmode'),
-                'date_from'         => $this->input->post('zip-from'),
-                'date_to'           => $this->input->post('zip-to'),
-                'redirect_on_error' => admin_url('clients/client/' . $id . '?group=payments'),
-            ]);
-
-        $this->app_bulk_pdf_export->set_client_id($id);
-        $this->app_bulk_pdf_export->set_client_id_column(db_prefix().'clients.userid');
-        $this->app_bulk_pdf_export->in_folder($this->input->post('file_name'));
-        $this->app_bulk_pdf_export->export();
+        if ($this->input->post('zip-to') && $this->input->post('zip-from')) {
+            $from_date = to_sql_date($this->input->post('zip-from'));
+            $to_date   = to_sql_date($this->input->post('zip-to'));
+            if ($from_date == $to_date) {
+                $this->db->where('tblinvoicepaymentrecords.date', $from_date);
+            } else {
+                $this->db->where('tblinvoicepaymentrecords.date BETWEEN "' . $from_date . '" AND "' . $to_date . '"');
+            }
+        }
+        $this->db->select('tblinvoicepaymentrecords.id as paymentid');
+        $this->db->from('tblinvoicepaymentrecords');
+        $this->db->where('tblclients.userid', $id);
+        if (!$has_permission_view) {
+            $whereUser = '';
+            $whereUser .= '(invoiceid IN (SELECT id FROM tblinvoices WHERE addedfrom=' . get_staff_user_id() . ')';
+            if (get_option('allow_staff_view_invoices_assigned') == 1) {
+                $whereUser .= ' OR invoiceid IN (SELECT id FROM tblinvoices WHERE sale_agent=' . get_staff_user_id() . ')';
+            }
+            $whereUser .= ')';
+            $this->db->where($whereUser);
+        }
+        $this->db->join('tblinvoices', 'tblinvoices.id = tblinvoicepaymentrecords.invoiceid', 'left');
+        $this->db->join('tblclients', 'tblclients.userid = tblinvoices.clientid', 'left');
+        if ($this->input->post('paymentmode')) {
+            $this->db->where('paymentmode', $this->input->post('paymentmode'));
+        }
+        $payments      = $this->db->get()->result_array();
+        $zip_file_name = $this->input->post('file_name');
+        $this->load->helper('file');
+        if (!is_really_writable(TEMP_FOLDER)) {
+            show_error('/temp folder is not writable. You need to change the permissions to 0755');
+        }
+        $dir = TEMP_FOLDER . $zip_file_name;
+        if (is_dir($dir)) {
+            delete_dir($dir);
+        }
+        if (count($payments) == 0) {
+            set_alert('warning', _l('client_zip_no_data_found', _l('payments')));
+            redirect(admin_url('clients/client/' . $id . '?group=payments'));
+        }
+        mkdir($dir, 0755);
+        $this->load->model('payments_model');
+        $this->load->model('invoices_model');
+        foreach ($payments as $payment) {
+            $payment_data               = $this->payments_model->get($payment['paymentid']);
+            $payment_data->invoice_data = $this->invoices_model->get($payment_data->invoiceid);
+            $this->pdf_zip              = payment_pdf($payment_data);
+            $file_name                  = $dir;
+            $file_name .= '/' . strtoupper(_l('payment'));
+            $file_name .= '-' . strtoupper($payment_data->paymentid) . '.pdf';
+            $this->pdf_zip->Output($file_name, 'F');
+        }
+        $this->load->library('zip');
+        // Read the invoices
+        $this->zip->read_dir($dir, false);
+        // Delete the temp directory for the client
+        delete_dir($dir);
+        $this->zip->download(slug_it(get_option('companyname')) . '-payments-' . $zip_file_name . '.zip');
+        $this->zip->clear_data();
     }
 
     public function import()
@@ -756,14 +928,14 @@ class Clients extends AdminController
             access_denied('customers');
         }
 
-        $dbFields = $this->db->list_fields(db_prefix().'contacts');
+        $dbFields = $this->db->list_fields('tblcontacts');
         foreach ($dbFields as $key => $contactField) {
             if ($contactField == 'phonenumber') {
                 $dbFields[$key] = 'contact_phonenumber';
             }
         }
 
-        $dbFields = array_merge($dbFields, $this->db->list_fields(db_prefix().'clients'));
+        $dbFields = array_merge($dbFields, $this->db->list_fields('tblclients'));
 
         $this->load->library('import/import_customers', [], 'import');
 
@@ -857,7 +1029,7 @@ class Clients extends AdminController
 
     public function bulk_action()
     {
-        hooks()->do_action('before_do_bulk_action_for_customers');
+        do_action('before_do_bulk_action_for_customers');
         $total_deleted = 0;
         if ($this->input->post()) {
             $ids    = $this->input->post('ids');
@@ -959,7 +1131,10 @@ class Clients extends AdminController
         $user_password = $this->input->post('user_password', false);
         $user          = $this->staff_model->get(get_staff_user_id());
 
-        if (!app_hasher()->CheckPassword($user_password, $user->password)) {
+        $this->load->helper('phpass');
+
+        $hasher = new PasswordHash(PHPASS_HASH_STRENGTH, PHPASS_HASH_PORTABLE);
+        if (!$hasher->CheckPassword($user_password, $user->password)) {
             header('HTTP/1.1 401 Unauthorized');
             echo json_encode(['error_msg' => _l('vault_password_user_not_correct')]);
             die;

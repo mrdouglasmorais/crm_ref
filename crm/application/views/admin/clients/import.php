@@ -45,7 +45,7 @@
 <script src="<?php echo base_url('assets/plugins/jquery-validation/additional-methods.min.js'); ?>"></script>
 <script>
  $(function(){
-   appValidateForm($('#import_form'),{file_csv:{required:true,extension: "csv"},source:'required',status:'required'});
+   _validate_form($('#import_form'),{file_csv:{required:true,extension: "csv"},source:'required',status:'required'});
  });
 </script>
 </body>

@@ -5,7 +5,7 @@
 		<?php if(has_contact_permission('projects')) { ?>
 			<div class="panel_s">
 				<div class="panel-body">
-					<h3 class="text-success projects-summary-heading no-mtop mbot15"><?php echo _l('projects_summary'); ?></h3>
+					<h3 class="text-success no-mtop mbot15"><?php echo _l('projects_summary'); ?></h3>
 					<div class="row">
 						<?php get_template_part('projects/project_summary'); ?>
 					</div>

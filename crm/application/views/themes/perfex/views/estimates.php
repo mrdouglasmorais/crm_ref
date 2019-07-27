@@ -1,7 +1,7 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
-<div class="panel_s section-heading section-estimates">
+<div class="panel_s">
     <div class="panel-body">
-        <h4 class="no-margin section-text"><?php echo _l('clients_my_estimates'); ?></h4>
+        <h4 class="no-margin"><?php echo _l('clients_my_estimates'); ?></h4>
     </div>
 </div>
 <div class="panel_s">

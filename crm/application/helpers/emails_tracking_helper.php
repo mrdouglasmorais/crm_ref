@@ -2,7 +2,7 @@
 
 defined('BASEPATH') or exit('No direct script access allowed');
 
-hooks()->add_filter('after_parse_email_template_message', 'email_tracking_inject_in_body');
+add_action('after_parse_email_template_message', 'email_tracking_inject_in_body');
 
 function email_tracking_inject_in_body($template)
 {
@@ -15,7 +15,7 @@ function email_tracking_inject_in_body($template)
     return $template;
 }
 
-hooks()->add_action('email_template_sent', 'add_email_tracking');
+add_action('email_template_sent', 'add_email_tracking');
 
 function add_email_tracking($data)
 {
@@ -25,11 +25,11 @@ function add_email_tracking($data)
         && isset($data['template']->has_tracking)
         && $data['template']->has_tracking
     ) {
-        $CI->db->insert(db_prefix().'tracked_mails', [
+        $CI->db->insert('tblemailstracking', [
             'uid'      => $data['template']->tmp_id,
             'subject'  => $data['template']->subject,
-            'rel_id'   => $GLOBALS['SENDING_EMAIL_TEMPLATE_CLASS']->get_rel_id(),
-            'rel_type' => $GLOBALS['SENDING_EMAIL_TEMPLATE_CLASS']->get_rel_type(),
+            'rel_id'   => $CI->emails_model->get_rel_id(),
+            'rel_type' => $CI->emails_model->get_rel_type(),
             'date'     => date('Y-m-d H:i:s'),
             'email'    => $data['email'],
         ]);
@@ -43,7 +43,7 @@ function get_tracked_emails($rel_id, $rel_type)
     $CI->db->where('rel_type', $rel_type);
     $CI->db->order_by('date', 'desc');
 
-    return $CI->db->get(db_prefix().'tracked_mails')->result_array();
+    return $CI->db->get('tblemailstracking')->result_array();
 }
 
 function delete_tracked_emails($rel_id, $rel_type)
@@ -51,12 +51,12 @@ function delete_tracked_emails($rel_id, $rel_type)
     $CI = &get_instance();
     $CI->db->where('rel_id', $rel_id);
     $CI->db->where('rel_type', $rel_type);
-    $CI->db->delete(db_prefix().'tracked_mails');
+    $CI->db->delete('tblemailstracking');
 }
 
 function get_available_tracking_templates_slugs()
 {
-    $slugs = [
+    return do_action('available_tracking_templates', [
         'invoice-send-to-client',
         'invoice-already-send',
         'invoice-overdue-notice',
@@ -70,7 +70,5 @@ function get_available_tracking_templates_slugs()
         'send-contract',
         'send-subscription',
         'subscription-payment-failed',
-    ];
-
-    return hooks()->apply_filters('available_tracking_templates', $slugs);
+    ]);
 }

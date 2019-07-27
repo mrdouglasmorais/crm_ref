@@ -1,8 +1,7 @@
 <?php
 
 defined('BASEPATH') or exit('No direct script access allowed');
-
-class Emails extends AdminController
+class Emails extends Admin_controller
 {
     public function __construct()
     {
@@ -25,7 +24,7 @@ class Emails extends AdminController
 
 
         $this->db->where('language', 'english');
-        $email_templates_english = $this->db->get(db_prefix() . 'emailtemplates')->result_array();
+        $email_templates_english = $this->db->get('tblemailtemplates')->result_array();
         foreach ($this->app->get_available_languages() as $avLanguage) {
             if ($avLanguage != 'english') {
                 foreach ($email_templates_english as $template) {
@@ -36,7 +35,7 @@ class Emails extends AdminController
                         continue;
                     }
 
-                    $notExists = total_rows(db_prefix() . 'emailtemplates', [
+                    $notExists = total_rows('tblemailtemplates', [
                         'slug'     => $template['slug'],
                         'language' => $avLanguage,
                     ]) == 0;
@@ -55,13 +54,13 @@ class Emails extends AdminController
                         $data['plaintext'] = $template['plaintext'];
                         $data['active']    = $template['active'];
                         $data['order']     = $template['order'];
-                        $this->db->insert(db_prefix() . 'emailtemplates', $data);
+                        $this->db->insert('tblemailtemplates', $data);
                     }
                 }
             }
         }
 
-        update_option('email_templates_language_checks', serialize($langCheckings));
+       update_option('email_templates_language_checks',serialize($langCheckings));
 
         $data['staff'] = $this->emails_model->get([
             'type'     => 'staff',
@@ -171,11 +170,10 @@ class Emails extends AdminController
             unset($data['available_languages'][$key]);
         }
 
-        $data['available_merge_fields'] = $this->app_merge_fields->all();
-
-        $data['template'] = $this->emails_model->get_email_template_by_id($id);
-        $title            = $data['template']->name;
-        $data['title']    = $title;
+        $data['available_merge_fields'] = get_available_merge_fields();
+        $data['template']               = $this->emails_model->get_email_template_by_id($id);
+        $title                          = $data['template']->name;
+        $data['title']                  = $title;
         $this->load->view('admin/emails/template', $data);
     }
 
@@ -227,7 +225,7 @@ class Emails extends AdminController
 
             $template = parse_email_template($template);
 
-            hooks()->do_action('before_send_test_smtp_email');
+            do_action('before_send_test_smtp_email');
             $this->email->initialize();
             if (get_option('mail_engine') == 'phpmailer') {
                 $this->email->set_debug_output(function ($err) {
@@ -257,11 +255,11 @@ class Emails extends AdminController
             $this->email->message($template->message);
             if ($this->email->send(true)) {
                 set_alert('success', 'Seems like your SMTP settings is set correctly. Check your email now.');
-                hooks()->do_action('smtp_test_email_success');
+                do_action('smtp_test_email_success');
             } else {
                 set_debug_alert('<h1>Your SMTP settings are not set correctly here is the debug log.</h1><br />' . $this->email->print_debugger() . (isset($GLOBALS['debug']) ? $GLOBALS['debug'] : ''));
 
-                hooks()->do_action('smtp_test_email_failed');
+                do_action('smtp_test_email_failed');
             }
         }
     }

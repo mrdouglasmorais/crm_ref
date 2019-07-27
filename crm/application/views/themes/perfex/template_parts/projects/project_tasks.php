@@ -21,25 +21,34 @@
        'name'=>_l('milestones_uncategorized'),
        'id'=>0,
        'total_logged_time'=>$this->projects_model->calc_milestone_logged_time($project->id,0),
-       'total_tasks'=>total_project_tasks_by_milestone(0, $project->id),
-       'total_finished_tasks'=>total_project_finished_tasks_by_milestone(0, $project->id),
        'color'=>NULL,
       );
       $_milestones = $this->projects_model->get_milestones($project->id);
       foreach($_milestones as $m){
-          $milestones[] = $m;
+       $milestones[] = $m;
       }
       ?>
    <div class="row">
       <?php foreach($milestones as $milestone){
          $tasks = $this->projects_model->get_tasks($project->id,array('milestone'=>$milestone['id']));
+         $total_project_tasks  = total_rows('tblstafftasks', array(
+          'rel_type' => 'project',
+          'rel_id' => $project->id,
+          'milestone'=>$milestone['id'],
+         ));
+         $total_finished_tasks = total_rows('tblstafftasks', array(
+          'rel_type' => 'project',
+          'rel_id' => $project->id,
+          'status' => 5,
+          'milestone'=>$milestone['id'],
+         ));
          $percent              = 0;
-         if ($milestone['total_finished_tasks'] >= floatval($milestone['total_tasks'])) {
+         if ($total_finished_tasks >= floatval($total_project_tasks)) {
           $percent = 100;
          } else {
-           if ($milestone['total_tasks'] !== 0) {
-              $percent = number_format(($milestone['total_finished_tasks'] * 100) / $milestone['total_tasks'], 2);
-           }
+          if ($total_project_tasks !== 0) {
+           $percent = number_format(($total_finished_tasks * 100) / $total_project_tasks, 2);
+         }
          }
          $milestone_color = '';
          if(!empty($milestone["color"]) && !is_null($milestone['color'])){
@@ -62,9 +71,9 @@
                 echo _l('milestone_no_tasks_found');
                }
                foreach($tasks as $task){ ?>
-            <div class="media _task_wrapper<?php if((!empty($task['duedate']) && $task['duedate'] < date('Y-m-d')) && $task['status'] != Tasks_model::STATUS_COMPLETE){ echo ' overdue-task'; } ?>">
+            <div class="media _task_wrapper<?php if((!empty($task['duedate']) && $task['duedate'] < date('Y-m-d')) && $task['status'] != 5){ echo ' overdue-task'; } ?>">
                <div class="media-body">
-                  <a href="<?php echo site_url('clients/project/'.$project->id.'?group=project_tasks&taskid='.$task['id']); ?>" class="task_milestone pull-left<?php if($task['status'] == Tasks_model::STATUS_COMPLETE){echo ' line-throught text-muted';} ?>"><?php echo $task['name']; ?></a>
+                  <a href="<?php echo site_url('clients/project/'.$project->id.'?group=project_tasks&taskid='.$task['id']); ?>" class="task_milestone pull-left<?php if($task['status'] == 5){echo ' line-throught text-muted';} ?>"><?php echo $task['name']; ?></a>
                   <?php if($project->settings->edit_tasks == 1 && $task['is_added_from_contact'] == 1 && $task['addedfrom'] == get_contact_user_id()){ ?>
                   <a href="<?php echo site_url('clients/project/'.$project->id.'?group=edit_task&taskid='.$task['id']); ?>" class="pull-right">
                   <small><i class="fa fa-pencil-square-o"></i></small>

@@ -27,9 +27,8 @@ class QueueContext extends InstanceContext {
      * Initialize the QueueContext
      * 
      * @param \Twilio\Version $version Version that contains the resource
-     * @param string $accountSid The SID of the Account that created the
-     *                           resource(s) to fetch
-     * @param string $sid The unique string that identifies this resource
+     * @param string $accountSid The account_sid
+     * @param string $sid Fetch by unique queue Sid
      * @return \Twilio\Rest\Api\V2010\Account\QueueContext 
      */
     public function __construct(Version $version, $accountSid, $sid) {

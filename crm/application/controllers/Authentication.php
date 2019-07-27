@@ -2,14 +2,8 @@
 
 defined('BASEPATH') or exit('No direct script access allowed');
 
-class Authentication extends ClientsController
+class Authentication extends Clients_controller
 {
-    public function __construct()
-    {
-        parent::__construct();
-        hooks()->do_action('clients_authentication_constructor', $this);
-    }
-
     public function index()
     {
         $this->login();
@@ -18,7 +12,7 @@ class Authentication extends ClientsController
     // Added for backward compatibilies
     public function admin()
     {
-        redirect(admin_url('authentication'));
+        redirect(site_url('admin/authentication'));
     }
 
     public function login()
@@ -53,12 +47,9 @@ class Authentication extends ClientsController
                 redirect(site_url('authentication/login'));
             }
 
-            $this->load->model('announcements_model');
-            $this->announcements_model->set_announcements_as_read_except_last_one(get_contact_user_id());
-
-            hooks()->do_action('after_contact_login');
-
             maybe_redirect_to_previous_url();
+
+            do_action('after_contact_login');
             redirect(site_url());
         }
         if (get_option('allow_registration') == 1) {
@@ -68,8 +59,8 @@ class Authentication extends ClientsController
         }
         $data['bodyclass'] = 'customers_login';
 
-        $this->data($data);
-        $this->view('login');
+        $this->data = $data;
+        $this->view = 'login';
         $this->layout();
     }
 
@@ -94,7 +85,7 @@ class Authentication extends ClientsController
 
         $this->form_validation->set_rules('firstname', _l('client_firstname'), 'required');
         $this->form_validation->set_rules('lastname', _l('client_lastname'), 'required');
-        $this->form_validation->set_rules('email', _l('client_email'), 'trim|required|is_unique[' . db_prefix() . 'contacts.email]|valid_email');
+        $this->form_validation->set_rules('email', _l('client_email'), 'trim|required|is_unique[tblcontacts.email]|valid_email');
         $this->form_validation->set_rules('password', _l('clients_register_password'), 'required');
         $this->form_validation->set_rules('passwordr', _l('clients_register_password_repeat'), 'required|matches[password]');
 
@@ -159,7 +150,7 @@ class Authentication extends ClientsController
                 ], true);
 
                 if ($clientid) {
-                    hooks()->do_action('after_client_register', $clientid);
+                    do_action('after_client_register', $clientid);
 
                     if (get_option('customers_register_require_confirmation') == '1') {
                         send_customer_registered_email_to_administrators($clientid);
@@ -181,7 +172,7 @@ class Authentication extends ClientsController
                     $redUrl = site_url();
 
                     if ($logged_in) {
-                        hooks()->do_action('after_client_register_logged_in', $clientid);
+                        do_action('after_client_register_logged_in', $clientid);
                         set_alert('success', _l('clients_successfully_registered'));
                     } else {
                         set_alert('warning', _l('clients_account_created_but_not_logged_in'));
@@ -196,8 +187,8 @@ class Authentication extends ClientsController
 
         $data['title']     = _l('clients_register_heading');
         $data['bodyclass'] = 'register';
-        $this->data($data);
-        $this->view('register');
+        $this->data        = $data;
+        $this->view        = 'register';
         $this->layout();
     }
 
@@ -228,8 +219,8 @@ class Authentication extends ClientsController
             }
         }
         $data['title'] = _l('customer_forgot_password');
-        $this->data($data);
-        $this->view('forgot_password');
+        $this->data    = $data;
+        $this->view    = 'forgot_password';
 
         $this->layout();
     }
@@ -246,7 +237,7 @@ class Authentication extends ClientsController
         $this->form_validation->set_rules('passwordr', _l('customer_reset_password_repeat'), 'required|matches[password]');
         if ($this->input->post()) {
             if ($this->form_validation->run() !== false) {
-                hooks()->do_action('before_user_reset_password', [
+                do_action('before_user_reset_password', [
                     'staff'  => $staff,
                     'userid' => $userid,
                 ]);
@@ -259,7 +250,7 @@ class Authentication extends ClientsController
                 if (is_array($success) && $success['expired'] == true) {
                     set_alert('danger', _l('password_reset_key_expired'));
                 } elseif ($success == true) {
-                    hooks()->do_action('after_user_reset_password', [
+                    do_action('after_user_reset_password', [
                         'staff'  => $staff,
                         'userid' => $userid,
                     ]);
@@ -271,8 +262,8 @@ class Authentication extends ClientsController
             }
         }
         $data['title'] = _l('admin_auth_reset_password_heading');
-        $this->data($data);
-        $this->view('reset_password');
+        $this->data    = $data;
+        $this->view    = 'reset_password';
         $this->layout();
     }
 
@@ -280,14 +271,14 @@ class Authentication extends ClientsController
     {
         $this->load->model('authentication_model');
         $this->authentication_model->logout(false);
-        hooks()->do_action('after_client_logout');
+        do_action('after_client_logout');
         redirect(site_url('authentication/login'));
     }
 
     public function contact_email_exists($email = '')
     {
         $this->db->where('email', $email);
-        $total_rows = $this->db->count_all_results(db_prefix() . 'contacts');
+        $total_rows = $this->db->count_all_results('tblcontacts');
 
         if ($total_rows == 0) {
             $this->form_validation->set_message('contact_email_exists', _l('auth_reset_pass_email_not_found'));

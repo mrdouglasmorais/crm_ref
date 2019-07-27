@@ -17,6 +17,6 @@
 </h4>
 <?php echo render_input('settings[google_calendar_main_calendar]','settings_gcal_main_calendar_id',get_option('google_calendar_main_calendar'),'text',array('data-toggle'=>'tooltip','title'=>'settings_gcal_main_calendar_id_help')); ?>
 <hr />
-<h4><?php echo _l('google_picker'); ?></h4>
+<h4><?php echo _l('google_picker'); ?> (Beta)</h4>
 <?php echo render_yes_no_option('enable_google_picker','enable_google_picker'); ?>
 

@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 4.8.3
+-- version 4.8.2
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Apr 02, 2019 at 02:54 PM
--- Server version: 5.7.24-0ubuntu0.18.04.1
--- PHP Version: 7.2.11-4+ubuntu18.04.1+deb.sury.org+1
+-- Generation Time: Oct 28, 2018 at 11:21 AM
+-- Server version: 5.7.22-0ubuntu18.04.1
+-- PHP Version: 7.2.5-1+ubuntu18.04.1+deb.sury.org+1
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 SET AUTOCOMMIT = 0;
@@ -25,15 +25,15 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 --
--- Table structure for table `tblactivity_log`
+-- Table structure for table `tblactivitylog`
 --
 
-CREATE TABLE `tblactivity_log` (
+CREATE TABLE `tblactivitylog` (
   `id` int(11) NOT NULL,
   `description` mediumtext NOT NULL,
   `date` datetime NOT NULL,
   `staffid` varchar(100) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -43,14 +43,25 @@ CREATE TABLE `tblactivity_log` (
 
 CREATE TABLE `tblannouncements` (
   `announcementid` int(11) NOT NULL,
-  `name` varchar(191) NOT NULL,
+  `name` varchar(300) NOT NULL,
   `message` text,
   `showtousers` int(11) NOT NULL,
   `showtostaff` int(11) NOT NULL,
   `showname` int(11) NOT NULL,
   `dateadded` datetime NOT NULL,
   `userid` varchar(100) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tblcheckliststemplates`
+--
+
+CREATE TABLE `tblcheckliststemplates` (
+  `id` int(11) NOT NULL,
+  `description` text
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -60,7 +71,7 @@ CREATE TABLE `tblannouncements` (
 
 CREATE TABLE `tblclients` (
   `userid` int(11) NOT NULL,
-  `company` varchar(191) DEFAULT NULL,
+  `company` varchar(100) DEFAULT NULL,
   `vat` varchar(50) DEFAULT NULL,
   `phonenumber` varchar(30) DEFAULT NULL,
   `country` int(11) NOT NULL DEFAULT '0',
@@ -82,15 +93,43 @@ CREATE TABLE `tblclients` (
   `shipping_state` varchar(100) DEFAULT NULL,
   `shipping_zip` varchar(100) DEFAULT NULL,
   `shipping_country` int(11) DEFAULT '0',
-  `longitude` varchar(191) DEFAULT NULL,
-  `latitude` varchar(191) DEFAULT NULL,
+  `longitude` varchar(300) DEFAULT NULL,
+  `latitude` varchar(300) DEFAULT NULL,
   `default_language` varchar(40) DEFAULT NULL,
   `default_currency` int(11) NOT NULL DEFAULT '0',
   `show_primary_contact` int(11) NOT NULL DEFAULT '0',
   `stripe_id` varchar(40) DEFAULT NULL,
   `registration_confirmed` int(11) NOT NULL DEFAULT '1',
   `addedfrom` int(11) NOT NULL DEFAULT '0'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tblcommentlikes`
+--
+
+CREATE TABLE `tblcommentlikes` (
+  `id` int(11) NOT NULL,
+  `postid` int(11) NOT NULL,
+  `commentid` int(11) NOT NULL,
+  `userid` int(11) NOT NULL,
+  `dateliked` datetime NOT NULL
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tblconsentpurposes`
+--
+
+CREATE TABLE `tblconsentpurposes` (
+  `id` int(11) NOT NULL,
+  `name` varchar(100) NOT NULL,
+  `description` text,
+  `date_created` datetime NOT NULL,
+  `last_updated` datetime DEFAULT NULL
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -109,21 +148,19 @@ CREATE TABLE `tblconsents` (
   `opt_in_purpose_description` text,
   `purpose_id` int(11) NOT NULL,
   `staff_name` varchar(100) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `tblconsent_purposes`
+-- Table structure for table `tblcontactpermissions`
 --
 
-CREATE TABLE `tblconsent_purposes` (
+CREATE TABLE `tblcontactpermissions` (
   `id` int(11) NOT NULL,
-  `name` varchar(100) NOT NULL,
-  `description` text,
-  `date_created` datetime NOT NULL,
-  `last_updated` datetime DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+  `permission_id` int(11) NOT NULL,
+  `userid` int(11) NOT NULL
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -135,11 +172,11 @@ CREATE TABLE `tblcontacts` (
   `id` int(11) NOT NULL,
   `userid` int(11) NOT NULL,
   `is_primary` int(11) NOT NULL DEFAULT '1',
-  `firstname` varchar(191) NOT NULL,
-  `lastname` varchar(191) NOT NULL,
+  `firstname` varchar(300) NOT NULL,
+  `lastname` varchar(300) NOT NULL,
   `email` varchar(100) NOT NULL,
   `phonenumber` varchar(100) NOT NULL,
-  `title` varchar(100) DEFAULT NULL,
+  `title` varchar(200) NOT NULL,
   `datecreated` datetime NOT NULL,
   `password` varchar(255) DEFAULT NULL,
   `new_pass_key` varchar(32) DEFAULT NULL,
@@ -151,7 +188,7 @@ CREATE TABLE `tblcontacts` (
   `last_login` datetime DEFAULT NULL,
   `last_password_change` datetime DEFAULT NULL,
   `active` tinyint(1) NOT NULL DEFAULT '1',
-  `profile_image` varchar(191) DEFAULT NULL,
+  `profile_image` varchar(300) DEFAULT NULL,
   `direction` varchar(3) DEFAULT NULL,
   `invoice_emails` tinyint(1) NOT NULL DEFAULT '1',
   `estimate_emails` tinyint(1) NOT NULL DEFAULT '1',
@@ -160,19 +197,42 @@ CREATE TABLE `tblcontacts` (
   `task_emails` tinyint(1) NOT NULL DEFAULT '1',
   `project_emails` tinyint(1) NOT NULL DEFAULT '1',
   `ticket_emails` tinyint(1) NOT NULL DEFAULT '1'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `tblcontact_permissions`
+-- Table structure for table `tblcontractcomments`
 --
 
-CREATE TABLE `tblcontact_permissions` (
+CREATE TABLE `tblcontractcomments` (
   `id` int(11) NOT NULL,
-  `permission_id` int(11) NOT NULL,
-  `userid` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+  `content` mediumtext,
+  `contract_id` int(11) NOT NULL,
+  `staffid` int(11) NOT NULL,
+  `dateadded` datetime NOT NULL
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tblcontractrenewals`
+--
+
+CREATE TABLE `tblcontractrenewals` (
+  `id` int(11) NOT NULL,
+  `contractid` int(11) NOT NULL,
+  `old_start_date` date NOT NULL,
+  `new_start_date` date NOT NULL,
+  `old_end_date` date DEFAULT NULL,
+  `new_end_date` date DEFAULT NULL,
+  `old_value` decimal(15,2) DEFAULT NULL,
+  `new_value` decimal(15,2) DEFAULT NULL,
+  `date_renewed` datetime NOT NULL,
+  `renewed_by` varchar(100) NOT NULL,
+  `renewed_by_staff_id` int(11) NOT NULL DEFAULT '0',
+  `is_on_old_expiry_notified` int(11) DEFAULT '0'
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -184,7 +244,7 @@ CREATE TABLE `tblcontracts` (
   `id` int(11) NOT NULL,
   `content` longtext,
   `description` text,
-  `subject` varchar(191) DEFAULT NULL,
+  `subject` varchar(300) DEFAULT NULL,
   `client` int(11) NOT NULL,
   `datestart` date DEFAULT NULL,
   `dateend` date DEFAULT NULL,
@@ -203,53 +263,18 @@ CREATE TABLE `tblcontracts` (
   `acceptance_email` varchar(100) DEFAULT NULL,
   `acceptance_date` datetime DEFAULT NULL,
   `acceptance_ip` varchar(40) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `tblcontracts_types`
+-- Table structure for table `tblcontracttypes`
 --
 
-CREATE TABLE `tblcontracts_types` (
+CREATE TABLE `tblcontracttypes` (
   `id` int(11) NOT NULL,
   `name` mediumtext NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `tblcontract_comments`
---
-
-CREATE TABLE `tblcontract_comments` (
-  `id` int(11) NOT NULL,
-  `content` mediumtext,
-  `contract_id` int(11) NOT NULL,
-  `staffid` int(11) NOT NULL,
-  `dateadded` datetime NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `tblcontract_renewals`
---
-
-CREATE TABLE `tblcontract_renewals` (
-  `id` int(11) NOT NULL,
-  `contractid` int(11) NOT NULL,
-  `old_start_date` date NOT NULL,
-  `new_start_date` date NOT NULL,
-  `old_end_date` date DEFAULT NULL,
-  `new_end_date` date DEFAULT NULL,
-  `old_value` decimal(15,2) DEFAULT NULL,
-  `new_value` decimal(15,2) DEFAULT NULL,
-  `date_renewed` datetime NOT NULL,
-  `renewed_by` varchar(100) NOT NULL,
-  `renewed_by_staff_id` int(11) NOT NULL DEFAULT '0',
-  `is_on_old_expiry_notified` int(11) DEFAULT '0'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -267,7 +292,7 @@ CREATE TABLE `tblcountries` (
   `un_member` varchar(12) DEFAULT NULL,
   `calling_code` varchar(8) DEFAULT NULL,
   `cctld` varchar(5) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 --
 -- Dumping data for table `tblcountries`
@@ -403,7 +428,7 @@ INSERT INTO `tblcountries` (`country_id`, `iso2`, `short_name`, `long_name`, `is
 (127, 'LT', 'Lithuania', 'Republic of Lithuania', 'LTU', '440', 'yes', '370', '.lt'),
 (128, 'LU', 'Luxembourg', 'Grand Duchy of Luxembourg', 'LUX', '442', 'yes', '352', '.lu'),
 (129, 'MO', 'Macao', 'The Macao Special Administrative Region', 'MAC', '446', 'no', '853', '.mo'),
-(130, 'MK', 'North Macedonia', 'Republic of North Macedonia', 'MKD', '807', 'yes', '389', '.mk'),
+(130, 'MK', 'Macedonia', 'The Former Yugoslav Republic of Macedonia', 'MKD', '807', 'yes', '389', '.mk'),
 (131, 'MG', 'Madagascar', 'Republic of Madagascar', 'MDG', '450', 'yes', '261', '.mg'),
 (132, 'MW', 'Malawi', 'Republic of Malawi', 'MWI', '454', 'yes', '265', '.mw'),
 (133, 'MY', 'Malaysia', 'Malaysia', 'MYS', '458', 'yes', '60', '.my'),
@@ -568,24 +593,7 @@ CREATE TABLE `tblcreditnotes` (
   `show_shipping_on_credit_note` tinyint(1) NOT NULL DEFAULT '1',
   `show_quantity_as` int(11) NOT NULL DEFAULT '1',
   `reference_no` varchar(100) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `tblcreditnote_refunds`
---
-
-CREATE TABLE `tblcreditnote_refunds` (
-  `id` int(11) NOT NULL,
-  `credit_note_id` int(11) NOT NULL,
-  `staff_id` int(11) NOT NULL,
-  `refunded_on` date NOT NULL,
-  `payment_mode` varchar(40) NOT NULL,
-  `note` text,
-  `amount` decimal(15,2) NOT NULL,
-  `created_at` datetime DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -601,7 +609,7 @@ CREATE TABLE `tblcredits` (
   `date` date NOT NULL,
   `date_applied` datetime NOT NULL,
   `amount` decimal(15,2) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -613,54 +621,62 @@ CREATE TABLE `tblcurrencies` (
   `id` int(11) NOT NULL,
   `symbol` varchar(10) NOT NULL,
   `name` varchar(100) NOT NULL,
-  `decimal_separator` varchar(5) DEFAULT NULL,
-  `thousand_separator` varchar(5) DEFAULT NULL,
-  `placement` varchar(10) DEFAULT NULL,
   `isdefault` tinyint(1) NOT NULL DEFAULT '0'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 --
 -- Dumping data for table `tblcurrencies`
 --
 
-INSERT INTO `tblcurrencies` (`id`, `symbol`, `name`, `decimal_separator`, `thousand_separator`, `placement`, `isdefault`) VALUES
-(1, '$', 'USD', '.', ',', 'before', 1),
-(2, '€', 'EUR', ',', '.', 'before', 0);
+INSERT INTO `tblcurrencies` (`id`, `symbol`, `name`, `isdefault`) VALUES
+(1, '$', 'USD', 1),
+(2, '€', 'EUR', 0);
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `tblcustomers_groups`
+-- Table structure for table `tblcustomeradmins`
 --
 
-CREATE TABLE `tblcustomers_groups` (
-  `id` int(11) NOT NULL,
-  `name` varchar(191) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `tblcustomer_admins`
---
-
-CREATE TABLE `tblcustomer_admins` (
+CREATE TABLE `tblcustomeradmins` (
   `staff_id` int(11) NOT NULL,
   `customer_id` int(11) NOT NULL,
   `date_assigned` text NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `tblcustomer_groups`
+-- Table structure for table `tblcustomerfiles_shares`
 --
 
-CREATE TABLE `tblcustomer_groups` (
+CREATE TABLE `tblcustomerfiles_shares` (
+  `file_id` int(11) NOT NULL,
+  `contact_id` int(11) NOT NULL
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tblcustomergroups_in`
+--
+
+CREATE TABLE `tblcustomergroups_in` (
   `id` int(11) NOT NULL,
   `groupid` int(11) NOT NULL,
   `customer_id` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tblcustomersgroups`
+--
+
+CREATE TABLE `tblcustomersgroups` (
+  `id` int(11) NOT NULL,
+  `name` varchar(255) NOT NULL
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -670,7 +686,7 @@ CREATE TABLE `tblcustomer_groups` (
 
 CREATE TABLE `tblcustomfields` (
   `id` int(11) NOT NULL,
-  `fieldto` varchar(15) NOT NULL,
+  `fieldto` varchar(50) NOT NULL,
   `name` varchar(150) NOT NULL,
   `slug` varchar(150) NOT NULL,
   `required` tinyint(1) NOT NULL DEFAULT '0',
@@ -686,7 +702,7 @@ CREATE TABLE `tblcustomfields` (
   `show_on_client_portal` int(11) NOT NULL DEFAULT '0',
   `disalow_client_to_edit` int(11) NOT NULL DEFAULT '0',
   `bs_column` int(11) NOT NULL DEFAULT '12'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -698,9 +714,9 @@ CREATE TABLE `tblcustomfieldsvalues` (
   `id` int(11) NOT NULL,
   `relid` int(11) NOT NULL,
   `fieldid` int(11) NOT NULL,
-  `fieldto` varchar(15) NOT NULL,
+  `fieldto` varchar(50) NOT NULL,
   `value` text NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -720,20 +736,71 @@ CREATE TABLE `tbldepartments` (
   `delete_after_import` int(11) NOT NULL DEFAULT '0',
   `calendar_id` mediumtext,
   `hidefromclient` tinyint(1) NOT NULL DEFAULT '0'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `tbldismissed_announcements`
+-- Table structure for table `tbldismissedannouncements`
 --
 
-CREATE TABLE `tbldismissed_announcements` (
+CREATE TABLE `tbldismissedannouncements` (
   `dismissedannouncementid` int(11) NOT NULL,
   `announcementid` int(11) NOT NULL,
   `staff` int(11) NOT NULL,
   `userid` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tblemaillists`
+--
+
+CREATE TABLE `tblemaillists` (
+  `listid` int(11) NOT NULL,
+  `name` mediumtext NOT NULL,
+  `creator` varchar(100) NOT NULL,
+  `datecreated` datetime NOT NULL
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tblemailqueue`
+--
+
+CREATE TABLE `tblemailqueue` (
+  `id` int(11) NOT NULL,
+  `engine` varchar(40) DEFAULT NULL,
+  `email` varchar(500) NOT NULL,
+  `cc` varchar(500) DEFAULT NULL,
+  `bcc` varchar(500) DEFAULT NULL,
+  `message` mediumtext NOT NULL,
+  `alt_message` mediumtext,
+  `status` enum('pending','sending','sent','failed') DEFAULT NULL,
+  `date` datetime DEFAULT NULL,
+  `headers` text,
+  `attachments` mediumtext
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tblemailstracking`
+--
+
+CREATE TABLE `tblemailstracking` (
+  `id` int(11) NOT NULL,
+  `uid` varchar(32) NOT NULL,
+  `rel_id` int(11) NOT NULL,
+  `rel_type` varchar(40) NOT NULL,
+  `date` datetime NOT NULL,
+  `email` varchar(100) NOT NULL,
+  `opened` tinyint(1) NOT NULL DEFAULT '0',
+  `date_opened` datetime DEFAULT NULL,
+  `subject` varchar(300) DEFAULT NULL
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -754,7 +821,7 @@ CREATE TABLE `tblemailtemplates` (
   `plaintext` int(11) NOT NULL DEFAULT '0',
   `active` tinyint(4) NOT NULL DEFAULT '0',
   `order` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 --
 -- Dumping data for table `tblemailtemplates`
@@ -762,7 +829,7 @@ CREATE TABLE `tblemailtemplates` (
 
 INSERT INTO `tblemailtemplates` (`emailtemplateid`, `type`, `slug`, `language`, `name`, `subject`, `message`, `fromname`, `fromemail`, `plaintext`, `active`, `order`) VALUES
 (1, 'client', 'new-client-created', 'english', 'New Contact Added/Registered (Welcome Email)', 'Welcome aboard', 'Dear {contact_firstname} {contact_lastname}<br /><br />Thank you for registering on the <strong>{companyname}</strong> CRM System.<br /><br />We just wanted to say welcome.<br /><br />Please contact us if you need any help.<br /><br />Click here to view your profile: <a href=\"{crm_url}\">{crm_url}</a><br /><br />Kind Regards, <br />{email_signature}<br /><br />(This is an automated email, so please don\'t reply to this email address)', '{companyname} | CRM', '', 0, 1, 0),
-(2, 'invoice', 'invoice-send-to-client', 'english', 'Send Invoice to Customer', 'Invoice with number {invoice_number} created', '<span style=\"font-size: 12pt;\">Dear {contact_firstname} {contact_lastname}</span><br /><br /><span style=\"font-size: 12pt;\">We have prepared the following invoice for you: <strong># {invoice_number}</strong></span><br /><br /><span style=\"font-size: 12pt;\"><strong>Invoice status</strong>: {invoice_status}</span><br /><br /><span style=\"font-size: 12pt;\">You can view the invoice on the following link: <a href=\"{invoice_link}\">{invoice_number}</a></span><br /><br /><span style=\"font-size: 12pt;\">Please contact us for more information.</span><br /><br /><span style=\"font-size: 12pt;\">Kind Regards,</span><br /><span style=\"font-size: 12pt;\">{email_signature}</span>', '{companyname} | CRM', '', 0, 1, 0),
+(2, 'invoice', 'invoice-send-to-client', 'english', 'Send Invoice to Customer', 'Invoice with number {invoice_number} created', '<span style=\"font-size: 12pt;\">Dear {contact_firstname} {contact_lastname}</span><br /> <br /><span style=\"font-size: 12pt;\">We have prepared the following invoice for you: <strong># {invoice_number}</strong></span><br /> <br /><span style=\"font-size: 12pt;\"><strong>Invoice status</strong>: {invoice_status}</span><br /> <br /><span style=\"font-size: 12pt;\">You can view the invoice on the following link: <a href=\"{invoice_link}\">{invoice_number}</a></span><br /> <br /><span style=\"font-size: 12pt;\">Please contact us for more information.</span><br /> <br /><span style=\"font-size: 12pt;\">Kind Regards,</span><br /><span style=\"font-size: 12pt;\">{email_signature}</span>', '{companyname} | CRM', '', 0, 1, 0),
 (3, 'ticket', 'new-ticket-opened-admin', 'english', 'New Ticket Opened (Opened by Staff, Sent to Customer)', 'New Support Ticket Opened', '<span style=\"font-size: 12pt;\">Hi {contact_firstname} {contact_lastname}</span><br /><br /><span style=\"font-size: 12pt;\">New support ticket has been opened.</span><br /><br /><span style=\"font-size: 12pt;\"><strong>Subject:</strong> {ticket_subject}</span><br /><span style=\"font-size: 12pt;\"><strong>Department:</strong> {ticket_department}</span><br /><span style=\"font-size: 12pt;\"><strong>Priority:</strong> {ticket_priority}</span><br /><br /><span style=\"font-size: 12pt;\"><strong>Ticket message:</strong></span><br /><span style=\"font-size: 12pt;\">{ticket_message}</span><br /><br /><span style=\"font-size: 12pt;\">You can view the ticket on the following link: <a href=\"{ticket_url}\">#{ticket_id}<br /><br /></a>Kind Regards,</span><br /><span style=\"font-size: 12pt;\">{email_signature}</span>', '{companyname} | CRM', '', 0, 1, 0),
 (4, 'ticket', 'ticket-reply', 'english', 'Ticket Reply (Sent to Customer)', 'New Ticket Reply', '<span style=\"font-size: 12pt;\">Hi {contact_firstname} {contact_lastname}</span><br /><br /><span style=\"font-size: 12pt;\">You have a new ticket reply to ticket <a href=\"{ticket_url}\">#{ticket_id}</a></span><br /><br /><span style=\"font-size: 12pt;\"><strong>Ticket Subject:</strong> {ticket_subject}<br /></span><br /><span style=\"font-size: 12pt;\"><strong>Ticket message:</strong></span><br /><span style=\"font-size: 12pt;\">{ticket_message}</span><br /><br /><span style=\"font-size: 12pt;\">You can view the ticket on the following link: <a href=\"{ticket_url}\">#{ticket_id}</a></span><br /><br /><span style=\"font-size: 12pt;\">Kind Regards,</span><br /><span style=\"font-size: 12pt;\">{email_signature}</span>', '{companyname} | CRM', '', 0, 1, 0),
 (5, 'ticket', 'ticket-autoresponse', 'english', 'New Ticket Opened - Autoresponse', 'New Support Ticket Opened', '<span style=\"font-size: 12pt;\">Hi {contact_firstname} {contact_lastname}</span><br /><br /><span style=\"font-size: 12pt;\">Thank you for contacting our support team. A support ticket has now been opened for your request. You will be notified when a response is made by email.</span><br /> <br /><span style=\"font-size: 12pt;\"><strong>Subject:</strong> {ticket_subject}</span><br /><span style=\"font-size: 12pt;\"><strong>Department</strong>: {ticket_department}</span><br /><span style=\"font-size: 12pt;\"><strong>Priority:</strong> {ticket_priority}</span><br /> <br /><span style=\"font-size: 12pt;\"><strong>Ticket message:</strong></span><br /><span style=\"font-size: 12pt;\">{ticket_message}</span><br /><br /><span style=\"font-size: 12pt;\">You can view the ticket on the following link: <a href=\"{ticket_url}\">#{ticket_id}</a></span><br /> <br /><span style=\"font-size: 12pt;\">Kind Regards,</span><br /><span style=\"font-size: 12pt;\">{email_signature}</span>', '{companyname} | CRM', '', 0, 1, 0),
@@ -798,12 +865,12 @@ INSERT INTO `tblemailtemplates` (`emailtemplateid`, `type`, `slug`, `language`, 
 (35, 'project', 'new-project-discussion-comment-to-customer', 'english', 'New Discussion Comment  (Sent to Customer Contacts)', 'New Discussion Comment', '<p><span style=\"font-size: 12pt;\">Hello {contact_firstname} {contact_lastname}</span><br /><br /><span style=\"font-size: 12pt;\">New discussion comment has been made on <strong>{discussion_subject}</strong> from <strong>{comment_creator}</strong></span><br /><br /><span style=\"font-size: 12pt;\"><strong>Discussion subject:</strong> {discussion_subject}</span><br /><span style=\"font-size: 12pt;\"><strong>Comment</strong>: {discussion_comment}</span><br /><br /><span style=\"font-size: 12pt;\">You can view the discussion on the following link: <a href=\"{discussion_link}\">{discussion_subject}</a></span><br /><br /><span style=\"font-size: 12pt;\">Kind Regards,</span><br /><span style=\"font-size: 12pt;\">{email_signature}</span></p>', '{companyname} | CRM', '', 0, 1, 0),
 (36, 'project', 'new-project-discussion-comment-to-staff', 'english', 'New Discussion Comment (Sent to Project Members)', 'New Discussion Comment', '<p>Hi {staff_firstname}<br /><br />New discussion comment has been made on <strong>{discussion_subject}</strong> from <strong>{comment_creator}</strong><br /><br /><strong>Discussion subject:</strong> {discussion_subject}<br /><strong>Comment:</strong> {discussion_comment}<br /><br />You can view the discussion on the following link: <a href=\"{discussion_link}\">{discussion_subject}</a><br /><br />Kind Regards,<br />{email_signature}</p>', '{companyname} | CRM', '', 0, 1, 0),
 (37, 'project', 'staff-added-as-project-member', 'english', 'Staff Added as Project Member', 'New project assigned to you', '<p>Hi {staff_firstname}<br /><br />New project has been assigned to you.<br /><br />You can view the project on the following link <a href=\"{project_link}\">{project_name}</a><br /><br />{email_signature}</p>', '{companyname} | CRM', '', 0, 1, 0),
-(38, 'estimate', 'estimate-expiry-reminder', 'english', 'Estimate Expiration Reminder', 'Estimate Expiration Reminder', '<p><span style=\"font-size: 12pt;\">Hello {contact_firstname} {contact_lastname}</span><br /><br /><span style=\"font-size: 12pt;\">The estimate with <strong># {estimate_number}</strong> will expire on <strong>{estimate_expirydate}</strong></span><br /><br /><span style=\"font-size: 12pt;\">You can view the estimate on the following link: <a href=\"{estimate_link}\">{estimate_number}</a></span><br /><br /><span style=\"font-size: 12pt;\">Kind Regards,</span><br /><span style=\"font-size: 12pt;\">{email_signature}</span></p>', '{companyname} | CRM', '', 0, 1, 0),
+(38, 'estimate', 'estimate-expiry-reminder', 'english', 'Estimate Expiration Reminder', 'Estimate Expiration Reminder', '<p><span style=\"font-size: 12pt;\">Hello {client_company}</span><br /><br /><span style=\"font-size: 12pt;\">The estimate with <strong># {estimate_number}</strong> will expire on <strong>{estimate_expirydate}</strong></span><br /><br /><span style=\"font-size: 12pt;\">You can view the estimate on the following link: <a href=\"{estimate_link}\">{estimate_number}</a></span><br /><br /><span style=\"font-size: 12pt;\">Kind Regards,</span><br /><span style=\"font-size: 12pt;\">{email_signature}</span></p>', '{companyname} | CRM', '', 0, 1, 0),
 (39, 'proposals', 'proposal-expiry-reminder', 'english', 'Proposal Expiration Reminder', 'Proposal Expiration Reminder', '<p>Hello {proposal_proposal_to}<br /><br />The proposal {proposal_number}&nbsp;will expire on <strong>{proposal_open_till}</strong><br /><br />You can view the proposal on the following link: <a href=\"{proposal_link}\">{proposal_number}</a><br /><br />Kind Regards,<br />{email_signature}</p>', '{companyname} | CRM', '', 0, 1, 0),
 (40, 'staff', 'new-staff-created', 'english', 'New Staff Created (Welcome Email)', 'You are added as staff member', 'Hi {staff_firstname}<br /><br />You are added as member on our CRM.<br /><br />Please use the following logic credentials:<br /><br /><strong>Email:</strong> {staff_email}<br /><strong>Password:</strong> {password}<br /><br />Click <a href=\"{admin_url}\">here </a>to login in the dashboard.<br /><br />Best Regards,<br />{email_signature}', '{companyname} | CRM', '', 0, 1, 0),
 (41, 'client', 'contact-forgot-password', 'english', 'Forgot Password', 'Create New Password', '<h2>Create a new password</h2>\r\nForgot your password?<br /> To create a new password, just follow this link:<br /> <br /><a href=\"{reset_password_url}\">Reset Password</a><br /> <br /> You received this email, because it was requested by a {companyname}&nbsp;user. This is part of the procedure to create a new password on the system. If you DID NOT request a new password then please ignore this email and your password will remain the same. <br /><br /> {email_signature}', '{companyname} | CRM', '', 0, 1, 0),
 (42, 'client', 'contact-password-reseted', 'english', 'Password Reset - Confirmation', 'Your password has been changed', '<strong><span style=\"font-size: 14pt;\">You have changed your password.</span><br /></strong><br /> Please, keep it in your records so you don\'t forget it.<br /> <br /> Your email address for login is: {contact_email}<br /><br />If this wasnt you, please contact us.<br /><br />{email_signature}', '{companyname} | CRM', '', 0, 1, 0),
-(43, 'client', 'contact-set-password', 'english', 'Set New Password', 'Set new password on {companyname} ', '<h2><span style=\"font-size: 14pt;\">Setup your new password on {companyname}</span></h2>\r\nPlease use the following link to set up your new password:<br /><br /><a href=\"{set_password_url}\">Set new password</a><br /><br />Keep it in your records so you don\'t forget it.<br /><br />Please set your new password in <strong>48 hours</strong>. After that, you won\'t be able to set your password because this link will expire.<br /><br />You can login at: <a href=\"{crm_url}\">{crm_url}</a><br />Your email address for login: {contact_email}<br /><br />{email_signature}', '{companyname} | CRM', '', 0, 1, 0),
+(43, 'client', 'contact-set-password', 'english', 'Set New Password', 'Set new password on {companyname} ', '<h2><span style=\"font-size: 14pt;\">Setup your new password on {companyname}</span></h2>\r\nPlease use the following link to setup your new password:<br /><br /><a href=\"{set_password_url}\">Set new password</a><br /><br />Keep it in your records so you don\'t forget it.<br /><br /> Please set your new password in <strong>48 hours</strong>. After that you wont be able to set your password because this link will expire.<br /><br />You can login at: <a href=\"{crm_url}\">{crm_url}</a><br /> Your email address for login: {contact_email}<br /><br />{email_signature}', '{companyname} | CRM', '', 0, 1, 0),
 (44, 'staff', 'staff-forgot-password', 'english', 'Forgot Password', 'Create New Password', '<h2><span style=\"font-size: 14pt;\">Create a new password</span></h2>\r\nForgot your password?<br /> To create a new password, just follow this link:<br /> <br /><a href=\"{reset_password_url}\">Reset Password</a><br /> <br /> You received this email, because it was requested by a <strong>{companyname}</strong>&nbsp;user. This is part of the procedure to create a new password on the system. If you DID NOT request a new password then please ignore this email and your password will remain the same. <br /><br /> {email_signature}', '{companyname} | CRM', '', 0, 1, 0),
 (45, 'staff', 'staff-password-reseted', 'english', 'Password Reset - Confirmation', 'Your password has been changed', '<span style=\"font-size: 14pt;\"><strong>You have changed your password.<br /></strong></span><br /> Please, keep it in your records so you don\'t forget it.<br /> <br /> Your email address for login is: {staff_email}<br /><br /> If this wasnt you, please contact us.<br /><br />{email_signature}', '{companyname} | CRM', '', 0, 1, 0),
 (46, 'project', 'assigned-to-project', 'english', 'New Project Created (Sent to Customer Contacts)', 'New Project Created', '<p>Hello&nbsp;{contact_firstname}&nbsp;{contact_lastname}</p>\r\n<p>New project is assigned to your company.<br /><br /><strong>Project Name:</strong>&nbsp;{project_name}<br /><strong>Project Start Date:</strong>&nbsp;{project_start_date}</p>\r\n<p>You can view the project on the following link:&nbsp;<a href=\"{project_link}\">{project_name}</a></p>\r\n<p>We are looking forward hearing from you.<br /><br />Kind Regards,<br />{email_signature}</p>', '{companyname} | CRM', '', 0, 1, 0),
@@ -830,11 +897,10 @@ INSERT INTO `tblemailtemplates` (`emailtemplateid`, `type`, `slug`, `language`, 
 (67, 'gdpr', 'gdpr-removal-request', 'english', 'Removal Request From Contact (Sent to administrators)', 'Data Removal Request Received', 'Hello&nbsp;{staff_firstname}&nbsp;{staff_lastname}<br /><br />Data removal has been requested by&nbsp;{contact_firstname} {contact_lastname}<br /><br />You can review this request and take proper actions directly from the admin area.', '{companyname} | CRM', '', 0, 1, 0),
 (68, 'gdpr', 'gdpr-removal-request-lead', 'english', 'Removal Request From Lead (Sent to administrators)', 'Data Removal Request Received', 'Hello&nbsp;{staff_firstname}&nbsp;{staff_lastname}<br /><br />Data removal has been requested by {lead_name}<br /><br />You can review this request and take proper actions directly from the admin area.<br /><br />To view the lead inside the admin area click here:&nbsp;<a href=\"{lead_link}\">{lead_link}</a>', '{companyname} | CRM', '', 0, 1, 0),
 (69, 'client', 'client-registration-confirmed', 'english', 'Customer Registration Confirmed', 'Your registration is confirmed', '<p>Dear {contact_firstname} {contact_lastname}<br /><br />We just wanted to let you know that your registration at&nbsp;{companyname} is successfully confirmed and your account is now active.<br /><br />You can login at&nbsp;<a href=\"{crm_url}\">{crm_url}</a> with the email and password you provided during registration.<br /><br />Please contact us if you need any help.<br /><br />Kind Regards, <br />{email_signature}</p>\r\n<p><br />(This is an automated email, so please don\'t reply to this email address)</p>', '{companyname} | CRM', '', 0, 1, 0),
-(70, 'contract', 'contract-signed-to-staff', 'english', 'Contract Signed (Sent to Staff)', 'Customer Signed a Contract', 'Hi {staff_firstname}<br /><br />A contract with subject&nbsp;<strong>{contract_subject} </strong>has been successfully signed by the customer.<br /><br />You can view the contract at the following link: <a href=\"{contract_link}\">{contract_subject}</a>&nbsp;or from the admin area.<br /><br />{email_signature}', '{companyname} | CRM', '', 0, 1, 0),
+(70, 'contract', 'contract-signed-to-staff', 'english', 'Contract Signed (Sent to Staff)', 'Customer Signed a Contract', 'Hi {staff_firstname}<br /><br />A contract with subject&nbsp;<strong>{contract_subject} </strong>has been successfully signed by the customer.<br /><br />You can view and reply to the comment on the following link: <a href=\"{contract_link}\">{contract_subject}</a>&nbsp;or from the admin area.<br /><br />{email_signature}', '{companyname} | CRM', '', 0, 1, 0),
 (71, 'subscriptions', 'customer-subscribed-to-staff', 'english', 'Customer Subscribed to a Subscription (Sent to administrators and subscription creator)', 'Customer Subscribed to a Subscription', 'The customer <strong>{client_company}</strong> subscribed to a subscription with name&nbsp;<strong>{subscription_name}</strong><br /><br /><strong>ID</strong>:&nbsp;{subscription_id}<br /><strong>Subscription name</strong>:&nbsp;{subscription_name}<br /><strong>Subscription description</strong>:&nbsp;{subscription_description}<br /><br />You can view the subscription by clicking <a href=\"{subscription_link}\">here</a><br />\r\n<div style=\"text-align: center;\"><span style=\"font-size: 10pt;\">&nbsp;</span></div>\r\nBest Regards,<br />{email_signature}<br /><br /><span style=\"font-size: 10pt;\"><span style=\"color: #999999;\">You are receiving this email because you are either administrator or you are creator of the subscription.</span></span>', '{companyname} | CRM', '', 0, 1, 0),
 (72, 'client', 'contact-verification-email', 'english', 'Email Verification (Sent to Contact After Registration)', 'Verify Email Address', '<p>Hello&nbsp;{contact_firstname}<br /><br />Please click the button below to verify your email address.<br /><br /><a href=\"{email_verification_url}\">Verify Email Address</a><br /><br />If you did not create an account, no further action is required</p>\r\n<p><br />{email_signature}</p>', '{companyname} | CRM', '', 0, 1, 0),
-(73, 'client', 'new-customer-profile-file-uploaded-to-staff', 'english', 'New Customer Profile File(s) Uploaded (Sent to Staff)', 'Customer Uploaded New File(s) in Profile', 'Hi!<br /><br />New file(s) is uploaded into the customer ({client_company}) profile by&nbsp;{contact_firstname}<br /><br />You can check the uploaded files into the admin area by clicking <a href=\"{customer_profile_files_admin_link}\">here</a> or at the following link:&nbsp;{customer_profile_files_admin_link}<br /><br />{email_signature}', '{companyname} | CRM', '', 0, 1, 0),
-(74, 'staff', 'event-notification-to-staff', 'english', 'Event Notification (Calendar)', 'Upcoming Event - {event_title}', 'Hi {staff_firstname}! <br /><br />This is a reminder for event <a href=\\\"{event_link}\\\">{event_title}</a> scheduled at {event_start_date}. <br /><br />Regards.', '', '', 0, 1, 0);
+(73, 'client', 'new-customer-profile-file-uploaded-to-staff', 'english', 'New Customer Profile File(s) Uploaded (Sent to Staff)', 'Customer Uploaded New File(s) in Profile', 'Hi!<br /><br />New file(s) is uploaded into the customer ({client_company}) profile by&nbsp;{contact_firstname}<br /><br />You can check the uploaded files into the admin area by clicking <a href=\"{customer_profile_files_admin_link}\">here</a> or at the following link:&nbsp;{customer_profile_files_admin_link}<br /><br />{email_signature}', '{companyname} | CRM', '', 0, 1, 0);
 
 -- --------------------------------------------------------
 
@@ -894,7 +960,7 @@ CREATE TABLE `tblestimates` (
   `acceptance_date` datetime DEFAULT NULL,
   `acceptance_ip` varchar(40) DEFAULT NULL,
   `signature` varchar(40) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -914,7 +980,7 @@ CREATE TABLE `tblevents` (
   `isstartnotified` tinyint(1) NOT NULL DEFAULT '0',
   `reminder_before` int(11) NOT NULL DEFAULT '0',
   `reminder_before_type` varchar(10) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -931,7 +997,7 @@ CREATE TABLE `tblexpenses` (
   `tax2` int(11) NOT NULL DEFAULT '0',
   `reference_no` varchar(100) DEFAULT NULL,
   `note` text,
-  `expense_name` varchar(191) DEFAULT NULL,
+  `expense_name` varchar(500) DEFAULT NULL,
   `clientid` int(11) NOT NULL,
   `project_id` int(11) NOT NULL DEFAULT '0',
   `billable` int(11) DEFAULT '0',
@@ -950,19 +1016,19 @@ CREATE TABLE `tblexpenses` (
   `recurring_from` int(11) DEFAULT NULL,
   `dateadded` datetime NOT NULL,
   `addedfrom` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `tblexpenses_categories`
+-- Table structure for table `tblexpensescategories`
 --
 
-CREATE TABLE `tblexpenses_categories` (
+CREATE TABLE `tblexpensescategories` (
   `id` int(11) NOT NULL,
-  `name` varchar(191) NOT NULL,
+  `name` varchar(300) NOT NULL,
   `description` text
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -974,7 +1040,7 @@ CREATE TABLE `tblfiles` (
   `id` int(11) NOT NULL,
   `rel_id` int(11) NOT NULL,
   `rel_type` varchar(20) NOT NULL,
-  `file_name` varchar(191) NOT NULL,
+  `file_name` varchar(600) NOT NULL,
   `filetype` varchar(40) DEFAULT NULL,
   `visible_to_customer` int(11) NOT NULL DEFAULT '0',
   `attachment_key` varchar(32) DEFAULT NULL,
@@ -985,55 +1051,55 @@ CREATE TABLE `tblfiles` (
   `contact_id` int(11) DEFAULT '0',
   `task_comment_id` int(11) NOT NULL DEFAULT '0',
   `dateadded` datetime NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `tblform_questions`
+-- Table structure for table `tblformquestionboxes`
 --
 
-CREATE TABLE `tblform_questions` (
+CREATE TABLE `tblformquestionboxes` (
+  `boxid` int(11) NOT NULL,
+  `boxtype` varchar(10) NOT NULL,
+  `questionid` int(11) NOT NULL
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tblformquestionboxesdescription`
+--
+
+CREATE TABLE `tblformquestionboxesdescription` (
+  `questionboxdescriptionid` int(11) NOT NULL,
+  `description` mediumtext NOT NULL,
+  `boxid` mediumtext NOT NULL,
+  `questionid` int(11) NOT NULL
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tblformquestions`
+--
+
+CREATE TABLE `tblformquestions` (
   `questionid` int(11) NOT NULL,
   `rel_id` int(11) NOT NULL,
   `rel_type` varchar(20) DEFAULT NULL,
   `question` mediumtext NOT NULL,
   `required` tinyint(1) NOT NULL DEFAULT '0',
   `question_order` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `tblform_question_box`
+-- Table structure for table `tblformresults`
 --
 
-CREATE TABLE `tblform_question_box` (
-  `boxid` int(11) NOT NULL,
-  `boxtype` varchar(10) NOT NULL,
-  `questionid` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `tblform_question_box_description`
---
-
-CREATE TABLE `tblform_question_box_description` (
-  `questionboxdescriptionid` int(11) NOT NULL,
-  `description` mediumtext NOT NULL,
-  `boxid` mediumtext NOT NULL,
-  `questionid` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `tblform_results`
---
-
-CREATE TABLE `tblform_results` (
+CREATE TABLE `tblformresults` (
   `resultid` int(11) NOT NULL,
   `boxid` int(11) NOT NULL,
   `boxdescriptionid` int(11) DEFAULT NULL,
@@ -1042,25 +1108,28 @@ CREATE TABLE `tblform_results` (
   `questionid` int(11) NOT NULL,
   `answer` text,
   `resultsetid` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `tblgdpr_requests`
+-- Table structure for table `tblgoals`
 --
 
-CREATE TABLE `tblgdpr_requests` (
+CREATE TABLE `tblgoals` (
   `id` int(11) NOT NULL,
-  `clientid` int(11) NOT NULL DEFAULT '0',
-  `contact_id` int(11) NOT NULL DEFAULT '0',
-  `lead_id` int(11) NOT NULL DEFAULT '0',
-  `request_type` varchar(191) DEFAULT NULL,
-  `status` varchar(40) DEFAULT NULL,
-  `request_date` datetime NOT NULL,
-  `request_from` varchar(150) DEFAULT NULL,
-  `description` text
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+  `subject` varchar(400) NOT NULL,
+  `description` text NOT NULL,
+  `start_date` date NOT NULL,
+  `end_date` date NOT NULL,
+  `goal_type` int(11) NOT NULL,
+  `contract_type` int(11) NOT NULL DEFAULT '0',
+  `achievement` int(11) NOT NULL,
+  `notify_when_fail` tinyint(1) NOT NULL DEFAULT '1',
+  `notify_when_achieve` tinyint(1) NOT NULL DEFAULT '1',
+  `notified` int(11) NOT NULL DEFAULT '0',
+  `staff_id` int(11) NOT NULL DEFAULT '0'
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -1073,12 +1142,36 @@ CREATE TABLE `tblinvoicepaymentrecords` (
   `invoiceid` int(11) NOT NULL,
   `amount` decimal(15,2) NOT NULL,
   `paymentmode` varchar(40) DEFAULT NULL,
-  `paymentmethod` varchar(191) DEFAULT NULL,
+  `paymentmethod` varchar(200) DEFAULT NULL,
   `date` date NOT NULL,
   `daterecorded` datetime NOT NULL,
   `note` text NOT NULL,
   `transactionid` mediumtext
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tblinvoicepaymentsmodes`
+--
+
+CREATE TABLE `tblinvoicepaymentsmodes` (
+  `id` int(11) NOT NULL,
+  `name` varchar(100) NOT NULL,
+  `description` text,
+  `show_on_pdf` int(11) NOT NULL DEFAULT '0',
+  `invoices_only` int(11) NOT NULL DEFAULT '0',
+  `expenses_only` int(11) NOT NULL DEFAULT '0',
+  `selected_by_default` int(11) NOT NULL DEFAULT '1',
+  `active` tinyint(1) NOT NULL DEFAULT '1'
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+--
+-- Dumping data for table `tblinvoicepaymentsmodes`
+--
+
+INSERT INTO `tblinvoicepaymentsmodes` (`id`, `name`, `description`, `show_on_pdf`, `invoices_only`, `expenses_only`, `selected_by_default`, `active`) VALUES
+(1, 'Bank', NULL, 0, 0, 0, 1, 1);
 
 -- --------------------------------------------------------
 
@@ -1139,25 +1232,7 @@ CREATE TABLE `tblinvoices` (
   `show_quantity_as` int(11) NOT NULL DEFAULT '1',
   `project_id` int(11) DEFAULT '0',
   `subscription_id` int(11) NOT NULL DEFAULT '0'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `tblitemable`
---
-
-CREATE TABLE `tblitemable` (
-  `id` int(11) NOT NULL,
-  `rel_id` int(11) NOT NULL,
-  `rel_type` varchar(15) NOT NULL,
-  `description` mediumtext NOT NULL,
-  `long_description` mediumtext,
-  `qty` decimal(15,2) NOT NULL,
-  `rate` decimal(15,2) NOT NULL,
-  `unit` varchar(40) DEFAULT NULL,
-  `item_order` int(11) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -1174,7 +1249,35 @@ CREATE TABLE `tblitems` (
   `tax2` int(11) DEFAULT NULL,
   `unit` varchar(40) DEFAULT NULL,
   `group_id` int(11) NOT NULL DEFAULT '0'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tblitemsrelated`
+--
+
+CREATE TABLE `tblitemsrelated` (
+  `id` int(11) NOT NULL,
+  `rel_id` int(11) NOT NULL,
+  `rel_type` varchar(30) NOT NULL,
+  `item_id` int(11) NOT NULL
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tblitemstax`
+--
+
+CREATE TABLE `tblitemstax` (
+  `id` int(11) NOT NULL,
+  `itemid` int(11) NOT NULL,
+  `rel_id` int(11) NOT NULL,
+  `rel_type` varchar(20) NOT NULL,
+  `taxrate` decimal(15,2) NOT NULL,
+  `taxname` varchar(100) NOT NULL
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -1185,44 +1288,33 @@ CREATE TABLE `tblitems` (
 CREATE TABLE `tblitems_groups` (
   `id` int(11) NOT NULL,
   `name` varchar(50) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `tblitem_tax`
+-- Table structure for table `tblitems_in`
 --
 
-CREATE TABLE `tblitem_tax` (
+CREATE TABLE `tblitems_in` (
   `id` int(11) NOT NULL,
-  `itemid` int(11) NOT NULL,
   `rel_id` int(11) NOT NULL,
-  `rel_type` varchar(20) NOT NULL,
-  `taxrate` decimal(15,2) NOT NULL,
-  `taxname` varchar(100) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+  `rel_type` varchar(15) NOT NULL,
+  `description` mediumtext NOT NULL,
+  `long_description` mediumtext,
+  `qty` decimal(15,2) NOT NULL,
+  `rate` decimal(15,2) NOT NULL,
+  `unit` varchar(40) DEFAULT NULL,
+  `item_order` int(11) DEFAULT NULL
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `tblknowedge_base_article_feedback`
+-- Table structure for table `tblknowledgebase`
 --
 
-CREATE TABLE `tblknowedge_base_article_feedback` (
-  `articleanswerid` int(11) NOT NULL,
-  `articleid` int(11) NOT NULL,
-  `answer` int(11) NOT NULL,
-  `ip` varchar(40) NOT NULL,
-  `date` datetime NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `tblknowledge_base`
---
-
-CREATE TABLE `tblknowledge_base` (
+CREATE TABLE `tblknowledgebase` (
   `articleid` int(11) NOT NULL,
   `articlegroup` int(11) NOT NULL,
   `subject` mediumtext NOT NULL,
@@ -1232,23 +1324,54 @@ CREATE TABLE `tblknowledge_base` (
   `datecreated` datetime NOT NULL,
   `article_order` int(11) NOT NULL DEFAULT '0',
   `staff_article` int(11) NOT NULL DEFAULT '0'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `tblknowledge_base_groups`
+-- Table structure for table `tblknowledgebasearticleanswers`
 --
 
-CREATE TABLE `tblknowledge_base_groups` (
+CREATE TABLE `tblknowledgebasearticleanswers` (
+  `articleanswerid` int(11) NOT NULL,
+  `articleid` int(11) NOT NULL,
+  `answer` int(11) NOT NULL,
+  `ip` varchar(40) NOT NULL,
+  `date` datetime NOT NULL
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tblknowledgebasegroups`
+--
+
+CREATE TABLE `tblknowledgebasegroups` (
   `groupid` int(11) NOT NULL,
-  `name` varchar(191) NOT NULL,
-  `group_slug` text,
+  `name` mediumtext NOT NULL,
+  `group_slug` varchar(300) DEFAULT NULL,
   `description` mediumtext,
   `active` tinyint(4) NOT NULL,
   `color` varchar(10) DEFAULT '#28B8DA',
   `group_order` int(11) DEFAULT '0'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tblleadactivitylog`
+--
+
+CREATE TABLE `tblleadactivitylog` (
+  `id` int(11) NOT NULL,
+  `leadid` int(11) NOT NULL,
+  `description` mediumtext NOT NULL,
+  `additional_data` varchar(600) DEFAULT NULL,
+  `date` datetime NOT NULL,
+  `staffid` int(11) NOT NULL,
+  `full_name` varchar(100) DEFAULT NULL,
+  `custom_activity` tinyint(1) NOT NULL DEFAULT '0'
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -1259,16 +1382,16 @@ CREATE TABLE `tblknowledge_base_groups` (
 CREATE TABLE `tblleads` (
   `id` int(11) NOT NULL,
   `hash` varchar(65) DEFAULT NULL,
-  `name` varchar(191) NOT NULL,
+  `name` varchar(300) NOT NULL,
   `title` varchar(100) DEFAULT NULL,
-  `company` varchar(191) DEFAULT NULL,
+  `company` varchar(300) DEFAULT NULL,
   `description` text,
   `country` int(11) NOT NULL DEFAULT '0',
   `zip` varchar(15) DEFAULT NULL,
   `city` varchar(100) DEFAULT NULL,
   `state` varchar(50) DEFAULT NULL,
   `address` varchar(100) DEFAULT NULL,
-  `assigned` int(11) NOT NULL DEFAULT '0',
+  `assigned` int(11) NOT NULL,
   `dateadded` datetime NOT NULL,
   `from_form_id` int(11) NOT NULL DEFAULT '0',
   `status` int(11) NOT NULL,
@@ -1277,7 +1400,7 @@ CREATE TABLE `tblleads` (
   `dateassigned` date DEFAULT NULL,
   `last_status_change` datetime DEFAULT NULL,
   `addedfrom` int(11) NOT NULL,
-  `email` varchar(100) DEFAULT NULL,
+  `email` varchar(150) DEFAULT NULL,
   `website` varchar(150) DEFAULT NULL,
   `leadorder` int(11) DEFAULT '1',
   `phonenumber` varchar(50) DEFAULT NULL,
@@ -1290,15 +1413,30 @@ CREATE TABLE `tblleads` (
   `is_public` tinyint(1) NOT NULL DEFAULT '0',
   `default_language` varchar(40) DEFAULT NULL,
   `client_id` int(11) NOT NULL DEFAULT '0'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `tblleads_email_integration`
+-- Table structure for table `tblleadsemailintegrationemails`
 --
 
-CREATE TABLE `tblleads_email_integration` (
+CREATE TABLE `tblleadsemailintegrationemails` (
+  `id` int(11) NOT NULL,
+  `subject` mediumtext,
+  `body` mediumtext,
+  `dateadded` datetime NOT NULL,
+  `leadid` int(11) NOT NULL,
+  `emailid` int(11) NOT NULL
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tblleadsintegration`
+--
+
+CREATE TABLE `tblleadsintegration` (
   `id` int(11) NOT NULL COMMENT 'the ID always must be 1',
   `active` int(11) NOT NULL,
   `email` varchar(100) NOT NULL,
@@ -1319,106 +1457,94 @@ CREATE TABLE `tblleads_email_integration` (
   `only_loop_on_unseen_emails` tinyint(1) NOT NULL DEFAULT '1',
   `delete_after_import` int(11) NOT NULL DEFAULT '0',
   `create_task_if_customer` int(11) NOT NULL DEFAULT '0'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 --
--- Dumping data for table `tblleads_email_integration`
+-- Dumping data for table `tblleadsintegration`
 --
 
-INSERT INTO `tblleads_email_integration` (`id`, `active`, `email`, `imap_server`, `password`, `check_every`, `responsible`, `lead_source`, `lead_status`, `encryption`, `folder`, `last_run`, `notify_lead_imported`, `notify_lead_contact_more_times`, `notify_type`, `notify_ids`, `mark_public`, `only_loop_on_unseen_emails`, `delete_after_import`, `create_task_if_customer`) VALUES
+INSERT INTO `tblleadsintegration` (`id`, `active`, `email`, `imap_server`, `password`, `check_every`, `responsible`, `lead_source`, `lead_status`, `encryption`, `folder`, `last_run`, `notify_lead_imported`, `notify_lead_contact_more_times`, `notify_type`, `notify_ids`, `mark_public`, `only_loop_on_unseen_emails`, `delete_after_import`, `create_task_if_customer`) VALUES
 (1, 0, '', '', '', 10, 0, 0, 0, 'tls', 'inbox', '', 1, 1, 'assigned', '', 0, 1, 0, 1);
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `tblleads_sources`
+-- Table structure for table `tblleadssources`
 --
 
-CREATE TABLE `tblleads_sources` (
+CREATE TABLE `tblleadssources` (
   `id` int(11) NOT NULL,
   `name` varchar(150) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 --
--- Dumping data for table `tblleads_sources`
+-- Dumping data for table `tblleadssources`
 --
 
-INSERT INTO `tblleads_sources` (`id`, `name`) VALUES
-(2, 'Facebook'),
-(1, 'Google');
+INSERT INTO `tblleadssources` (`id`, `name`) VALUES
+(1, 'Google'),
+(2, 'Facebook');
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `tblleads_status`
+-- Table structure for table `tblleadsstatus`
 --
 
-CREATE TABLE `tblleads_status` (
+CREATE TABLE `tblleadsstatus` (
   `id` int(11) NOT NULL,
   `name` varchar(50) NOT NULL,
   `statusorder` int(11) DEFAULT NULL,
   `color` varchar(10) DEFAULT '#28B8DA',
   `isdefault` int(11) NOT NULL DEFAULT '0'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 --
--- Dumping data for table `tblleads_status`
+-- Dumping data for table `tblleadsstatus`
 --
 
-INSERT INTO `tblleads_status` (`id`, `name`, `statusorder`, `color`, `isdefault`) VALUES
+INSERT INTO `tblleadsstatus` (`id`, `name`, `statusorder`, `color`, `isdefault`) VALUES
 (1, 'Customer', 1000, '#7cb342', 1);
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `tbllead_activity_log`
+-- Table structure for table `tbllistemails`
 --
 
-CREATE TABLE `tbllead_activity_log` (
-  `id` int(11) NOT NULL,
-  `leadid` int(11) NOT NULL,
-  `description` mediumtext NOT NULL,
-  `additional_data` text,
-  `date` datetime NOT NULL,
-  `staffid` int(11) NOT NULL,
-  `full_name` varchar(100) DEFAULT NULL,
-  `custom_activity` tinyint(1) NOT NULL DEFAULT '0'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+CREATE TABLE `tbllistemails` (
+  `emailid` int(11) NOT NULL,
+  `listid` int(11) NOT NULL,
+  `email` varchar(250) NOT NULL,
+  `dateadded` datetime NOT NULL
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `tbllead_integration_emails`
+-- Table structure for table `tblmaillistscustomfields`
 --
 
-CREATE TABLE `tbllead_integration_emails` (
-  `id` int(11) NOT NULL,
-  `subject` mediumtext,
-  `body` mediumtext,
-  `dateadded` datetime NOT NULL,
-  `leadid` int(11) NOT NULL,
-  `emailid` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+CREATE TABLE `tblmaillistscustomfields` (
+  `customfieldid` int(11) NOT NULL,
+  `listid` int(11) NOT NULL,
+  `fieldname` varchar(150) NOT NULL,
+  `fieldslug` varchar(100) NOT NULL
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `tblmail_queue`
+-- Table structure for table `tblmaillistscustomfieldvalues`
 --
 
-CREATE TABLE `tblmail_queue` (
-  `id` int(11) NOT NULL,
-  `engine` varchar(40) DEFAULT NULL,
-  `email` varchar(191) NOT NULL,
-  `cc` text,
-  `bcc` text,
-  `message` mediumtext NOT NULL,
-  `alt_message` mediumtext,
-  `status` enum('pending','sending','sent','failed') DEFAULT NULL,
-  `date` datetime DEFAULT NULL,
-  `headers` text,
-  `attachments` mediumtext
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+CREATE TABLE `tblmaillistscustomfieldvalues` (
+  `customfieldvalueid` int(11) NOT NULL,
+  `listid` int(11) NOT NULL,
+  `customfieldid` int(11) NOT NULL,
+  `emailid` int(11) NOT NULL,
+  `value` varchar(100) NOT NULL
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -1435,7 +1561,7 @@ CREATE TABLE `tblmigrations` (
 --
 
 INSERT INTO `tblmigrations` (`version`) VALUES
-(235);
+(221);
 
 -- --------------------------------------------------------
 
@@ -1445,7 +1571,7 @@ INSERT INTO `tblmigrations` (`version`) VALUES
 
 CREATE TABLE `tblmilestones` (
   `id` int(11) NOT NULL,
-  `name` varchar(191) NOT NULL,
+  `name` varchar(400) NOT NULL,
   `description` text,
   `description_visible_to_customer` tinyint(1) DEFAULT '0',
   `due_date` date NOT NULL,
@@ -1453,77 +1579,7 @@ CREATE TABLE `tblmilestones` (
   `color` varchar(10) DEFAULT NULL,
   `milestone_order` int(11) NOT NULL DEFAULT '0',
   `datecreated` date NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `tblmodules`
---
-
-CREATE TABLE `tblmodules` (
-  `id` int(11) NOT NULL,
-  `module_name` varchar(55) NOT NULL,
-  `installed_version` varchar(11) NOT NULL,
-  `active` tinyint(1) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `tblnewsfeed_comment_likes`
---
-
-CREATE TABLE `tblnewsfeed_comment_likes` (
-  `id` int(11) NOT NULL,
-  `postid` int(11) NOT NULL,
-  `commentid` int(11) NOT NULL,
-  `userid` int(11) NOT NULL,
-  `dateliked` datetime NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `tblnewsfeed_posts`
---
-
-CREATE TABLE `tblnewsfeed_posts` (
-  `postid` int(11) NOT NULL,
-  `creator` int(11) NOT NULL,
-  `datecreated` datetime NOT NULL,
-  `visibility` varchar(100) NOT NULL,
-  `content` text NOT NULL,
-  `pinned` int(11) NOT NULL,
-  `datepinned` datetime DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `tblnewsfeed_post_comments`
---
-
-CREATE TABLE `tblnewsfeed_post_comments` (
-  `id` int(11) NOT NULL,
-  `content` text,
-  `userid` int(11) NOT NULL,
-  `postid` int(11) NOT NULL,
-  `dateadded` datetime NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `tblnewsfeed_post_likes`
---
-
-CREATE TABLE `tblnewsfeed_post_likes` (
-  `id` int(11) NOT NULL,
-  `postid` int(11) NOT NULL,
-  `userid` int(11) NOT NULL,
-  `dateliked` datetime NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -1539,7 +1595,7 @@ CREATE TABLE `tblnotes` (
   `date_contacted` datetime DEFAULT NULL,
   `addedfrom` int(11) NOT NULL,
   `dateadded` datetime NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -1559,8 +1615,8 @@ CREATE TABLE `tblnotifications` (
   `touserid` int(11) NOT NULL,
   `fromcompany` int(11) DEFAULT NULL,
   `link` mediumtext,
-  `additional_data` text
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+  `additional_data` varchar(600) DEFAULT NULL
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -1570,7 +1626,7 @@ CREATE TABLE `tblnotifications` (
 
 CREATE TABLE `tbloptions` (
   `id` int(11) NOT NULL,
-  `name` varchar(191) NOT NULL,
+  `name` varchar(150) NOT NULL,
   `value` longtext NOT NULL,
   `autoload` tinyint(1) NOT NULL DEFAULT '1'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -1607,304 +1663,424 @@ INSERT INTO `tbloptions` (`id`, `name`, `value`, `autoload`) VALUES
 (25, 'invoice_prefix', 'INV-', 1),
 (26, 'decimal_separator', '.', 1),
 (27, 'thousand_separator', ',', 1),
-(28, 'invoice_company_name', '', 1),
-(29, 'invoice_company_address', '', 1),
-(30, 'invoice_company_city', '', 1),
-(31, 'invoice_company_country_code', '', 1),
-(32, 'invoice_company_postal_code', '', 1),
-(33, 'invoice_company_phonenumber', '', 1),
-(34, 'view_invoice_only_logged_in', '0', 1),
-(35, 'invoice_number_format', '1', 1),
-(36, 'next_invoice_number', '1', 0),
-(37, 'active_language', 'english', 1),
-(38, 'invoice_number_decrement_on_delete', '1', 1),
-(39, 'automatically_send_invoice_overdue_reminder_after', '1', 1),
-(40, 'automatically_resend_invoice_overdue_reminder_after', '3', 1),
-(41, 'expenses_auto_operations_hour', '21', 1),
-(42, 'delete_only_on_last_invoice', '1', 1),
-(43, 'delete_only_on_last_estimate', '1', 1),
-(44, 'create_invoice_from_recurring_only_on_paid_invoices', '0', 1),
-(45, 'allow_payment_amount_to_be_modified', '1', 1),
-(46, 'rtl_support_client', '0', 1),
-(47, 'limit_top_search_bar_results_to', '10', 1),
-(48, 'estimate_prefix', 'EST-', 1),
-(49, 'next_estimate_number', '1', 0),
-(50, 'estimate_number_decrement_on_delete', '1', 1),
-(51, 'estimate_number_format', '1', 1),
-(52, 'estimate_auto_convert_to_invoice_on_client_accept', '1', 1),
-(53, 'exclude_estimate_from_client_area_with_draft_status', '1', 1),
-(54, 'rtl_support_admin', '0', 1),
-(55, 'last_cron_run', '', 1),
-(56, 'show_sale_agent_on_estimates', '1', 1),
-(57, 'show_sale_agent_on_invoices', '1', 1),
-(58, 'predefined_terms_invoice', '', 1),
-(59, 'predefined_terms_estimate', '', 1),
-(60, 'default_task_priority', '2', 1),
-(61, 'dropbox_app_key', '', 1),
-(62, 'show_expense_reminders_on_calendar', '1', 1),
-(63, 'only_show_contact_tickets', '1', 1),
-(64, 'predefined_clientnote_invoice', '', 1),
-(65, 'predefined_clientnote_estimate', '', 1),
-(66, 'custom_pdf_logo_image_url', '', 1),
-(67, 'favicon', '', 1),
-(68, 'invoice_due_after', '30', 1),
-(69, 'google_api_key', '', 1),
-(70, 'google_calendar_main_calendar', '', 1),
-(71, 'default_tax', 'a:0:{}', 1),
-(72, 'show_invoices_on_calendar', '1', 1),
-(73, 'show_estimates_on_calendar', '1', 1),
-(74, 'show_contracts_on_calendar', '1', 1),
-(75, 'show_tasks_on_calendar', '1', 1),
-(76, 'show_customer_reminders_on_calendar', '1', 1),
-(77, 'output_client_pdfs_from_admin_area_in_client_language', '0', 1),
-(78, 'show_lead_reminders_on_calendar', '1', 1),
-(79, 'send_estimate_expiry_reminder_before', '4', 1),
-(80, 'leads_default_source', '', 1),
-(81, 'leads_default_status', '', 1),
-(82, 'proposal_expiry_reminder_enabled', '1', 1),
-(83, 'send_proposal_expiry_reminder_before', '4', 1),
-(84, 'default_contact_permissions', 'a:6:{i:0;s:1:\"1\";i:1;s:1:\"2\";i:2;s:1:\"3\";i:3;s:1:\"4\";i:4;s:1:\"5\";i:5;s:1:\"6\";}', 1),
-(85, 'pdf_logo_width', '150', 1),
-(86, 'access_tickets_to_none_staff_members', '0', 1),
-(87, 'customer_default_country', '', 1),
-(88, 'view_estimate_only_logged_in', '0', 1),
-(89, 'show_status_on_pdf_ei', '1', 1),
-(90, 'email_piping_only_replies', '0', 1),
-(91, 'email_piping_only_registered', '0', 1),
-(92, 'default_view_calendar', 'month', 1),
-(93, 'email_piping_default_priority', '2', 1),
-(94, 'total_to_words_lowercase', '0', 1),
-(95, 'show_tax_per_item', '1', 1),
-(96, 'total_to_words_enabled', '0', 1),
-(97, 'receive_notification_on_new_ticket', '1', 0),
-(98, 'autoclose_tickets_after', '0', 1),
-(99, 'media_max_file_size_upload', '10', 1),
-(100, 'client_staff_add_edit_delete_task_comments_first_hour', '0', 1),
-(101, 'show_projects_on_calendar', '1', 1),
-(102, 'leads_kanban_limit', '50', 1),
-(103, 'tasks_reminder_notification_before', '2', 1),
-(104, 'pdf_font', 'freesans', 1),
-(105, 'pdf_table_heading_color', '#323a45', 1),
-(106, 'pdf_table_heading_text_color', '#ffffff', 1),
-(107, 'pdf_font_size', '10', 1),
-(108, 'default_leads_kanban_sort', 'leadorder', 1),
-(109, 'default_leads_kanban_sort_type', 'asc', 1),
-(110, 'allowed_files', '.png,.jpg,.pdf,.doc,.docx,.xls,.xlsx,.zip,.rar,.txt', 1),
-(111, 'show_all_tasks_for_project_member', '1', 1),
-(112, 'email_protocol', 'smtp', 1),
-(113, 'calendar_first_day', '0', 1),
-(114, 'recaptcha_secret_key', '', 1),
-(115, 'show_help_on_setup_menu', '1', 1),
-(116, 'show_proposals_on_calendar', '1', 1),
-(117, 'smtp_encryption', '', 1),
-(118, 'recaptcha_site_key', '', 1),
-(119, 'smtp_username', '', 1),
-(120, 'auto_stop_tasks_timers_on_new_timer', '1', 1),
-(121, 'notification_when_customer_pay_invoice', '1', 1),
-(122, 'calendar_invoice_color', '#FF6F00', 1),
-(123, 'calendar_estimate_color', '#FF6F00', 1),
-(124, 'calendar_proposal_color', '#84c529', 1),
-(125, 'new_task_auto_assign_current_member', '1', 1),
-(126, 'calendar_reminder_color', '#03A9F4', 1),
-(127, 'calendar_contract_color', '#B72974', 1),
-(128, 'calendar_project_color', '#B72974', 1),
-(129, 'update_info_message', '', 1),
-(130, 'show_estimate_reminders_on_calendar', '1', 1),
-(131, 'show_invoice_reminders_on_calendar', '1', 1),
-(132, 'show_proposal_reminders_on_calendar', '1', 1),
-(133, 'proposal_due_after', '7', 1),
-(134, 'allow_customer_to_change_ticket_status', '0', 1),
-(135, 'lead_lock_after_convert_to_customer', '0', 1),
-(136, 'default_proposals_pipeline_sort', 'pipeline_order', 1),
-(137, 'default_proposals_pipeline_sort_type', 'asc', 1),
-(138, 'default_estimates_pipeline_sort', 'pipeline_order', 1),
-(139, 'default_estimates_pipeline_sort_type', 'asc', 1),
-(140, 'use_recaptcha_customers_area', '0', 1),
-(141, 'remove_decimals_on_zero', '0', 1),
-(142, 'remove_tax_name_from_item_table', '0', 1),
-(143, 'pdf_format_invoice', 'A4-PORTRAIT', 1),
-(144, 'pdf_format_estimate', 'A4-PORTRAIT', 1),
-(145, 'pdf_format_proposal', 'A4-PORTRAIT', 1),
-(146, 'pdf_format_payment', 'A4-PORTRAIT', 1),
-(147, 'pdf_format_contract', 'A4-PORTRAIT', 1),
-(148, 'swap_pdf_info', '0', 1),
-(149, 'exclude_invoice_from_client_area_with_draft_status', '1', 1),
-(150, 'cron_has_run_from_cli', '0', 1),
-(151, 'hide_cron_is_required_message', '0', 0),
-(152, 'auto_assign_customer_admin_after_lead_convert', '1', 1),
-(153, 'show_transactions_on_invoice_pdf', '1', 1),
-(154, 'show_pay_link_to_invoice_pdf', '1', 1),
-(155, 'tasks_kanban_limit', '50', 1),
-(156, 'purchase_key', '', 1),
-(157, 'estimates_pipeline_limit', '50', 1),
-(158, 'proposals_pipeline_limit', '50', 1),
-(159, 'proposal_number_prefix', 'PRO-', 1),
-(160, 'number_padding_prefixes', '6', 1),
-(161, 'show_page_number_on_pdf', '0', 1),
-(162, 'calendar_events_limit', '4', 1),
-(163, 'show_setup_menu_item_only_on_hover', '0', 1),
-(164, 'company_requires_vat_number_field', '1', 1),
-(165, 'company_is_required', '1', 1),
-(166, 'allow_contact_to_delete_files', '0', 1),
-(167, 'company_vat', '', 1),
-(168, 'di', '', 1),
-(169, 'invoice_auto_operations_hour', '21', 1),
-(170, 'use_minified_files', '1', 1),
-(171, 'only_own_files_contacts', '0', 1),
-(172, 'allow_primary_contact_to_view_edit_billing_and_shipping', '0', 1),
-(173, 'estimate_due_after', '7', 1),
-(174, 'staff_members_open_tickets_to_all_contacts', '1', 1),
-(175, 'time_format', '24', 1),
-(176, 'delete_activity_log_older_then', '1', 1),
-(177, 'disable_language', '0', 1),
-(178, 'company_state', '', 1),
-(179, 'email_header', '<!doctype html>\n                            <html>\n                            <head>\n                              <meta name=\"viewport\" content=\"width=device-width\" />\n                              <meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\" />\n                              <style>\n                                body {\n                                 background-color: #f6f6f6;\n                                 font-family: sans-serif;\n                                 -webkit-font-smoothing: antialiased;\n                                 font-size: 14px;\n                                 line-height: 1.4;\n                                 margin: 0;\n                                 padding: 0;\n                                 -ms-text-size-adjust: 100%;\n                                 -webkit-text-size-adjust: 100%;\n                               }\n                               table {\n                                 border-collapse: separate;\n                                 mso-table-lspace: 0pt;\n                                 mso-table-rspace: 0pt;\n                                 width: 100%;\n                               }\n                               table td {\n                                 font-family: sans-serif;\n                                 font-size: 14px;\n                                 vertical-align: top;\n                               }\n                                   /* -------------------------------------\n                                     BODY & CONTAINER\n                                     ------------------------------------- */\n                                     .body {\n                                       background-color: #f6f6f6;\n                                       width: 100%;\n                                     }\n                                     /* Set a max-width, and make it display as block so it will automatically stretch to that width, but will also shrink down on a phone or something */\n\n                                     .container {\n                                       display: block;\n                                       margin: 0 auto !important;\n                                       /* makes it centered */\n                                       max-width: 680px;\n                                       padding: 10px;\n                                       width: 680px;\n                                     }\n                                     /* This should also be a block element, so that it will fill 100% of the .container */\n\n                                     .content {\n                                       box-sizing: border-box;\n                                       display: block;\n                                       margin: 0 auto;\n                                       max-width: 680px;\n                                       padding: 10px;\n                                     }\n                                   /* -------------------------------------\n                                     HEADER, FOOTER, MAIN\n                                     ------------------------------------- */\n\n                                     .main {\n                                       background: #fff;\n                                       border-radius: 3px;\n                                       width: 100%;\n                                     }\n                                     .wrapper {\n                                       box-sizing: border-box;\n                                       padding: 20px;\n                                     }\n                                     .footer {\n                                       clear: both;\n                                       padding-top: 10px;\n                                       text-align: center;\n                                       width: 100%;\n                                     }\n                                     .footer td,\n                                     .footer p,\n                                     .footer span,\n                                     .footer a {\n                                       color: #999999;\n                                       font-size: 12px;\n                                       text-align: center;\n                                     }\n                                     hr {\n                                       border: 0;\n                                       border-bottom: 1px solid #f6f6f6;\n                                       margin: 20px 0;\n                                     }\n                                   /* -------------------------------------\n                                     RESPONSIVE AND MOBILE FRIENDLY STYLES\n                                     ------------------------------------- */\n\n                                     @media only screen and (max-width: 620px) {\n                                       table[class=body] .content {\n                                         padding: 0 !important;\n                                       }\n                                       table[class=body] .container {\n                                         padding: 0 !important;\n                                         width: 100% !important;\n                                       }\n                                       table[class=body] .main {\n                                         border-left-width: 0 !important;\n                                         border-radius: 0 !important;\n                                         border-right-width: 0 !important;\n                                       }\n                                     }\n                                   </style>\n                                 </head>\n                                 <body class=\"\">\n                                  <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" class=\"body\">\n                                    <tr>\n                                     <td>&nbsp;</td>\n                                     <td class=\"container\">\n                                      <div class=\"content\">\n                                        <!-- START CENTERED WHITE CONTAINER -->\n                                        <table class=\"main\">\n                                          <!-- START MAIN CONTENT AREA -->\n                                          <tr>\n                                           <td class=\"wrapper\">\n                                            <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\">\n                                              <tr>\n                                               <td>', 1),
-(180, 'show_pdf_signature_invoice', '1', 0),
-(181, 'show_pdf_signature_estimate', '1', 0),
-(182, 'signature_image', '', 0),
-(183, 'scroll_responsive_tables', '0', 1),
-(184, 'email_footer', '</td>\n                             </tr>\n                           </table>\n                         </td>\n                       </tr>\n                       <!-- END MAIN CONTENT AREA -->\n                     </table>\n                     <!-- START FOOTER -->\n                     <div class=\"footer\">\n                      <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\">\n                        <tr>\n                          <td class=\"content-block\">\n                            <span>{companyname}</span>\n                          </td>\n                        </tr>\n                      </table>\n                    </div>\n                    <!-- END FOOTER -->\n                    <!-- END CENTERED WHITE CONTAINER -->\n                  </div>\n                </td>\n                <td>&nbsp;</td>\n              </tr>\n            </table>\n            </body>\n            </html>', 1),
-(185, 'exclude_proposal_from_client_area_with_draft_status', '1', 1),
-(186, 'pusher_app_key', '', 1),
-(187, 'pusher_app_secret', '', 1),
-(188, 'pusher_app_id', '', 1),
-(189, 'pusher_realtime_notifications', '0', 1),
-(190, 'pdf_format_statement', 'A4-PORTRAIT', 1),
-(191, 'pusher_cluster', '', 1),
-(192, 'show_table_export_button', 'to_all', 1),
-(193, 'allow_staff_view_proposals_assigned', '1', 1),
-(194, 'show_cloudflare_notice', '1', 0),
-(195, 'task_modal_class', 'modal-lg', 1),
-(196, 'lead_modal_class', 'modal-lg', 1),
-(197, 'show_timesheets_overview_all_members_notice_admins', '1', 0),
-(198, 'desktop_notifications', '0', 1),
-(199, 'hide_notified_reminders_from_calendar', '1', 0),
-(200, 'customer_info_format', '{company_name}<br />\r\n{street}<br />\r\n{city} {state}<br />\r\n{country_code} {zip_code}<br />\r\n{vat_number_with_label}', 0),
-(201, 'timer_started_change_status_in_progress', '1', 0),
-(202, 'default_ticket_reply_status', '3', 1),
-(203, 'default_task_status', 'auto', 1),
-(204, 'email_queue_skip_with_attachments', '1', 1),
-(205, 'email_queue_enabled', '0', 1),
-(206, 'last_email_queue_retry', '', 1),
-(207, 'auto_dismiss_desktop_notifications_after', '0', 1),
-(208, 'proposal_info_format', '{proposal_to}<br />\r\n{address}<br />\r\n{city} {state}<br />\r\n{country_code} {zip_code}<br />\r\n{phone}<br />\r\n{email}', 0),
-(209, 'ticket_replies_order', 'asc', 1),
-(210, 'new_recurring_invoice_action', 'generate_and_send', 0),
-(211, 'bcc_emails', '', 0),
-(212, 'email_templates_language_checks', '', 0),
-(213, 'proposal_accept_identity_confirmation', '1', 0),
-(214, 'estimate_accept_identity_confirmation', '1', 0),
-(215, 'new_task_auto_follower_current_member', '0', 1),
-(216, 'task_biillable_checked_on_creation', '1', 1),
-(217, 'predefined_clientnote_credit_note', '', 1),
-(218, 'predefined_terms_credit_note', '', 1),
-(219, 'next_credit_note_number', '1', 1),
-(220, 'credit_note_prefix', 'CN-', 1),
-(221, 'credit_note_number_decrement_on_delete', '1', 1),
-(222, 'pdf_format_credit_note', 'A4-PORTRAIT', 1),
-(223, 'show_pdf_signature_credit_note', '1', 0),
-(224, 'show_credit_note_reminders_on_calendar', '1', 1),
-(225, 'show_amount_due_on_invoice', '1', 1),
-(226, 'show_total_paid_on_invoice', '1', 1),
-(227, 'show_credits_applied_on_invoice', '1', 1),
-(228, 'staff_members_create_inline_lead_status', '1', 1),
-(229, 'staff_members_create_inline_customer_groups', '1', 1),
-(230, 'staff_members_create_inline_ticket_services', '1', 1),
-(231, 'staff_members_save_tickets_predefined_replies', '1', 1),
-(232, 'staff_members_create_inline_contract_types', '1', 1),
-(233, 'staff_members_create_inline_expense_categories', '1', 1),
-(234, 'show_project_on_credit_note', '1', 1),
-(235, 'proposals_auto_operations_hour', '21', 1),
-(236, 'estimates_auto_operations_hour', '21', 1),
-(237, 'contracts_auto_operations_hour', '21', 1),
-(238, 'credit_note_number_format', '1', 1),
-(239, 'allow_non_admin_members_to_import_leads', '0', 1),
-(240, 'e_sign_legal_text', 'By clicking on \"Sign\", I consent to be legally bound by this electronic representation of my signature.', 1),
-(241, 'show_pdf_signature_contract', '1', 1),
-(242, 'view_contract_only_logged_in', '0', 1),
-(243, 'show_subscriptions_in_customers_area', '1', 1),
-(244, 'calendar_only_assigned_tasks', '0', 1),
-(245, 'after_subscription_payment_captured', 'send_invoice_and_receipt', 1),
-(246, 'mail_engine', 'phpmailer', 1),
-(247, 'gdpr_enable_terms_and_conditions', '0', 1),
-(248, 'privacy_policy', '', 1),
-(249, 'terms_and_conditions', '', 1),
-(250, 'gdpr_enable_terms_and_conditions_lead_form', '0', 1),
-(251, 'gdpr_enable_terms_and_conditions_ticket_form', '0', 1),
-(252, 'gdpr_contact_enable_right_to_be_forgotten', '0', 1),
-(253, 'show_gdpr_in_customers_menu', '1', 1),
-(254, 'show_gdpr_link_in_footer', '1', 1),
-(255, 'enable_gdpr', '0', 1),
-(256, 'gdpr_on_forgotten_remove_invoices_credit_notes', '0', 1),
-(257, 'gdpr_on_forgotten_remove_estimates', '0', 1),
-(258, 'gdpr_enable_consent_for_contacts', '0', 1),
-(259, 'gdpr_consent_public_page_top_block', '', 1),
-(260, 'gdpr_page_top_information_block', '', 1),
-(261, 'gdpr_enable_lead_public_form', '0', 1),
-(262, 'gdpr_show_lead_custom_fields_on_public_form', '0', 1),
-(263, 'gdpr_lead_attachments_on_public_form', '0', 1),
-(264, 'gdpr_enable_consent_for_leads', '0', 1),
-(265, 'gdpr_lead_enable_right_to_be_forgotten', '0', 1),
-(266, 'allow_staff_view_invoices_assigned', '1', 1),
-(267, 'gdpr_data_portability_leads', '0', 1),
-(268, 'gdpr_lead_data_portability_allowed', '', 1),
-(269, 'gdpr_contact_data_portability_allowed', '', 1),
-(270, 'gdpr_data_portability_contacts', '0', 1),
-(271, 'allow_staff_view_estimates_assigned', '1', 1),
-(272, 'gdpr_after_lead_converted_delete', '0', 1),
-(273, 'gdpr_show_terms_and_conditions_in_footer', '0', 1),
-(274, 'save_last_order_for_tables', '0', 1),
-(275, 'company_logo_dark', '', 1),
-(276, 'customers_register_require_confirmation', '0', 1),
-(277, 'allow_non_admin_staff_to_delete_ticket_attachments', '0', 1),
-(278, 'receive_notification_on_new_ticket_replies', '1', 0),
-(279, 'google_client_id', '', 1),
-(280, 'enable_google_picker', '1', 1),
-(281, 'show_ticket_reminders_on_calendar', '1', 1),
-(282, 'ticket_import_reply_only', '0', 1),
-(283, 'visible_customer_profile_tabs', 'all', 0),
-(284, 'show_project_on_invoice', '1', 1),
-(285, 'show_project_on_estimate', '1', 1),
-(286, 'staff_members_create_inline_lead_source', '1', 1),
-(287, 'upgraded_from_version', '', 0),
-(288, 'lead_unique_validation', '[\"email\"]', 1),
-(289, 'last_upgrade_copy_data', '', 1);
+(28, 'currency_placement', 'before', 1),
+(29, 'invoice_company_name', '', 1),
+(30, 'invoice_company_address', '', 1),
+(31, 'invoice_company_city', '', 1),
+(32, 'invoice_company_country_code', '', 1),
+(33, 'invoice_company_postal_code', '', 1),
+(34, 'invoice_company_phonenumber', '', 1),
+(35, 'view_invoice_only_logged_in', '0', 1),
+(36, 'invoice_number_format', '1', 1),
+(37, 'next_invoice_number', '1', 0),
+(38, 'active_language', 'english', 1),
+(39, 'invoice_number_decrement_on_delete', '1', 1),
+(40, 'automatically_send_invoice_overdue_reminder_after', '1', 1),
+(41, 'automatically_resend_invoice_overdue_reminder_after', '3', 1),
+(42, 'expenses_auto_operations_hour', '21', 1),
+(43, 'survey_send_emails_per_cron_run', '100', 1),
+(44, 'delete_only_on_last_invoice', '1', 1),
+(45, 'delete_only_on_last_estimate', '1', 1),
+(46, 'create_invoice_from_recurring_only_on_paid_invoices', '0', 1),
+(47, 'allow_payment_amount_to_be_modified', '1', 1),
+(48, 'rtl_support_client', '0', 1),
+(49, 'limit_top_search_bar_results_to', '10', 1),
+(50, 'estimate_prefix', 'EST-', 1),
+(51, 'next_estimate_number', '1', 0),
+(52, 'estimate_number_decrement_on_delete', '1', 1),
+(53, 'estimate_number_format', '1', 1),
+(54, 'estimate_auto_convert_to_invoice_on_client_accept', '1', 1),
+(55, 'exclude_estimate_from_client_area_with_draft_status', '1', 1),
+(56, 'rtl_support_admin', '0', 1),
+(57, 'last_cron_run', '', 1),
+(58, 'show_sale_agent_on_estimates', '1', 1),
+(59, 'show_sale_agent_on_invoices', '1', 1),
+(60, 'predefined_terms_invoice', '', 1),
+(61, 'predefined_terms_estimate', '', 1),
+(62, 'default_task_priority', '2', 1),
+(63, 'dropbox_app_key', '', 1),
+(64, 'show_expense_reminders_on_calendar', '1', 1),
+(65, 'only_show_contact_tickets', '1', 1),
+(66, 'predefined_clientnote_invoice', '', 1),
+(67, 'predefined_clientnote_estimate', '', 1),
+(68, 'custom_pdf_logo_image_url', '', 1),
+(69, 'favicon', '', 1),
+(70, 'auto_backup_enabled', '0', 1),
+(71, 'invoice_due_after', '30', 1),
+(72, 'google_api_key', '', 1),
+(73, 'google_calendar_main_calendar', '', 1),
+(74, 'default_tax', 'a:0:{}', 1),
+(75, 'show_invoices_on_calendar', '1', 1),
+(76, 'show_estimates_on_calendar', '1', 1),
+(77, 'show_contracts_on_calendar', '1', 1),
+(78, 'show_tasks_on_calendar', '1', 1),
+(79, 'show_customer_reminders_on_calendar', '1', 1),
+(80, 'auto_backup_every', '7', 1),
+(81, 'last_auto_backup', '', 1),
+(82, 'output_client_pdfs_from_admin_area_in_client_language', '0', 1),
+(83, 'show_lead_reminders_on_calendar', '1', 1),
+(84, 'aside_menu_active', '{\"aside_menu_active\":[{\"name\":\"als_dashboard\",\"url\":\"\\/\",\"permission\":\"\",\"icon\":\"fa fa-home\",\"id\":\"dashboard\"},{\"name\":\"als_clients\",\"url\":\"clients\",\"permission\":\"customers\",\"icon\":\"fa fa-user-o\",\"id\":\"customers\"},{\"name\":\"als_sales\",\"url\":\"#\",\"permission\":\"\",\"icon\":\"fa fa-balance-scale\",\"id\":\"sales\",\"children\":[{\"name\":\"proposals\",\"url\":\"proposals\",\"permission\":\"proposals\",\"icon\":\"\",\"id\":\"child-proposals\"},{\"name\":\"estimates\",\"url\":\"estimates\\/list_estimates\",\"permission\":\"estimates\",\"icon\":\"\",\"id\":\"child-estimates\"},{\"name\":\"invoices\",\"url\":\"invoices\\/list_invoices\",\"permission\":\"invoices\",\"icon\":\"\",\"id\":\"child-invoices\"},{\"name\":\"payments\",\"url\":\"payments\",\"permission\":\"payments\",\"icon\":\"\",\"id\":\"child-payments\"},{\"name\":\"credit_notes\",\"url\":\"credit_notes\",\"permission\":\"credit_notes\",\"icon\":\"\",\"id\":\"credit_notes\"},{\"name\":\"items\",\"url\":\"invoice_items\",\"permission\":\"items\",\"icon\":\"\",\"id\":\"child-items\"}]},{\"name\":\"subscriptions\",\"permission\":\"subscriptions\",\"icon\":\"fa fa-repeat\",\"url\":\"subscriptions\",\"id\":\"subscriptions\"},{\"name\":\"als_expenses\",\"url\":\"expenses\\/list_expenses\",\"permission\":\"expenses\",\"icon\":\"fa fa-file-text-o\",\"id\":\"expenses\"},{\"id\":\"contracts\",\"name\":\"als_contracts\",\"url\":\"contracts\",\"permission\":\"contracts\",\"icon\":\"fa fa-file\"},{\"id\":\"projects\",\"name\":\"projects\",\"url\":\"projects\",\"permission\":\"\",\"icon\":\"fa fa-bars\"},{\"name\":\"als_tasks\",\"url\":\"tasks\\/list_tasks\",\"permission\":\"\",\"icon\":\"fa fa-tasks\",\"id\":\"tasks\"},{\"name\":\"support\",\"url\":\"tickets\",\"permission\":\"\",\"icon\":\"fa fa-ticket\",\"id\":\"tickets\"},{\"name\":\"als_leads\",\"url\":\"leads\",\"permission\":\"is_staff_member\",\"icon\":\"fa fa-tty\",\"id\":\"leads\"},{\"name\":\"als_kb\",\"url\":\"knowledge_base\",\"permission\":\"knowledge_base\",\"icon\":\"fa fa-folder-open-o\",\"id\":\"knowledge-base\"},{\"name\":\"als_utilities\",\"url\":\"#\",\"permission\":\"\",\"icon\":\"fa fa-cogs\",\"id\":\"utilities\",\"children\":[{\"name\":\"als_media\",\"url\":\"utilities\\/media\",\"permission\":\"\",\"icon\":\"\",\"id\":\"child-media\"},{\"name\":\"bulk_pdf_exporter\",\"url\":\"utilities\\/bulk_pdf_exporter\",\"permission\":\"bulk_pdf_exporter\",\"icon\":\"\",\"id\":\"child-bulk-pdf-exporter\"},{\"name\":\"als_calendar_submenu\",\"url\":\"utilities\\/calendar\",\"permission\":\"\",\"icon\":\"\",\"id\":\"child-calendar\"},{\"name\":\"als_goals_tracking\",\"url\":\"goals\",\"permission\":\"goals\",\"icon\":\"\",\"id\":\"child-goals-tracking\"},{\"name\":\"als_surveys\",\"url\":\"surveys\",\"permission\":\"surveys\",\"icon\":\"\",\"id\":\"child-surveys\"},{\"name\":\"als_announcements_submenu\",\"url\":\"announcements\",\"permission\":\"is_admin\",\"icon\":\"\",\"id\":\"child-announcements\"},{\"name\":\"utility_backup\",\"url\":\"utilities\\/backup\",\"permission\":\"is_admin\",\"icon\":\"\",\"id\":\"child-database-backup\"},{\"name\":\"als_activity_log_submenu\",\"url\":\"utilities\\/activity_log\",\"permission\":\"is_admin\",\"icon\":\"\",\"id\":\"child-activity-log\"},{\"name\":\"ticket_pipe_log\",\"url\":\"utilities\\/pipe_log\",\"permission\":\"is_admin\",\"icon\":\"\",\"id\":\"ticket-pipe-log\"}]},{\"name\":\"als_reports\",\"url\":\"#\",\"permission\":\"reports\",\"icon\":\"fa fa-area-chart\",\"id\":\"reports\",\"children\":[{\"name\":\"als_reports_sales_submenu\",\"url\":\"reports\\/sales\",\"permission\":\"\",\"icon\":\"\",\"id\":\"child-sales\"},{\"name\":\"als_reports_expenses\",\"url\":\"reports\\/expenses\",\"permission\":\"\",\"icon\":\"\",\"id\":\"child-expenses\"},{\"name\":\"als_expenses_vs_income\",\"url\":\"reports\\/expenses_vs_income\",\"permission\":\"\",\"icon\":\"\",\"id\":\"child-expenses-vs-income\"},{\"name\":\"als_reports_leads_submenu\",\"url\":\"reports\\/leads\",\"permission\":\"\",\"icon\":\"\",\"id\":\"child-leads\"},{\"name\":\"timesheets_overview\",\"url\":\"staff\\/timesheets?view=all\",\"permission\":\"is_admin\",\"icon\":\"\",\"id\":\"reports_timesheets_overview\"},{\"name\":\"als_kb_articles_submenu\",\"url\":\"reports\\/knowledge_base_articles\",\"permission\":\"\",\"icon\":\"\",\"id\":\"child-kb-articles\"}]}]}', 1),
+(85, 'send_estimate_expiry_reminder_before', '4', 1),
+(86, 'leads_default_source', '', 1),
+(87, 'leads_default_status', '', 1),
+(88, 'proposal_expiry_reminder_enabled', '1', 1),
+(89, 'send_proposal_expiry_reminder_before', '4', 1),
+(90, 'default_contact_permissions', 'a:6:{i:0;s:1:\"1\";i:1;s:1:\"2\";i:2;s:1:\"3\";i:3;s:1:\"4\";i:4;s:1:\"5\";i:5;s:1:\"6\";}', 1),
+(91, 'pdf_logo_width', '150', 1),
+(92, 'aside_menu_inactive', '{\"aside_menu_inactive\":[]}', 1),
+(93, 'setup_menu_active', '{\"setup_menu_active\":[{\"name\":\"als_staff\",\"url\":\"staff\",\"permission\":\"staff\",\"icon\":\"\",\"id\":\"staff\"},{\"name\":\"clients\",\"url\":\"#\",\"permission\":\"is_admin\",\"icon\":\"\",\"id\":\"customers\",\"children\":[{\"name\":\"customer_groups\",\"url\":\"clients\\/groups\",\"permission\":\"\",\"icon\":\"\",\"id\":\"groups\"}]},{\"name\":\"support\",\"url\":\"#\",\"permission\":\"\",\"icon\":\"\",\"id\":\"tickets\",\"children\":[{\"name\":\"acs_departments\",\"url\":\"departments\",\"permission\":\"is_admin\",\"icon\":\"\",\"id\":\"departments\"},{\"name\":\"acs_ticket_predefined_replies_submenu\",\"url\":\"tickets\\/predefined_replies\",\"permission\":\"is_admin\",\"icon\":\"\",\"id\":\"predefined-replies\"},{\"name\":\"acs_ticket_priority_submenu\",\"url\":\"tickets\\/priorities\",\"permission\":\"is_admin\",\"icon\":\"\",\"id\":\"ticket-priority\"},{\"name\":\"acs_ticket_statuses_submenu\",\"url\":\"tickets\\/statuses\",\"permission\":\"is_admin\",\"icon\":\"\",\"id\":\"ticket-statuses\"},{\"name\":\"acs_ticket_services_submenu\",\"url\":\"tickets\\/services\",\"permission\":\"is_admin\",\"icon\":\"\",\"id\":\"services\"},{\"name\":\"spam_filters\",\"url\":\"tickets\\/spam_filters\",\"permission\":\"is_admin\",\"icon\":\"\",\"id\":\"spam-filters\"}]},{\"name\":\"acs_leads\",\"url\":\"#\",\"permission\":\"is_admin\",\"icon\":\"\",\"id\":\"leads\",\"children\":[{\"name\":\"acs_leads_sources_submenu\",\"url\":\"leads\\/sources\",\"permission\":\"\",\"icon\":\"\",\"id\":\"sources\"},{\"name\":\"acs_leads_statuses_submenu\",\"url\":\"leads\\/statuses\",\"permission\":\"\",\"icon\":\"\",\"id\":\"statuses\"},{\"name\":\"leads_email_integration\",\"url\":\"leads\\/email_integration\",\"permission\":\"\",\"icon\":\"\",\"id\":\"email-integration\"},{\"name\":\"web_to_lead\",\"url\":\"leads\\/forms\",\"permission\":\"is_admin\",\"icon\":\"\",\"id\":\"web-to-lead\"}]},{\"name\":\"acs_finance\",\"url\":\"#\",\"permission\":\"is_admin\",\"icon\":\"\",\"id\":\"finance\",\"children\":[{\"name\":\"acs_sales_taxes_submenu\",\"url\":\"taxes\",\"permission\":\"\",\"icon\":\"\",\"id\":\"taxes\"},{\"name\":\"acs_sales_currencies_submenu\",\"url\":\"currencies\",\"permission\":\"\",\"icon\":\"\",\"id\":\"currencies\"},{\"name\":\"acs_sales_payment_modes_submenu\",\"url\":\"paymentmodes\",\"permission\":\"\",\"icon\":\"\",\"id\":\"payment-modes\"},{\"name\":\"acs_expense_categories\",\"url\":\"expenses\\/categories\",\"permission\":\"\",\"icon\":\"\",\"id\":\"expenses-categories\"}]},{\"name\":\"acs_contracts\",\"url\":\"#\",\"permission\":\"is_admin\",\"icon\":\"\",\"id\":\"contracts\",\"children\":[{\"name\":\"acs_contract_types\",\"url\":\"contracts\\/types\",\"permission\":\"\",\"icon\":\"\",\"id\":\"contract-types\"}]},{\"name\":\"acs_email_templates\",\"url\":\"emails\",\"permission\":\"email_templates\",\"icon\":\"\",\"id\":\"email-templates\"},{\"name\":\"asc_custom_fields\",\"url\":\"custom_fields\",\"permission\":\"is_admin\",\"icon\":\"\",\"id\":\"custom-fields\"},{\"name\":\"gdpr_short\",\"url\":\"gdpr\",\"permission\":\"is_admin\",\"icon\":\"\",\"id\":\"gdpr\"},{\"name\":\"acs_roles\",\"url\":\"roles\",\"permission\":\"roles\",\"icon\":\"\",\"id\":\"roles\"},{\"name\":\"menu_builder\",\"url\":\"#\",\"permission\":\"is_admin\",\"icon\":\"\",\"id\":\"menu-builder\",\"children\":[{\"name\":\"main_menu\",\"url\":\"utilities\\/main_menu\",\"permission\":\"is_admin\",\"icon\":\"\",\"id\":\"organize-sidebar\"},{\"name\":\"setup_menu\",\"url\":\"utilities\\/setup_menu\",\"permission\":\"is_admin\",\"icon\":\"\",\"id\":\"setup-menu\"}]},{\"name\":\"theme_style\",\"url\":\"utilities\\/theme_style\",\"permission\":\"is_admin\",\"icon\":\"\",\"id\":\"theme-style\"},{\"name\":\"acs_settings\",\"url\":\"settings\",\"permission\":\"settings\",\"icon\":\"\",\"id\":\"settings\"}]}', 1),
+(94, 'access_tickets_to_none_staff_members', '0', 1),
+(95, 'setup_menu_inactive', '{\"setup_menu_inactive\":[]}', 1),
+(96, 'customer_default_country', '', 1),
+(97, 'view_estimate_only_logged_in', '0', 1),
+(98, 'show_status_on_pdf_ei', '1', 1),
+(99, 'email_piping_only_replies', '0', 1),
+(100, 'email_piping_only_registered', '0', 1),
+(101, 'default_view_calendar', 'month', 1),
+(102, 'email_piping_default_priority', '2', 1),
+(103, 'total_to_words_lowercase', '0', 1),
+(104, 'show_tax_per_item', '1', 1),
+(105, 'last_survey_send_cron', '', 1),
+(106, 'total_to_words_enabled', '0', 1),
+(107, 'receive_notification_on_new_ticket', '1', 0),
+(108, 'autoclose_tickets_after', '0', 1),
+(109, 'media_max_file_size_upload', '10', 1),
+(110, 'client_staff_add_edit_delete_task_comments_first_hour', '0', 1),
+(111, 'show_projects_on_calendar', '1', 1),
+(112, 'leads_kanban_limit', '50', 1),
+(113, 'tasks_reminder_notification_before', '2', 1),
+(114, 'pdf_font', 'freesans', 1),
+(115, 'pdf_table_heading_color', '#323a45', 1),
+(116, 'pdf_table_heading_text_color', '#ffffff', 1),
+(117, 'pdf_font_size', '10', 1),
+(118, 'default_leads_kanban_sort', 'leadorder', 1),
+(119, 'default_leads_kanban_sort_type', 'asc', 1),
+(120, 'allowed_files', '.png,.jpg,.pdf,.doc,.docx,.xls,.xlsx,.zip,.rar,.txt', 1),
+(121, 'show_all_tasks_for_project_member', '1', 1),
+(122, 'email_protocol', 'smtp', 1),
+(123, 'calendar_first_day', '0', 1),
+(124, 'recaptcha_secret_key', '', 1),
+(125, 'show_help_on_setup_menu', '1', 1),
+(126, 'show_proposals_on_calendar', '1', 1),
+(127, 'smtp_encryption', '', 1),
+(128, 'recaptcha_site_key', '', 1),
+(129, 'smtp_username', '', 1),
+(130, 'auto_stop_tasks_timers_on_new_timer', '1', 1),
+(131, 'notification_when_customer_pay_invoice', '1', 1),
+(132, 'theme_style', '[]', 1),
+(133, 'calendar_invoice_color', '#FF6F00', 1),
+(134, 'calendar_estimate_color', '#FF6F00', 1),
+(135, 'calendar_proposal_color', '#84c529', 1),
+(136, 'new_task_auto_assign_current_member', '1', 1),
+(137, 'calendar_reminder_color', '#03A9F4', 1),
+(138, 'calendar_contract_color', '#B72974', 1),
+(139, 'calendar_project_color', '#B72974', 1),
+(140, 'update_info_message', '', 1),
+(141, 'show_estimate_reminders_on_calendar', '1', 1),
+(142, 'show_invoice_reminders_on_calendar', '1', 1),
+(143, 'show_proposal_reminders_on_calendar', '1', 1),
+(144, 'proposal_due_after', '7', 1),
+(145, 'allow_customer_to_change_ticket_status', '0', 1),
+(146, 'lead_lock_after_convert_to_customer', '0', 1),
+(147, 'default_proposals_pipeline_sort', 'pipeline_order', 1),
+(148, 'default_proposals_pipeline_sort_type', 'asc', 1),
+(149, 'default_estimates_pipeline_sort', 'pipeline_order', 1),
+(150, 'default_estimates_pipeline_sort_type', 'asc', 1),
+(151, 'use_recaptcha_customers_area', '0', 1),
+(152, 'remove_decimals_on_zero', '0', 1),
+(153, 'remove_tax_name_from_item_table', '0', 1),
+(154, 'pdf_format_invoice', 'A4-PORTRAIT', 1),
+(155, 'pdf_format_estimate', 'A4-PORTRAIT', 1),
+(156, 'pdf_format_proposal', 'A4-PORTRAIT', 1),
+(157, 'pdf_format_payment', 'A4-PORTRAIT', 1),
+(158, 'pdf_format_contract', 'A4-PORTRAIT', 1),
+(159, 'swap_pdf_info', '0', 1),
+(160, 'exclude_invoice_from_client_area_with_draft_status', '1', 1),
+(161, 'cron_has_run_from_cli', '0', 1),
+(162, 'hide_cron_is_required_message', '0', 0),
+(163, 'auto_assign_customer_admin_after_lead_convert', '1', 1),
+(164, 'show_transactions_on_invoice_pdf', '1', 1),
+(165, 'show_pay_link_to_invoice_pdf', '1', 1),
+(166, 'tasks_kanban_limit', '50', 1),
+(167, 'purchase_key', '', 1),
+(168, 'estimates_pipeline_limit', '50', 1),
+(169, 'proposals_pipeline_limit', '50', 1),
+(170, 'proposal_number_prefix', 'PRO-', 1),
+(171, 'number_padding_prefixes', '6', 1),
+(172, 'show_page_number_on_pdf', '0', 1),
+(173, 'calendar_events_limit', '4', 1),
+(174, 'show_setup_menu_item_only_on_hover', '0', 1),
+(175, 'company_requires_vat_number_field', '1', 1),
+(176, 'company_is_required', '1', 1),
+(177, 'allow_contact_to_delete_files', '0', 1),
+(178, 'company_vat', '', 1),
+(179, 'di', '', 0),
+(180, 'invoice_auto_operations_hour', '21', 1),
+(181, 'use_minified_files', '1', 1),
+(182, 'only_own_files_contacts', '0', 1),
+(183, 'allow_primary_contact_to_view_edit_billing_and_shipping', '0', 1),
+(184, 'estimate_due_after', '7', 1),
+(185, 'delete_backups_older_then', '0', 1),
+(186, 'staff_members_open_tickets_to_all_contacts', '1', 1),
+(187, 'time_format', '24', 1),
+(188, 'delete_activity_log_older_then', '1', 1),
+(189, 'disable_language', '0', 1),
+(190, 'company_state', '', 1),
+(191, 'email_header', '<!doctype html>\n                            <html>\n                            <head>\n                              <meta name=\"viewport\" content=\"width=device-width\" />\n                              <meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\" />\n                              <style>\n                                body {\n                                 background-color: #f6f6f6;\n                                 font-family: sans-serif;\n                                 -webkit-font-smoothing: antialiased;\n                                 font-size: 14px;\n                                 line-height: 1.4;\n                                 margin: 0;\n                                 padding: 0;\n                                 -ms-text-size-adjust: 100%;\n                                 -webkit-text-size-adjust: 100%;\n                               }\n                               table {\n                                 border-collapse: separate;\n                                 mso-table-lspace: 0pt;\n                                 mso-table-rspace: 0pt;\n                                 width: 100%;\n                               }\n                               table td {\n                                 font-family: sans-serif;\n                                 font-size: 14px;\n                                 vertical-align: top;\n                               }\n                                   /* -------------------------------------\n                                     BODY & CONTAINER\n                                     ------------------------------------- */\n                                     .body {\n                                       background-color: #f6f6f6;\n                                       width: 100%;\n                                     }\n                                     /* Set a max-width, and make it display as block so it will automatically stretch to that width, but will also shrink down on a phone or something */\n\n                                     .container {\n                                       display: block;\n                                       margin: 0 auto !important;\n                                       /* makes it centered */\n                                       max-width: 680px;\n                                       padding: 10px;\n                                       width: 680px;\n                                     }\n                                     /* This should also be a block element, so that it will fill 100% of the .container */\n\n                                     .content {\n                                       box-sizing: border-box;\n                                       display: block;\n                                       margin: 0 auto;\n                                       max-width: 680px;\n                                       padding: 10px;\n                                     }\n                                   /* -------------------------------------\n                                     HEADER, FOOTER, MAIN\n                                     ------------------------------------- */\n\n                                     .main {\n                                       background: #fff;\n                                       border-radius: 3px;\n                                       width: 100%;\n                                     }\n                                     .wrapper {\n                                       box-sizing: border-box;\n                                       padding: 20px;\n                                     }\n                                     .footer {\n                                       clear: both;\n                                       padding-top: 10px;\n                                       text-align: center;\n                                       width: 100%;\n                                     }\n                                     .footer td,\n                                     .footer p,\n                                     .footer span,\n                                     .footer a {\n                                       color: #999999;\n                                       font-size: 12px;\n                                       text-align: center;\n                                     }\n                                     hr {\n                                       border: 0;\n                                       border-bottom: 1px solid #f6f6f6;\n                                       margin: 20px 0;\n                                     }\n                                   /* -------------------------------------\n                                     RESPONSIVE AND MOBILE FRIENDLY STYLES\n                                     ------------------------------------- */\n\n                                     @media only screen and (max-width: 620px) {\n                                       table[class=body] .content {\n                                         padding: 0 !important;\n                                       }\n                                       table[class=body] .container {\n                                         padding: 0 !important;\n                                         width: 100% !important;\n                                       }\n                                       table[class=body] .main {\n                                         border-left-width: 0 !important;\n                                         border-radius: 0 !important;\n                                         border-right-width: 0 !important;\n                                       }\n                                     }\n                                   </style>\n                                 </head>\n                                 <body class=\"\">\n                                  <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" class=\"body\">\n                                    <tr>\n                                     <td>&nbsp;</td>\n                                     <td class=\"container\">\n                                      <div class=\"content\">\n                                        <!-- START CENTERED WHITE CONTAINER -->\n                                        <table class=\"main\">\n                                          <!-- START MAIN CONTENT AREA -->\n                                          <tr>\n                                           <td class=\"wrapper\">\n                                            <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\">\n                                              <tr>\n                                               <td>', 1),
+(192, 'show_pdf_signature_invoice', '1', 0),
+(193, 'show_pdf_signature_estimate', '1', 0),
+(194, 'signature_image', '', 0),
+(195, 'scroll_responsive_tables', '0', 1),
+(196, 'email_footer', '</td>\n                             </tr>\n                           </table>\n                         </td>\n                       </tr>\n                       <!-- END MAIN CONTENT AREA -->\n                     </table>\n                     <!-- START FOOTER -->\n                     <div class=\"footer\">\n                      <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\">\n                        <tr>\n                          <td class=\"content-block\">\n                            <span>{companyname}</span>\n                          </td>\n                        </tr>\n                      </table>\n                    </div>\n                    <!-- END FOOTER -->\n                    <!-- END CENTERED WHITE CONTAINER -->\n                  </div>\n                </td>\n                <td>&nbsp;</td>\n              </tr>\n            </table>\n            </body>\n            </html>', 1),
+(197, 'exclude_proposal_from_client_area_with_draft_status', '1', 1),
+(198, 'pusher_app_key', '', 1),
+(199, 'pusher_app_secret', '', 1),
+(200, 'pusher_app_id', '', 1),
+(201, 'pusher_realtime_notifications', '0', 1),
+(202, 'pdf_format_statement', 'A4-PORTRAIT', 1),
+(203, 'pusher_cluster', '', 1),
+(204, 'show_table_export_button', 'to_all', 1),
+(205, 'allow_staff_view_proposals_assigned', '1', 1),
+(206, 'show_cloudflare_notice', '1', 0),
+(207, 'task_modal_class', 'modal-lg', 1),
+(208, 'lead_modal_class', 'modal-lg', 1),
+(209, 'show_timesheets_overview_all_members_notice_admins', '1', 0),
+(210, 'desktop_notifications', '0', 1),
+(211, 'hide_notified_reminders_from_calendar', '1', 0),
+(212, 'customer_info_format', '{company_name}<br />\r\n{street}<br />\r\n{city} {state}<br />\r\n{country_code} {zip_code}<br />\r\n{vat_number_with_label}', 0),
+(213, 'upgraded_from_version', '', 0),
+(214, 'timer_started_change_status_in_progress', '1', 0),
+(215, 'default_ticket_reply_status', '3', 1),
+(216, 'default_task_status', 'auto', 1),
+(217, 'email_queue_skip_with_attachments', '1', 1),
+(218, 'email_queue_enabled', '0', 1),
+(219, 'last_email_queue_retry', '', 1),
+(220, 'auto_dismiss_desktop_notifications_after', '0', 1),
+(221, 'proposal_info_format', '{proposal_to}<br />\r\n{address}<br />\r\n{city} {state}<br />\r\n{country_code} {zip_code}<br />\r\n{phone}<br />\r\n{email}', 0),
+(222, 'ticket_replies_order', 'asc', 1),
+(223, 'new_recurring_invoice_action', 'generate_and_send', 0),
+(224, 'bcc_emails', '', 0),
+(225, 'email_templates_language_checks', '', 0),
+(226, 'proposal_accept_identity_confirmation', '1', 0),
+(227, 'estimate_accept_identity_confirmation', '1', 0),
+(228, 'new_task_auto_follower_current_member', '0', 1),
+(229, 'task_biillable_checked_on_creation', '1', 1),
+(230, 'predefined_clientnote_credit_note', '', 1),
+(231, 'predefined_terms_credit_note', '', 1),
+(232, 'next_credit_note_number', '1', 1),
+(233, 'credit_note_prefix', 'CN-', 1),
+(234, 'credit_note_number_decrement_on_delete', '1', 1),
+(235, 'pdf_format_credit_note', 'A4-PORTRAIT', 1),
+(236, 'show_pdf_signature_credit_note', '1', 0),
+(237, 'show_credit_note_reminders_on_calendar', '1', 1),
+(238, 'show_amount_due_on_invoice', '1', 1),
+(239, 'show_total_paid_on_invoice', '1', 1),
+(240, 'show_credits_applied_on_invoice', '1', 1),
+(241, 'show_project_on_invoice', '1', 1),
+(242, 'show_project_on_estimate', '1', 1),
+(243, 'visible_customer_profile_tabs', 'all', 0),
+(244, 'staff_members_create_inline_lead_status', '1', 1),
+(245, 'staff_members_create_inline_lead_source', '1', 1),
+(246, 'staff_members_create_inline_customer_groups', '1', 1),
+(247, 'staff_members_create_inline_ticket_services', '1', 1),
+(248, 'staff_members_save_tickets_predefined_replies', '1', 1),
+(249, 'staff_members_create_inline_contract_types', '1', 1),
+(250, 'staff_members_create_inline_expense_categories', '1', 1),
+(251, 'show_project_on_credit_note', '1', 1),
+(252, 'proposals_auto_operations_hour', '21', 1),
+(253, 'estimates_auto_operations_hour', '21', 1),
+(254, 'contracts_auto_operations_hour', '21', 1),
+(255, 'credit_note_number_format', '1', 1),
+(256, 'allow_non_admin_members_to_import_leads', '0', 1),
+(257, 'e_sign_legal_text', 'By clicking on \"Sign\", I consent to be legally bound by this electronic representation of my signature.', 1),
+(258, 'show_pdf_signature_contract', '1', 1),
+(259, 'view_contract_only_logged_in', '0', 1),
+(260, 'show_subscriptions_in_customers_area', '1', 1),
+(261, 'calendar_only_assigned_tasks', '0', 1),
+(262, 'after_subscription_payment_captured', 'send_invoice_and_receipt', 1),
+(263, 'mail_engine', 'phpmailer', 1),
+(264, 'gdpr_enable_terms_and_conditions', '0', 1),
+(265, 'privacy_policy', '', 1),
+(266, 'terms_and_conditions', '', 1),
+(267, 'gdpr_enable_terms_and_conditions_lead_form', '0', 1),
+(268, 'gdpr_enable_terms_and_conditions_ticket_form', '0', 1),
+(269, 'gdpr_contact_enable_right_to_be_forgotten', '0', 1),
+(270, 'show_gdpr_in_customers_menu', '1', 1),
+(271, 'show_gdpr_link_in_footer', '1', 1),
+(272, 'enable_gdpr', '0', 1),
+(273, 'gdpr_on_forgotten_remove_invoices_credit_notes', '0', 1),
+(274, 'gdpr_on_forgotten_remove_estimates', '0', 1),
+(275, 'gdpr_enable_consent_for_contacts', '0', 1),
+(276, 'gdpr_consent_public_page_top_block', '', 1),
+(277, 'gdpr_page_top_information_block', '', 1),
+(278, 'gdpr_enable_lead_public_form', '0', 1),
+(279, 'gdpr_show_lead_custom_fields_on_public_form', '0', 1),
+(280, 'gdpr_lead_attachments_on_public_form', '0', 1),
+(281, 'gdpr_enable_consent_for_leads', '0', 1),
+(282, 'gdpr_lead_enable_right_to_be_forgotten', '0', 1),
+(283, 'allow_staff_view_invoices_assigned', '1', 1),
+(284, 'gdpr_data_portability_leads', '0', 1),
+(285, 'gdpr_lead_data_portability_allowed', '', 1),
+(286, 'gdpr_contact_data_portability_allowed', '', 1),
+(287, 'gdpr_data_portability_contacts', '0', 1),
+(288, 'allow_staff_view_estimates_assigned', '1', 1),
+(289, 'gdpr_after_lead_converted_delete', '0', 1),
+(290, 'gdpr_show_terms_and_conditions_in_footer', '0', 1),
+(291, 'save_last_order_for_tables', '0', 1),
+(292, 'company_logo_dark', '', 1),
+(293, 'customers_register_require_confirmation', '0', 1),
+(294, 'allow_non_admin_staff_to_delete_ticket_attachments', '0', 1),
+(295, 'receive_notification_on_new_ticket_replies', '1', 0),
+(296, 'google_client_id', '', 1),
+(297, 'enable_google_picker', '0', 1),
+(298, 'show_ticket_reminders_on_calendar', '1', 1),
+(299, 'ticket_import_reply_only', '0', 1);
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `tblpayment_modes`
+-- Table structure for table `tblpermissions`
 --
 
-CREATE TABLE `tblpayment_modes` (
-  `id` int(11) NOT NULL,
-  `name` varchar(100) NOT NULL,
-  `description` text,
-  `show_on_pdf` int(11) NOT NULL DEFAULT '0',
-  `invoices_only` int(11) NOT NULL DEFAULT '0',
-  `expenses_only` int(11) NOT NULL DEFAULT '0',
-  `selected_by_default` int(11) NOT NULL DEFAULT '1',
-  `active` tinyint(1) NOT NULL DEFAULT '1'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+CREATE TABLE `tblpermissions` (
+  `permissionid` int(11) NOT NULL,
+  `name` mediumtext NOT NULL,
+  `shortname` mediumtext NOT NULL
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 --
--- Dumping data for table `tblpayment_modes`
+-- Dumping data for table `tblpermissions`
 --
 
-INSERT INTO `tblpayment_modes` (`id`, `name`, `description`, `show_on_pdf`, `invoices_only`, `expenses_only`, `selected_by_default`, `active`) VALUES
-(1, 'Bank', NULL, 0, 0, 0, 1, 1);
+INSERT INTO `tblpermissions` (`permissionid`, `name`, `shortname`) VALUES
+(1, 'Contracts', 'contracts'),
+(2, 'Tasks', 'tasks'),
+(3, 'Reports', 'reports'),
+(4, 'Settings', 'settings'),
+(5, 'Projects', 'projects'),
+(6, 'Surveys', 'surveys'),
+(7, 'Staff', 'staff'),
+(8, 'Customers', 'customers'),
+(9, 'Email Templates', 'email_templates'),
+(10, 'Roles', 'roles'),
+(11, 'Estimates', 'estimates'),
+(12, 'Knowledge base', 'knowledge_base'),
+(13, 'Proposals', 'proposals'),
+(14, 'Goals', 'goals'),
+(15, 'Expenses', 'expenses'),
+(16, 'Bulk PDF Exporter', 'bulk_pdf_exporter'),
+(17, 'Payments', 'payments'),
+(18, 'Invoices', 'invoices'),
+(19, 'Items', 'items'),
+(20, 'Tasks Checklist Templates', 'checklist_templates'),
+(21, 'Credit notes', 'credit_notes'),
+(22, 'Leads', 'leads'),
+(23, 'Subscriptions', 'subscriptions');
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `tblpinned_projects`
+-- Table structure for table `tblpinnedprojects`
 --
 
-CREATE TABLE `tblpinned_projects` (
+CREATE TABLE `tblpinnedprojects` (
   `id` int(11) NOT NULL,
   `project_id` int(11) NOT NULL,
   `staff_id` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tblpostcomments`
+--
+
+CREATE TABLE `tblpostcomments` (
+  `id` int(11) NOT NULL,
+  `content` text,
+  `userid` int(11) NOT NULL,
+  `postid` int(11) NOT NULL,
+  `dateadded` datetime NOT NULL
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tblpostlikes`
+--
+
+CREATE TABLE `tblpostlikes` (
+  `id` int(11) NOT NULL,
+  `postid` int(11) NOT NULL,
+  `userid` int(11) NOT NULL,
+  `dateliked` datetime NOT NULL
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tblposts`
+--
+
+CREATE TABLE `tblposts` (
+  `postid` int(11) NOT NULL,
+  `creator` int(11) NOT NULL,
+  `datecreated` datetime NOT NULL,
+  `visibility` varchar(100) NOT NULL,
+  `content` text NOT NULL,
+  `pinned` int(11) NOT NULL,
+  `datepinned` datetime DEFAULT NULL
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tblpredefinedreplies`
+--
+
+CREATE TABLE `tblpredefinedreplies` (
+  `id` int(11) NOT NULL,
+  `name` varchar(300) NOT NULL,
+  `message` text NOT NULL
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tblpriorities`
+--
+
+CREATE TABLE `tblpriorities` (
+  `priorityid` int(11) NOT NULL,
+  `name` varchar(50) NOT NULL
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+--
+-- Dumping data for table `tblpriorities`
+--
+
+INSERT INTO `tblpriorities` (`priorityid`, `name`) VALUES
+(1, 'Low'),
+(2, 'Medium'),
+(3, 'High');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tblprojectactivity`
+--
+
+CREATE TABLE `tblprojectactivity` (
+  `id` int(11) NOT NULL,
+  `project_id` int(11) NOT NULL,
+  `staff_id` int(11) NOT NULL DEFAULT '0',
+  `contact_id` int(11) NOT NULL DEFAULT '0',
+  `fullname` varchar(100) DEFAULT NULL,
+  `visible_to_customer` int(11) NOT NULL DEFAULT '0',
+  `description_key` varchar(500) NOT NULL COMMENT 'Language file key',
+  `additional_data` text,
+  `dateadded` datetime NOT NULL
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -1922,10 +2098,10 @@ CREATE TABLE `tblprojectdiscussioncomments` (
   `content` text NOT NULL,
   `staff_id` int(11) NOT NULL,
   `contact_id` int(11) DEFAULT '0',
-  `fullname` varchar(191) DEFAULT NULL,
-  `file_name` varchar(191) DEFAULT NULL,
+  `fullname` varchar(300) DEFAULT NULL,
+  `file_name` varchar(300) DEFAULT NULL,
   `file_mime_type` varchar(70) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -1936,14 +2112,62 @@ CREATE TABLE `tblprojectdiscussioncomments` (
 CREATE TABLE `tblprojectdiscussions` (
   `id` int(11) NOT NULL,
   `project_id` int(11) NOT NULL,
-  `subject` varchar(191) NOT NULL,
+  `subject` varchar(500) NOT NULL,
   `description` text NOT NULL,
   `show_to_customer` tinyint(1) NOT NULL DEFAULT '0',
   `datecreated` datetime NOT NULL,
   `last_activity` datetime DEFAULT NULL,
   `staff_id` int(11) NOT NULL DEFAULT '0',
   `contact_id` int(11) NOT NULL DEFAULT '0'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tblprojectfiles`
+--
+
+CREATE TABLE `tblprojectfiles` (
+  `id` int(11) NOT NULL,
+  `file_name` mediumtext NOT NULL,
+  `subject` varchar(500) DEFAULT NULL,
+  `description` text,
+  `filetype` varchar(50) DEFAULT NULL,
+  `dateadded` datetime NOT NULL,
+  `last_activity` datetime DEFAULT NULL,
+  `project_id` int(11) NOT NULL,
+  `visible_to_customer` tinyint(1) DEFAULT '0',
+  `staffid` int(11) NOT NULL,
+  `contact_id` int(11) NOT NULL DEFAULT '0',
+  `external` varchar(40) DEFAULT NULL,
+  `external_link` text,
+  `thumbnail_link` text
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tblprojectmembers`
+--
+
+CREATE TABLE `tblprojectmembers` (
+  `id` int(11) NOT NULL,
+  `project_id` int(11) NOT NULL,
+  `staff_id` int(11) NOT NULL
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tblprojectnotes`
+--
+
+CREATE TABLE `tblprojectnotes` (
+  `id` int(11) NOT NULL,
+  `project_id` int(11) NOT NULL,
+  `content` text NOT NULL,
+  `staff_id` int(11) NOT NULL
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -1953,7 +2177,7 @@ CREATE TABLE `tblprojectdiscussions` (
 
 CREATE TABLE `tblprojects` (
   `id` int(11) NOT NULL,
-  `name` varchar(191) NOT NULL,
+  `name` varchar(600) NOT NULL,
   `description` text,
   `status` int(11) NOT NULL DEFAULT '0',
   `clientid` int(11) NOT NULL,
@@ -1968,86 +2192,34 @@ CREATE TABLE `tblprojects` (
   `project_rate_per_hour` decimal(15,2) DEFAULT NULL,
   `estimated_hours` decimal(15,2) DEFAULT NULL,
   `addedfrom` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `tblproject_activity`
+-- Table structure for table `tblprojectsettings`
 --
 
-CREATE TABLE `tblproject_activity` (
-  `id` int(11) NOT NULL,
-  `project_id` int(11) NOT NULL,
-  `staff_id` int(11) NOT NULL DEFAULT '0',
-  `contact_id` int(11) NOT NULL DEFAULT '0',
-  `fullname` varchar(100) DEFAULT NULL,
-  `visible_to_customer` int(11) NOT NULL DEFAULT '0',
-  `description_key` varchar(191) NOT NULL COMMENT 'Language file key',
-  `additional_data` text,
-  `dateadded` datetime NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `tblproject_files`
---
-
-CREATE TABLE `tblproject_files` (
-  `id` int(11) NOT NULL,
-  `file_name` varchar(191) NOT NULL,
-  `subject` varchar(191) DEFAULT NULL,
-  `description` text,
-  `filetype` varchar(50) DEFAULT NULL,
-  `dateadded` datetime NOT NULL,
-  `last_activity` datetime DEFAULT NULL,
-  `project_id` int(11) NOT NULL,
-  `visible_to_customer` tinyint(1) DEFAULT '0',
-  `staffid` int(11) NOT NULL,
-  `contact_id` int(11) NOT NULL DEFAULT '0',
-  `external` varchar(40) DEFAULT NULL,
-  `external_link` text,
-  `thumbnail_link` text
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `tblproject_members`
---
-
-CREATE TABLE `tblproject_members` (
-  `id` int(11) NOT NULL,
-  `project_id` int(11) NOT NULL,
-  `staff_id` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `tblproject_notes`
---
-
-CREATE TABLE `tblproject_notes` (
-  `id` int(11) NOT NULL,
-  `project_id` int(11) NOT NULL,
-  `content` text NOT NULL,
-  `staff_id` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `tblproject_settings`
---
-
-CREATE TABLE `tblproject_settings` (
+CREATE TABLE `tblprojectsettings` (
   `id` int(11) NOT NULL,
   `project_id` int(11) NOT NULL,
   `name` varchar(100) NOT NULL,
   `value` text
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tblproposalcomments`
+--
+
+CREATE TABLE `tblproposalcomments` (
+  `id` int(11) NOT NULL,
+  `content` mediumtext,
+  `proposalid` int(11) NOT NULL,
+  `staffid` int(11) NOT NULL,
+  `dateadded` datetime NOT NULL
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -2057,7 +2229,7 @@ CREATE TABLE `tblproject_settings` (
 
 CREATE TABLE `tblproposals` (
   `id` int(11) NOT NULL,
-  `subject` varchar(191) DEFAULT NULL,
+  `subject` varchar(500) DEFAULT NULL,
   `content` longtext,
   `addedfrom` int(11) NOT NULL,
   `datecreated` datetime NOT NULL,
@@ -2076,7 +2248,7 @@ CREATE TABLE `tblproposals` (
   `rel_type` varchar(40) DEFAULT NULL,
   `assigned` int(11) DEFAULT NULL,
   `hash` varchar(32) NOT NULL,
-  `proposal_to` varchar(191) DEFAULT NULL,
+  `proposal_to` varchar(600) DEFAULT NULL,
   `country` int(11) NOT NULL DEFAULT '0',
   `zip` varchar(50) DEFAULT NULL,
   `state` varchar(100) DEFAULT NULL,
@@ -2097,34 +2269,7 @@ CREATE TABLE `tblproposals` (
   `acceptance_date` datetime DEFAULT NULL,
   `acceptance_ip` varchar(40) DEFAULT NULL,
   `signature` varchar(40) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `tblproposal_comments`
---
-
-CREATE TABLE `tblproposal_comments` (
-  `id` int(11) NOT NULL,
-  `content` mediumtext,
-  `proposalid` int(11) NOT NULL,
-  `staffid` int(11) NOT NULL,
-  `dateadded` datetime NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `tblrelated_items`
---
-
-CREATE TABLE `tblrelated_items` (
-  `id` int(11) NOT NULL,
-  `rel_id` int(11) NOT NULL,
-  `rel_type` varchar(30) NOT NULL,
-  `item_id` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -2142,7 +2287,42 @@ CREATE TABLE `tblreminders` (
   `rel_type` varchar(40) NOT NULL,
   `notify_by_email` int(11) NOT NULL DEFAULT '1',
   `creator` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tblrequestsgdpr`
+--
+
+CREATE TABLE `tblrequestsgdpr` (
+  `id` int(11) NOT NULL,
+  `clientid` int(11) NOT NULL DEFAULT '0',
+  `contact_id` int(11) NOT NULL DEFAULT '0',
+  `lead_id` int(11) NOT NULL DEFAULT '0',
+  `request_type` varchar(200) DEFAULT NULL,
+  `status` varchar(40) DEFAULT NULL,
+  `request_date` datetime NOT NULL,
+  `request_from` varchar(150) DEFAULT NULL,
+  `description` text
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tblrolepermissions`
+--
+
+CREATE TABLE `tblrolepermissions` (
+  `rolepermissionid` int(11) NOT NULL,
+  `roleid` int(11) NOT NULL,
+  `can_view` tinyint(1) NOT NULL DEFAULT '0',
+  `can_view_own` tinyint(1) NOT NULL DEFAULT '0',
+  `can_edit` tinyint(1) DEFAULT '0',
+  `can_create` tinyint(1) NOT NULL DEFAULT '0',
+  `can_delete` tinyint(1) NOT NULL DEFAULT '0',
+  `permissionid` int(11) NOT NULL
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -2152,24 +2332,23 @@ CREATE TABLE `tblreminders` (
 
 CREATE TABLE `tblroles` (
   `roleid` int(11) NOT NULL,
-  `name` varchar(150) NOT NULL,
-  `permissions` longtext
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+  `name` varchar(150) NOT NULL
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 --
 -- Dumping data for table `tblroles`
 --
 
-INSERT INTO `tblroles` (`roleid`, `name`, `permissions`) VALUES
-(1, 'Employee', NULL);
+INSERT INTO `tblroles` (`roleid`, `name`) VALUES
+(1, 'Employee');
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `tblsales_activity`
+-- Table structure for table `tblsalesactivity`
 --
 
-CREATE TABLE `tblsales_activity` (
+CREATE TABLE `tblsalesactivity` (
   `id` int(11) NOT NULL,
   `rel_type` varchar(20) DEFAULT NULL,
   `rel_id` int(11) NOT NULL,
@@ -2178,7 +2357,7 @@ CREATE TABLE `tblsales_activity` (
   `staffid` varchar(11) DEFAULT NULL,
   `full_name` varchar(100) DEFAULT NULL,
   `date` datetime NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -2189,7 +2368,7 @@ CREATE TABLE `tblsales_activity` (
 CREATE TABLE `tblservices` (
   `serviceid` int(11) NOT NULL,
   `name` varchar(50) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -2202,30 +2381,6 @@ CREATE TABLE `tblsessions` (
   `ip_address` varchar(45) NOT NULL,
   `timestamp` int(10) UNSIGNED NOT NULL DEFAULT '0',
   `data` blob NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `tblshared_customer_files`
---
-
-CREATE TABLE `tblshared_customer_files` (
-  `file_id` int(11) NOT NULL,
-  `contact_id` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `tblspam_filters`
---
-
-CREATE TABLE `tblspam_filters` (
-  `id` int(11) NOT NULL,
-  `type` varchar(40) NOT NULL,
-  `rel_type` varchar(10) NOT NULL,
-  `value` text NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
@@ -2245,7 +2400,7 @@ CREATE TABLE `tblstaff` (
   `skype` varchar(50) DEFAULT NULL,
   `password` varchar(250) NOT NULL,
   `datecreated` datetime NOT NULL,
-  `profile_image` varchar(191) DEFAULT NULL,
+  `profile_image` varchar(300) DEFAULT NULL,
   `last_ip` varchar(40) DEFAULT NULL,
   `last_login` datetime DEFAULT NULL,
   `last_activity` datetime DEFAULT NULL,
@@ -2257,98 +2412,81 @@ CREATE TABLE `tblstaff` (
   `active` int(11) NOT NULL DEFAULT '1',
   `default_language` varchar(40) DEFAULT NULL,
   `direction` varchar(3) DEFAULT NULL,
-  `media_path_slug` varchar(191) DEFAULT NULL,
+  `media_path_slug` varchar(300) DEFAULT NULL,
   `is_not_staff` int(11) NOT NULL DEFAULT '0',
   `hourly_rate` decimal(15,2) NOT NULL DEFAULT '0.00',
   `two_factor_auth_enabled` tinyint(1) DEFAULT '0',
   `two_factor_auth_code` varchar(100) DEFAULT NULL,
   `two_factor_auth_code_requested` datetime DEFAULT NULL,
   `email_signature` text
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `tblstaff_departments`
+-- Table structure for table `tblstaffdepartments`
 --
 
-CREATE TABLE `tblstaff_departments` (
+CREATE TABLE `tblstaffdepartments` (
   `staffdepartmentid` int(11) NOT NULL,
   `staffid` int(11) NOT NULL,
   `departmentid` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `tblstaff_permissions`
+-- Table structure for table `tblstaffpermissions`
 --
 
-CREATE TABLE `tblstaff_permissions` (
-  `staff_id` int(11) NOT NULL,
-  `feature` varchar(40) NOT NULL,
-  `capability` varchar(100) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+CREATE TABLE `tblstaffpermissions` (
+  `staffpermid` int(11) NOT NULL,
+  `permissionid` int(11) NOT NULL,
+  `can_view` tinyint(1) NOT NULL DEFAULT '0',
+  `can_view_own` tinyint(1) NOT NULL DEFAULT '0',
+  `can_edit` tinyint(1) NOT NULL DEFAULT '0',
+  `can_create` tinyint(1) NOT NULL DEFAULT '0',
+  `can_delete` tinyint(1) NOT NULL DEFAULT '0',
+  `staffid` int(11) NOT NULL
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `tblsubscriptions`
+-- Table structure for table `tblstafftaskassignees`
 --
 
-CREATE TABLE `tblsubscriptions` (
+CREATE TABLE `tblstafftaskassignees` (
   `id` int(11) NOT NULL,
-  `name` varchar(191) NOT NULL,
-  `description` text,
-  `description_in_item` tinyint(1) NOT NULL DEFAULT '0',
-  `clientid` int(11) NOT NULL,
-  `date` date DEFAULT NULL,
-  `currency` int(11) NOT NULL,
-  `tax_id` int(11) NOT NULL DEFAULT '0',
-  `stripe_plan_id` text,
-  `stripe_subscription_id` text NOT NULL,
-  `next_billing_cycle` bigint(20) DEFAULT NULL,
-  `ends_at` bigint(20) DEFAULT NULL,
-  `status` varchar(50) DEFAULT NULL,
-  `quantity` int(11) NOT NULL DEFAULT '1',
-  `project_id` int(11) NOT NULL DEFAULT '0',
-  `hash` varchar(32) NOT NULL,
-  `created` datetime NOT NULL,
-  `created_from` int(11) NOT NULL,
-  `date_subscribed` datetime DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+  `staffid` int(11) NOT NULL,
+  `taskid` int(11) NOT NULL,
+  `assigned_from` int(11) NOT NULL DEFAULT '0',
+  `is_assigned_from_contact` tinyint(1) NOT NULL DEFAULT '0'
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `tbltaggables`
+-- Table structure for table `tblstafftaskcomments`
 --
 
-CREATE TABLE `tbltaggables` (
-  `rel_id` int(11) NOT NULL,
-  `rel_type` varchar(20) NOT NULL,
-  `tag_id` int(11) NOT NULL,
-  `tag_order` int(11) NOT NULL DEFAULT '0'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `tbltags`
---
-
-CREATE TABLE `tbltags` (
+CREATE TABLE `tblstafftaskcomments` (
   `id` int(11) NOT NULL,
-  `name` varchar(100) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+  `content` text NOT NULL,
+  `taskid` int(11) NOT NULL,
+  `staffid` int(11) NOT NULL,
+  `contact_id` int(11) NOT NULL DEFAULT '0',
+  `file_id` int(11) NOT NULL DEFAULT '0',
+  `dateadded` datetime NOT NULL
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `tbltasks`
+-- Table structure for table `tblstafftasks`
 --
 
-CREATE TABLE `tbltasks` (
+CREATE TABLE `tblstafftasks` (
   `id` int(11) NOT NULL,
   `name` mediumtext,
   `description` text,
@@ -2380,7 +2518,154 @@ CREATE TABLE `tbltasks` (
   `milestone_order` int(11) NOT NULL DEFAULT '0',
   `visible_to_client` tinyint(1) NOT NULL DEFAULT '0',
   `deadline_notified` int(11) NOT NULL DEFAULT '0'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tblstafftasksfollowers`
+--
+
+CREATE TABLE `tblstafftasksfollowers` (
+  `id` int(11) NOT NULL,
+  `staffid` int(11) NOT NULL,
+  `taskid` int(11) NOT NULL
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tblsubscriptions`
+--
+
+CREATE TABLE `tblsubscriptions` (
+  `id` int(11) NOT NULL,
+  `name` varchar(300) NOT NULL,
+  `description` text,
+  `description_in_item` tinyint(1) NOT NULL DEFAULT '0',
+  `clientid` int(11) NOT NULL,
+  `date` date DEFAULT NULL,
+  `currency` int(11) NOT NULL,
+  `tax_id` int(11) NOT NULL DEFAULT '0',
+  `stripe_plan_id` text,
+  `stripe_subscription_id` text NOT NULL,
+  `next_billing_cycle` bigint(20) DEFAULT NULL,
+  `ends_at` bigint(20) DEFAULT NULL,
+  `status` varchar(50) DEFAULT NULL,
+  `quantity` int(11) NOT NULL DEFAULT '1',
+  `project_id` int(11) NOT NULL DEFAULT '0',
+  `hash` varchar(32) NOT NULL,
+  `created` datetime NOT NULL,
+  `created_from` int(11) NOT NULL,
+  `date_subscribed` datetime DEFAULT NULL
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tblsurveyresultsets`
+--
+
+CREATE TABLE `tblsurveyresultsets` (
+  `resultsetid` int(11) NOT NULL,
+  `surveyid` int(11) NOT NULL,
+  `ip` varchar(40) NOT NULL,
+  `useragent` varchar(150) NOT NULL,
+  `date` datetime NOT NULL
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tblsurveys`
+--
+
+CREATE TABLE `tblsurveys` (
+  `surveyid` int(11) NOT NULL,
+  `subject` mediumtext NOT NULL,
+  `slug` mediumtext NOT NULL,
+  `description` text NOT NULL,
+  `viewdescription` text,
+  `datecreated` datetime NOT NULL,
+  `redirect_url` varchar(100) DEFAULT NULL,
+  `send` tinyint(1) NOT NULL DEFAULT '0',
+  `onlyforloggedin` int(11) DEFAULT '0',
+  `fromname` varchar(100) DEFAULT NULL,
+  `iprestrict` tinyint(1) NOT NULL,
+  `active` tinyint(1) NOT NULL DEFAULT '1',
+  `hash` varchar(32) NOT NULL
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tblsurveysemailsendcron`
+--
+
+CREATE TABLE `tblsurveysemailsendcron` (
+  `id` int(11) NOT NULL,
+  `surveyid` int(11) NOT NULL,
+  `email` varchar(100) NOT NULL,
+  `emailid` int(11) DEFAULT NULL,
+  `listid` varchar(11) DEFAULT NULL,
+  `log_id` int(11) NOT NULL
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tblsurveysendlog`
+--
+
+CREATE TABLE `tblsurveysendlog` (
+  `id` int(11) NOT NULL,
+  `surveyid` int(11) NOT NULL,
+  `total` int(11) NOT NULL,
+  `date` datetime NOT NULL,
+  `iscronfinished` int(11) NOT NULL DEFAULT '0',
+  `send_to_mail_lists` varchar(500) DEFAULT NULL
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tbltags`
+--
+
+CREATE TABLE `tbltags` (
+  `id` int(11) NOT NULL,
+  `name` varchar(100) NOT NULL
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tbltags_in`
+--
+
+CREATE TABLE `tbltags_in` (
+  `rel_id` int(11) NOT NULL,
+  `rel_type` varchar(20) NOT NULL,
+  `tag_id` int(11) NOT NULL,
+  `tag_order` int(11) NOT NULL DEFAULT '0'
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tbltaskchecklists`
+--
+
+CREATE TABLE `tbltaskchecklists` (
+  `id` int(11) NOT NULL,
+  `taskid` int(11) NOT NULL,
+  `description` text NOT NULL,
+  `finished` int(11) NOT NULL DEFAULT '0',
+  `dateadded` datetime NOT NULL,
+  `addedfrom` int(11) NOT NULL,
+  `finished_from` int(11) DEFAULT '0',
+  `list_order` int(11) NOT NULL DEFAULT '0'
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -2396,77 +2681,7 @@ CREATE TABLE `tbltaskstimers` (
   `staff_id` int(11) NOT NULL,
   `hourly_rate` decimal(15,2) NOT NULL DEFAULT '0.00',
   `note` text
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `tbltasks_checklist_templates`
---
-
-CREATE TABLE `tbltasks_checklist_templates` (
-  `id` int(11) NOT NULL,
-  `description` text
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `tbltask_assigned`
---
-
-CREATE TABLE `tbltask_assigned` (
-  `id` int(11) NOT NULL,
-  `staffid` int(11) NOT NULL,
-  `taskid` int(11) NOT NULL,
-  `assigned_from` int(11) NOT NULL DEFAULT '0',
-  `is_assigned_from_contact` tinyint(1) NOT NULL DEFAULT '0'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `tbltask_checklist_items`
---
-
-CREATE TABLE `tbltask_checklist_items` (
-  `id` int(11) NOT NULL,
-  `taskid` int(11) NOT NULL,
-  `description` text NOT NULL,
-  `finished` int(11) NOT NULL DEFAULT '0',
-  `dateadded` datetime NOT NULL,
-  `addedfrom` int(11) NOT NULL,
-  `finished_from` int(11) DEFAULT '0',
-  `list_order` int(11) NOT NULL DEFAULT '0'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `tbltask_comments`
---
-
-CREATE TABLE `tbltask_comments` (
-  `id` int(11) NOT NULL,
-  `content` text NOT NULL,
-  `taskid` int(11) NOT NULL,
-  `staffid` int(11) NOT NULL,
-  `contact_id` int(11) NOT NULL DEFAULT '0',
-  `file_id` int(11) NOT NULL DEFAULT '0',
-  `dateadded` datetime NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `tbltask_followers`
---
-
-CREATE TABLE `tbltask_followers` (
-  `id` int(11) NOT NULL,
-  `staffid` int(11) NOT NULL,
-  `taskid` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -2478,7 +2693,58 @@ CREATE TABLE `tbltaxes` (
   `id` int(11) NOT NULL,
   `name` varchar(100) NOT NULL,
   `taxrate` decimal(15,2) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tblticketattachments`
+--
+
+CREATE TABLE `tblticketattachments` (
+  `id` int(11) NOT NULL,
+  `ticketid` int(11) NOT NULL,
+  `replyid` int(11) DEFAULT NULL,
+  `file_name` mediumtext NOT NULL,
+  `filetype` varchar(50) DEFAULT NULL,
+  `dateadded` datetime NOT NULL
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tblticketpipelog`
+--
+
+CREATE TABLE `tblticketpipelog` (
+  `id` int(11) NOT NULL,
+  `date` datetime NOT NULL,
+  `email_to` varchar(500) NOT NULL,
+  `name` varchar(200) NOT NULL,
+  `subject` varchar(500) NOT NULL,
+  `message` mediumtext NOT NULL,
+  `email` varchar(300) NOT NULL,
+  `status` varchar(100) NOT NULL
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tblticketreplies`
+--
+
+CREATE TABLE `tblticketreplies` (
+  `id` int(11) NOT NULL,
+  `ticketid` int(11) NOT NULL,
+  `userid` int(11) DEFAULT NULL,
+  `contactid` int(11) NOT NULL DEFAULT '0',
+  `name` text,
+  `email` text,
+  `date` datetime NOT NULL,
+  `message` text,
+  `attachment` int(11) DEFAULT NULL,
+  `admin` int(11) DEFAULT NULL
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -2498,7 +2764,7 @@ CREATE TABLE `tbltickets` (
   `status` int(11) NOT NULL,
   `service` int(11) DEFAULT NULL,
   `ticketkey` varchar(32) NOT NULL,
-  `subject` varchar(191) NOT NULL,
+  `subject` varchar(300) NOT NULL,
   `message` text,
   `admin` int(11) DEFAULT NULL,
   `date` datetime NOT NULL,
@@ -2507,123 +2773,52 @@ CREATE TABLE `tbltickets` (
   `clientread` int(11) NOT NULL DEFAULT '0',
   `adminread` int(11) NOT NULL DEFAULT '0',
   `assigned` int(11) NOT NULL DEFAULT '0'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `tbltickets_pipe_log`
+-- Table structure for table `tblticketsspamcontrol`
 --
 
-CREATE TABLE `tbltickets_pipe_log` (
+CREATE TABLE `tblticketsspamcontrol` (
   `id` int(11) NOT NULL,
-  `date` datetime NOT NULL,
-  `email_to` varchar(100) NOT NULL,
-  `name` varchar(191) NOT NULL,
-  `subject` varchar(191) NOT NULL,
-  `message` mediumtext NOT NULL,
-  `email` varchar(100) NOT NULL,
-  `status` varchar(100) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+  `type` varchar(40) NOT NULL,
+  `value` text NOT NULL
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `tbltickets_predefined_replies`
+-- Table structure for table `tblticketstatus`
 --
 
-CREATE TABLE `tbltickets_predefined_replies` (
-  `id` int(11) NOT NULL,
-  `name` varchar(191) NOT NULL,
-  `message` text NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `tbltickets_priorities`
---
-
-CREATE TABLE `tbltickets_priorities` (
-  `priorityid` int(11) NOT NULL,
-  `name` varchar(50) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
---
--- Dumping data for table `tbltickets_priorities`
---
-
-INSERT INTO `tbltickets_priorities` (`priorityid`, `name`) VALUES
-(1, 'Low'),
-(2, 'Medium'),
-(3, 'High');
-
--- --------------------------------------------------------
-
---
--- Table structure for table `tbltickets_status`
---
-
-CREATE TABLE `tbltickets_status` (
+CREATE TABLE `tblticketstatus` (
   `ticketstatusid` int(11) NOT NULL,
   `name` varchar(50) NOT NULL,
   `isdefault` int(11) NOT NULL DEFAULT '0',
   `statuscolor` varchar(7) DEFAULT NULL,
   `statusorder` int(11) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 --
--- Dumping data for table `tbltickets_status`
+-- Dumping data for table `tblticketstatus`
 --
 
-INSERT INTO `tbltickets_status` (`ticketstatusid`, `name`, `isdefault`, `statuscolor`, `statusorder`) VALUES
-(1, 'Open', 1, '#ff2d42', 1),
-(2, 'In progress', 1, '#84c529', 2),
+INSERT INTO `tblticketstatus` (`ticketstatusid`, `name`, `isdefault`, `statuscolor`, `statusorder`) VALUES
 (3, 'Answered', 1, '#0000ff', 3),
 (4, 'On Hold', 1, '#c0c0c0', 4),
-(5, 'Closed', 1, '#03a9f4', 5);
+(2, 'In progress', 1, '#84c529', 2),
+(5, 'Closed', 1, '#03a9f4', 5),
+(1, 'Open', 1, '#ff2d42', 1);
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `tblticket_attachments`
+-- Table structure for table `tbltodoitems`
 --
 
-CREATE TABLE `tblticket_attachments` (
-  `id` int(11) NOT NULL,
-  `ticketid` int(11) NOT NULL,
-  `replyid` int(11) DEFAULT NULL,
-  `file_name` varchar(191) NOT NULL,
-  `filetype` varchar(50) DEFAULT NULL,
-  `dateadded` datetime NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `tblticket_replies`
---
-
-CREATE TABLE `tblticket_replies` (
-  `id` int(11) NOT NULL,
-  `ticketid` int(11) NOT NULL,
-  `userid` int(11) DEFAULT NULL,
-  `contactid` int(11) NOT NULL DEFAULT '0',
-  `name` text,
-  `email` text,
-  `date` datetime NOT NULL,
-  `message` text,
-  `attachment` int(11) DEFAULT NULL,
-  `admin` int(11) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `tbltodos`
---
-
-CREATE TABLE `tbltodos` (
+CREATE TABLE `tbltodoitems` (
   `todoid` int(11) NOT NULL,
   `description` text NOT NULL,
   `staffid` int(11) NOT NULL,
@@ -2631,53 +2826,35 @@ CREATE TABLE `tbltodos` (
   `finished` tinyint(1) NOT NULL,
   `datefinished` datetime DEFAULT NULL,
   `item_order` int(11) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `tbltracked_mails`
+-- Table structure for table `tbluserautologin`
 --
 
-CREATE TABLE `tbltracked_mails` (
-  `id` int(11) NOT NULL,
-  `uid` varchar(32) NOT NULL,
-  `rel_id` int(11) NOT NULL,
-  `rel_type` varchar(40) NOT NULL,
-  `date` datetime NOT NULL,
-  `email` varchar(100) NOT NULL,
-  `opened` tinyint(1) NOT NULL DEFAULT '0',
-  `date_opened` datetime DEFAULT NULL,
-  `subject` mediumtext
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `tbluser_auto_login`
---
-
-CREATE TABLE `tbluser_auto_login` (
+CREATE TABLE `tbluserautologin` (
   `key_id` char(32) NOT NULL,
   `user_id` int(11) NOT NULL,
   `user_agent` varchar(150) NOT NULL,
   `last_ip` varchar(40) NOT NULL,
   `last_login` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `staff` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `tbluser_meta`
+-- Table structure for table `tblusermeta`
 --
 
-CREATE TABLE `tbluser_meta` (
+CREATE TABLE `tblusermeta` (
   `umeta_id` bigint(20) UNSIGNED NOT NULL,
   `staff_id` bigint(20) UNSIGNED NOT NULL DEFAULT '0',
   `client_id` bigint(20) UNSIGNED NOT NULL DEFAULT '0',
   `contact_id` bigint(20) UNSIGNED NOT NULL DEFAULT '0',
-  `meta_key` varchar(191) DEFAULT NULL,
+  `meta_key` varchar(255) DEFAULT NULL,
   `meta_value` longtext
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -2690,9 +2867,9 @@ CREATE TABLE `tbluser_meta` (
 CREATE TABLE `tblvault` (
   `id` int(11) NOT NULL,
   `customer_id` int(11) NOT NULL,
-  `server_address` varchar(191) NOT NULL,
+  `server_address` varchar(400) NOT NULL,
   `port` int(11) DEFAULT NULL,
-  `username` varchar(191) NOT NULL,
+  `username` varchar(300) NOT NULL,
   `password` text NOT NULL,
   `description` text,
   `creator` int(11) NOT NULL,
@@ -2702,29 +2879,29 @@ CREATE TABLE `tblvault` (
   `last_updated` datetime DEFAULT NULL,
   `last_updated_from` varchar(100) DEFAULT NULL,
   `date_created` datetime NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `tblviews_tracking`
+-- Table structure for table `tblviewstracking`
 --
 
-CREATE TABLE `tblviews_tracking` (
+CREATE TABLE `tblviewstracking` (
   `id` int(11) NOT NULL,
   `rel_id` int(11) NOT NULL,
   `rel_type` varchar(40) NOT NULL,
   `date` datetime NOT NULL,
   `view_ip` varchar(40) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `tblweb_to_lead`
+-- Table structure for table `tblwebtolead`
 --
 
-CREATE TABLE `tblweb_to_lead` (
+CREATE TABLE `tblwebtolead` (
   `id` int(11) NOT NULL,
   `form_key` varchar(32) NOT NULL,
   `lead_source` int(11) NOT NULL,
@@ -2733,7 +2910,7 @@ CREATE TABLE `tblweb_to_lead` (
   `notify_type` varchar(20) DEFAULT NULL,
   `notify_ids` mediumtext,
   `responsible` int(11) NOT NULL DEFAULT '0',
-  `name` varchar(191) NOT NULL,
+  `name` varchar(400) NOT NULL,
   `form_data` mediumtext,
   `recaptcha` int(11) NOT NULL DEFAULT '0',
   `submit_btn_name` varchar(40) DEFAULT NULL,
@@ -2745,16 +2922,16 @@ CREATE TABLE `tblweb_to_lead` (
   `track_duplicate_field_and` varchar(20) DEFAULT NULL,
   `create_task_on_duplicate` int(11) NOT NULL DEFAULT '0',
   `dateadded` datetime NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 --
 -- Indexes for dumped tables
 --
 
 --
--- Indexes for table `tblactivity_log`
+-- Indexes for table `tblactivitylog`
 --
-ALTER TABLE `tblactivity_log`
+ALTER TABLE `tblactivitylog`
   ADD PRIMARY KEY (`id`),
   ADD KEY `staffid` (`staffid`);
 
@@ -2763,6 +2940,12 @@ ALTER TABLE `tblactivity_log`
 --
 ALTER TABLE `tblannouncements`
   ADD PRIMARY KEY (`announcementid`);
+
+--
+-- Indexes for table `tblcheckliststemplates`
+--
+ALTER TABLE `tblcheckliststemplates`
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Indexes for table `tblclients`
@@ -2774,6 +2957,18 @@ ALTER TABLE `tblclients`
   ADD KEY `company` (`company`);
 
 --
+-- Indexes for table `tblcommentlikes`
+--
+ALTER TABLE `tblcommentlikes`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `tblconsentpurposes`
+--
+ALTER TABLE `tblconsentpurposes`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indexes for table `tblconsents`
 --
 ALTER TABLE `tblconsents`
@@ -2781,11 +2976,12 @@ ALTER TABLE `tblconsents`
   ADD KEY `purpose_id` (`purpose_id`),
   ADD KEY `contact_id` (`contact_id`),
   ADD KEY `lead_id` (`lead_id`);
+ALTER TABLE `tblconsents` ADD FULLTEXT KEY `action` (`action`);
 
 --
--- Indexes for table `tblconsent_purposes`
+-- Indexes for table `tblcontactpermissions`
 --
-ALTER TABLE `tblconsent_purposes`
+ALTER TABLE `tblcontactpermissions`
   ADD PRIMARY KEY (`id`);
 
 --
@@ -2794,15 +2990,20 @@ ALTER TABLE `tblconsent_purposes`
 ALTER TABLE `tblcontacts`
   ADD PRIMARY KEY (`id`),
   ADD KEY `userid` (`userid`),
+  ADD KEY `is_primary` (`is_primary`),
   ADD KEY `firstname` (`firstname`),
-  ADD KEY `lastname` (`lastname`),
-  ADD KEY `email` (`email`),
-  ADD KEY `is_primary` (`is_primary`);
+  ADD KEY `lastname` (`lastname`);
 
 --
--- Indexes for table `tblcontact_permissions`
+-- Indexes for table `tblcontractcomments`
 --
-ALTER TABLE `tblcontact_permissions`
+ALTER TABLE `tblcontractcomments`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `tblcontractrenewals`
+--
+ALTER TABLE `tblcontractrenewals`
   ADD PRIMARY KEY (`id`);
 
 --
@@ -2814,21 +3015,9 @@ ALTER TABLE `tblcontracts`
   ADD KEY `contract_type` (`contract_type`);
 
 --
--- Indexes for table `tblcontracts_types`
+-- Indexes for table `tblcontracttypes`
 --
-ALTER TABLE `tblcontracts_types`
-  ADD PRIMARY KEY (`id`);
-
---
--- Indexes for table `tblcontract_comments`
---
-ALTER TABLE `tblcontract_comments`
-  ADD PRIMARY KEY (`id`);
-
---
--- Indexes for table `tblcontract_renewals`
---
-ALTER TABLE `tblcontract_renewals`
+ALTER TABLE `tblcontracttypes`
   ADD PRIMARY KEY (`id`);
 
 --
@@ -2847,12 +3036,6 @@ ALTER TABLE `tblcreditnotes`
   ADD KEY `project_id` (`project_id`);
 
 --
--- Indexes for table `tblcreditnote_refunds`
---
-ALTER TABLE `tblcreditnote_refunds`
-  ADD PRIMARY KEY (`id`);
-
---
 -- Indexes for table `tblcredits`
 --
 ALTER TABLE `tblcredits`
@@ -2865,26 +3048,26 @@ ALTER TABLE `tblcurrencies`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indexes for table `tblcustomers_groups`
+-- Indexes for table `tblcustomeradmins`
 --
-ALTER TABLE `tblcustomers_groups`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `name` (`name`);
-
---
--- Indexes for table `tblcustomer_admins`
---
-ALTER TABLE `tblcustomer_admins`
+ALTER TABLE `tblcustomeradmins`
   ADD KEY `customer_id` (`customer_id`),
   ADD KEY `staff_id` (`staff_id`);
 
 --
--- Indexes for table `tblcustomer_groups`
+-- Indexes for table `tblcustomergroups_in`
 --
-ALTER TABLE `tblcustomer_groups`
+ALTER TABLE `tblcustomergroups_in`
   ADD PRIMARY KEY (`id`),
   ADD KEY `groupid` (`groupid`),
   ADD KEY `customer_id` (`customer_id`);
+
+--
+-- Indexes for table `tblcustomersgroups`
+--
+ALTER TABLE `tblcustomersgroups`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `name` (`name`);
 
 --
 -- Indexes for table `tblcustomfields`
@@ -2898,8 +3081,8 @@ ALTER TABLE `tblcustomfields`
 ALTER TABLE `tblcustomfieldsvalues`
   ADD PRIMARY KEY (`id`),
   ADD KEY `relid` (`relid`),
-  ADD KEY `fieldto` (`fieldto`),
-  ADD KEY `fieldid` (`fieldid`);
+  ADD KEY `fieldid` (`fieldid`),
+  ADD KEY `fieldto` (`fieldto`);
 
 --
 -- Indexes for table `tbldepartments`
@@ -2909,13 +3092,31 @@ ALTER TABLE `tbldepartments`
   ADD KEY `name` (`name`);
 
 --
--- Indexes for table `tbldismissed_announcements`
+-- Indexes for table `tbldismissedannouncements`
 --
-ALTER TABLE `tbldismissed_announcements`
+ALTER TABLE `tbldismissedannouncements`
   ADD PRIMARY KEY (`dismissedannouncementid`),
   ADD KEY `announcementid` (`announcementid`),
   ADD KEY `staff` (`staff`),
   ADD KEY `userid` (`userid`);
+
+--
+-- Indexes for table `tblemaillists`
+--
+ALTER TABLE `tblemaillists`
+  ADD PRIMARY KEY (`listid`);
+
+--
+-- Indexes for table `tblemailqueue`
+--
+ALTER TABLE `tblemailqueue`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `tblemailstracking`
+--
+ALTER TABLE `tblemailstracking`
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Indexes for table `tblemailtemplates`
@@ -2950,9 +3151,9 @@ ALTER TABLE `tblexpenses`
   ADD KEY `currency` (`currency`);
 
 --
--- Indexes for table `tblexpenses_categories`
+-- Indexes for table `tblexpensescategories`
 --
-ALTER TABLE `tblexpenses_categories`
+ALTER TABLE `tblexpensescategories`
   ADD PRIMARY KEY (`id`);
 
 --
@@ -2964,34 +3165,35 @@ ALTER TABLE `tblfiles`
   ADD KEY `rel_type` (`rel_type`);
 
 --
--- Indexes for table `tblform_questions`
+-- Indexes for table `tblformquestionboxes`
 --
-ALTER TABLE `tblform_questions`
-  ADD PRIMARY KEY (`questionid`);
-
---
--- Indexes for table `tblform_question_box`
---
-ALTER TABLE `tblform_question_box`
+ALTER TABLE `tblformquestionboxes`
   ADD PRIMARY KEY (`boxid`);
 
 --
--- Indexes for table `tblform_question_box_description`
+-- Indexes for table `tblformquestionboxesdescription`
 --
-ALTER TABLE `tblform_question_box_description`
+ALTER TABLE `tblformquestionboxesdescription`
   ADD PRIMARY KEY (`questionboxdescriptionid`);
 
 --
--- Indexes for table `tblform_results`
+-- Indexes for table `tblformquestions`
 --
-ALTER TABLE `tblform_results`
+ALTER TABLE `tblformquestions`
+  ADD PRIMARY KEY (`questionid`);
+
+--
+-- Indexes for table `tblformresults`
+--
+ALTER TABLE `tblformresults`
   ADD PRIMARY KEY (`resultid`);
 
 --
--- Indexes for table `tblgdpr_requests`
+-- Indexes for table `tblgoals`
 --
-ALTER TABLE `tblgdpr_requests`
-  ADD PRIMARY KEY (`id`);
+ALTER TABLE `tblgoals`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `staff_id` (`staff_id`);
 
 --
 -- Indexes for table `tblinvoicepaymentrecords`
@@ -3000,6 +3202,12 @@ ALTER TABLE `tblinvoicepaymentrecords`
   ADD PRIMARY KEY (`id`),
   ADD KEY `invoiceid` (`invoiceid`),
   ADD KEY `paymentmethod` (`paymentmethod`);
+
+--
+-- Indexes for table `tblinvoicepaymentsmodes`
+--
+ALTER TABLE `tblinvoicepaymentsmodes`
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Indexes for table `tblinvoices`
@@ -3013,16 +3221,6 @@ ALTER TABLE `tblinvoices`
   ADD KEY `total` (`total`);
 
 --
--- Indexes for table `tblitemable`
---
-ALTER TABLE `tblitemable`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `rel_id` (`rel_id`),
-  ADD KEY `rel_type` (`rel_type`),
-  ADD KEY `qty` (`qty`),
-  ADD KEY `rate` (`rate`);
-
---
 -- Indexes for table `tblitems`
 --
 ALTER TABLE `tblitems`
@@ -3032,44 +3230,64 @@ ALTER TABLE `tblitems`
   ADD KEY `group_id` (`group_id`);
 
 --
+-- Indexes for table `tblitemsrelated`
+--
+ALTER TABLE `tblitemsrelated`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `tblitemstax`
+--
+ALTER TABLE `tblitemstax`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `itemid` (`itemid`);
+
+--
 -- Indexes for table `tblitems_groups`
 --
 ALTER TABLE `tblitems_groups`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indexes for table `tblitem_tax`
+-- Indexes for table `tblitems_in`
 --
-ALTER TABLE `tblitem_tax`
+ALTER TABLE `tblitems_in`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `itemid` (`itemid`);
+  ADD KEY `rel_id` (`rel_id`),
+  ADD KEY `rel_type` (`rel_type`),
+  ADD KEY `id` (`id`),
+  ADD KEY `qty` (`qty`),
+  ADD KEY `rate` (`rate`);
 
 --
--- Indexes for table `tblknowedge_base_article_feedback`
+-- Indexes for table `tblknowledgebase`
 --
-ALTER TABLE `tblknowedge_base_article_feedback`
-  ADD PRIMARY KEY (`articleanswerid`);
-
---
--- Indexes for table `tblknowledge_base`
---
-ALTER TABLE `tblknowledge_base`
+ALTER TABLE `tblknowledgebase`
   ADD PRIMARY KEY (`articleid`);
 
 --
--- Indexes for table `tblknowledge_base_groups`
+-- Indexes for table `tblknowledgebasearticleanswers`
 --
-ALTER TABLE `tblknowledge_base_groups`
+ALTER TABLE `tblknowledgebasearticleanswers`
+  ADD PRIMARY KEY (`articleanswerid`);
+
+--
+-- Indexes for table `tblknowledgebasegroups`
+--
+ALTER TABLE `tblknowledgebasegroups`
   ADD PRIMARY KEY (`groupid`);
+
+--
+-- Indexes for table `tblleadactivitylog`
+--
+ALTER TABLE `tblleadactivitylog`
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Indexes for table `tblleads`
 --
 ALTER TABLE `tblleads`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `name` (`name`),
-  ADD KEY `company` (`company`),
-  ADD KEY `email` (`email`),
   ADD KEY `assigned` (`assigned`),
   ADD KEY `status` (`status`),
   ADD KEY `source` (`source`),
@@ -3079,77 +3297,55 @@ ALTER TABLE `tblleads`
   ADD KEY `from_form_id` (`from_form_id`);
 
 --
--- Indexes for table `tblleads_email_integration`
+-- Indexes for table `tblleadsemailintegrationemails`
 --
-ALTER TABLE `tblleads_email_integration`
+ALTER TABLE `tblleadsemailintegrationemails`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indexes for table `tblleads_sources`
+-- Indexes for table `tblleadsintegration`
 --
-ALTER TABLE `tblleads_sources`
+ALTER TABLE `tblleadsintegration`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `tblleadssources`
+--
+ALTER TABLE `tblleadssources`
   ADD PRIMARY KEY (`id`),
   ADD KEY `name` (`name`);
 
 --
--- Indexes for table `tblleads_status`
+-- Indexes for table `tblleadsstatus`
 --
-ALTER TABLE `tblleads_status`
+ALTER TABLE `tblleadsstatus`
   ADD PRIMARY KEY (`id`),
   ADD KEY `name` (`name`);
 
 --
--- Indexes for table `tbllead_activity_log`
+-- Indexes for table `tbllistemails`
 --
-ALTER TABLE `tbllead_activity_log`
-  ADD PRIMARY KEY (`id`);
+ALTER TABLE `tbllistemails`
+  ADD PRIMARY KEY (`emailid`);
 
 --
--- Indexes for table `tbllead_integration_emails`
+-- Indexes for table `tblmaillistscustomfields`
 --
-ALTER TABLE `tbllead_integration_emails`
-  ADD PRIMARY KEY (`id`);
+ALTER TABLE `tblmaillistscustomfields`
+  ADD PRIMARY KEY (`customfieldid`);
 
 --
--- Indexes for table `tblmail_queue`
+-- Indexes for table `tblmaillistscustomfieldvalues`
 --
-ALTER TABLE `tblmail_queue`
-  ADD PRIMARY KEY (`id`);
+ALTER TABLE `tblmaillistscustomfieldvalues`
+  ADD PRIMARY KEY (`customfieldvalueid`),
+  ADD KEY `listid` (`listid`),
+  ADD KEY `customfieldid` (`customfieldid`);
 
 --
 -- Indexes for table `tblmilestones`
 --
 ALTER TABLE `tblmilestones`
-  ADD PRIMARY KEY (`id`);
-
---
--- Indexes for table `tblmodules`
---
-ALTER TABLE `tblmodules`
-  ADD PRIMARY KEY (`id`);
-
---
--- Indexes for table `tblnewsfeed_comment_likes`
---
-ALTER TABLE `tblnewsfeed_comment_likes`
-  ADD PRIMARY KEY (`id`);
-
---
--- Indexes for table `tblnewsfeed_posts`
---
-ALTER TABLE `tblnewsfeed_posts`
-  ADD PRIMARY KEY (`postid`);
-
---
--- Indexes for table `tblnewsfeed_post_comments`
---
-ALTER TABLE `tblnewsfeed_post_comments`
-  ADD PRIMARY KEY (`id`);
-
---
--- Indexes for table `tblnewsfeed_post_likes`
---
-ALTER TABLE `tblnewsfeed_post_likes`
   ADD PRIMARY KEY (`id`);
 
 --
@@ -3174,17 +3370,53 @@ ALTER TABLE `tbloptions`
   ADD KEY `name` (`name`);
 
 --
--- Indexes for table `tblpayment_modes`
+-- Indexes for table `tblpermissions`
 --
-ALTER TABLE `tblpayment_modes`
+ALTER TABLE `tblpermissions`
+  ADD PRIMARY KEY (`permissionid`);
+
+--
+-- Indexes for table `tblpinnedprojects`
+--
+ALTER TABLE `tblpinnedprojects`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `project_id` (`project_id`);
+
+--
+-- Indexes for table `tblpostcomments`
+--
+ALTER TABLE `tblpostcomments`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indexes for table `tblpinned_projects`
+-- Indexes for table `tblpostlikes`
 --
-ALTER TABLE `tblpinned_projects`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `project_id` (`project_id`);
+ALTER TABLE `tblpostlikes`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `tblposts`
+--
+ALTER TABLE `tblposts`
+  ADD PRIMARY KEY (`postid`);
+
+--
+-- Indexes for table `tblpredefinedreplies`
+--
+ALTER TABLE `tblpredefinedreplies`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `tblpriorities`
+--
+ALTER TABLE `tblpriorities`
+  ADD PRIMARY KEY (`priorityid`);
+
+--
+-- Indexes for table `tblprojectactivity`
+--
+ALTER TABLE `tblprojectactivity`
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Indexes for table `tblprojectdiscussioncomments`
@@ -3199,62 +3431,50 @@ ALTER TABLE `tblprojectdiscussions`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indexes for table `tblprojects`
+-- Indexes for table `tblprojectfiles`
 --
-ALTER TABLE `tblprojects`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `clientid` (`clientid`),
-  ADD KEY `name` (`name`);
-
---
--- Indexes for table `tblproject_activity`
---
-ALTER TABLE `tblproject_activity`
+ALTER TABLE `tblprojectfiles`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indexes for table `tblproject_files`
+-- Indexes for table `tblprojectmembers`
 --
-ALTER TABLE `tblproject_files`
-  ADD PRIMARY KEY (`id`);
-
---
--- Indexes for table `tblproject_members`
---
-ALTER TABLE `tblproject_members`
+ALTER TABLE `tblprojectmembers`
   ADD PRIMARY KEY (`id`),
   ADD KEY `project_id` (`project_id`),
   ADD KEY `staff_id` (`staff_id`);
 
 --
--- Indexes for table `tblproject_notes`
+-- Indexes for table `tblprojectnotes`
 --
-ALTER TABLE `tblproject_notes`
+ALTER TABLE `tblprojectnotes`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indexes for table `tblproject_settings`
+-- Indexes for table `tblprojects`
 --
-ALTER TABLE `tblproject_settings`
+ALTER TABLE `tblprojects`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `clientid` (`clientid`),
+  ADD KEY `name` (`name`(333));
+
+--
+-- Indexes for table `tblprojectsettings`
+--
+ALTER TABLE `tblprojectsettings`
   ADD PRIMARY KEY (`id`),
   ADD KEY `project_id` (`project_id`);
+
+--
+-- Indexes for table `tblproposalcomments`
+--
+ALTER TABLE `tblproposalcomments`
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Indexes for table `tblproposals`
 --
 ALTER TABLE `tblproposals`
-  ADD PRIMARY KEY (`id`);
-
---
--- Indexes for table `tblproposal_comments`
---
-ALTER TABLE `tblproposal_comments`
-  ADD PRIMARY KEY (`id`);
-
---
--- Indexes for table `tblrelated_items`
---
-ALTER TABLE `tblrelated_items`
   ADD PRIMARY KEY (`id`);
 
 --
@@ -3267,15 +3487,27 @@ ALTER TABLE `tblreminders`
   ADD KEY `staff` (`staff`);
 
 --
+-- Indexes for table `tblrequestsgdpr`
+--
+ALTER TABLE `tblrequestsgdpr`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `tblrolepermissions`
+--
+ALTER TABLE `tblrolepermissions`
+  ADD PRIMARY KEY (`rolepermissionid`);
+
+--
 -- Indexes for table `tblroles`
 --
 ALTER TABLE `tblroles`
   ADD PRIMARY KEY (`roleid`);
 
 --
--- Indexes for table `tblsales_activity`
+-- Indexes for table `tblsalesactivity`
 --
-ALTER TABLE `tblsales_activity`
+ALTER TABLE `tblsalesactivity`
   ADD PRIMARY KEY (`id`);
 
 --
@@ -3292,12 +3524,6 @@ ALTER TABLE `tblsessions`
   ADD KEY `ci_sessions_timestamp` (`timestamp`);
 
 --
--- Indexes for table `tblspam_filters`
---
-ALTER TABLE `tblspam_filters`
-  ADD PRIMARY KEY (`id`);
-
---
 -- Indexes for table `tblstaff`
 --
 ALTER TABLE `tblstaff`
@@ -3306,10 +3532,50 @@ ALTER TABLE `tblstaff`
   ADD KEY `lastname` (`lastname`);
 
 --
--- Indexes for table `tblstaff_departments`
+-- Indexes for table `tblstaffdepartments`
 --
-ALTER TABLE `tblstaff_departments`
+ALTER TABLE `tblstaffdepartments`
   ADD PRIMARY KEY (`staffdepartmentid`);
+
+--
+-- Indexes for table `tblstaffpermissions`
+--
+ALTER TABLE `tblstaffpermissions`
+  ADD PRIMARY KEY (`staffpermid`),
+  ADD KEY `permissionid` (`permissionid`),
+  ADD KEY `staffid` (`staffid`);
+
+--
+-- Indexes for table `tblstafftaskassignees`
+--
+ALTER TABLE `tblstafftaskassignees`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `taskid` (`taskid`),
+  ADD KEY `staffid` (`staffid`);
+
+--
+-- Indexes for table `tblstafftaskcomments`
+--
+ALTER TABLE `tblstafftaskcomments`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `file_id` (`file_id`),
+  ADD KEY `taskid` (`taskid`);
+
+--
+-- Indexes for table `tblstafftasks`
+--
+ALTER TABLE `tblstafftasks`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `rel_id` (`rel_id`),
+  ADD KEY `rel_type` (`rel_type`),
+  ADD KEY `milestone` (`milestone`),
+  ADD KEY `kanban_order` (`kanban_order`);
+
+--
+-- Indexes for table `tblstafftasksfollowers`
+--
+ALTER TABLE `tblstafftasksfollowers`
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Indexes for table `tblsubscriptions`
@@ -3321,12 +3587,28 @@ ALTER TABLE `tblsubscriptions`
   ADD KEY `tax_id` (`tax_id`);
 
 --
--- Indexes for table `tbltaggables`
+-- Indexes for table `tblsurveyresultsets`
 --
-ALTER TABLE `tbltaggables`
-  ADD KEY `rel_id` (`rel_id`),
-  ADD KEY `rel_type` (`rel_type`),
-  ADD KEY `tag_id` (`tag_id`);
+ALTER TABLE `tblsurveyresultsets`
+  ADD PRIMARY KEY (`resultsetid`);
+
+--
+-- Indexes for table `tblsurveys`
+--
+ALTER TABLE `tblsurveys`
+  ADD PRIMARY KEY (`surveyid`);
+
+--
+-- Indexes for table `tblsurveysemailsendcron`
+--
+ALTER TABLE `tblsurveysemailsendcron`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `tblsurveysendlog`
+--
+ALTER TABLE `tblsurveysendlog`
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Indexes for table `tbltags`
@@ -3336,14 +3618,19 @@ ALTER TABLE `tbltags`
   ADD KEY `name` (`name`);
 
 --
--- Indexes for table `tbltasks`
+-- Indexes for table `tbltags_in`
 --
-ALTER TABLE `tbltasks`
-  ADD PRIMARY KEY (`id`),
+ALTER TABLE `tbltags_in`
   ADD KEY `rel_id` (`rel_id`),
   ADD KEY `rel_type` (`rel_type`),
-  ADD KEY `milestone` (`milestone`),
-  ADD KEY `kanban_order` (`kanban_order`);
+  ADD KEY `tag_id` (`tag_id`);
+
+--
+-- Indexes for table `tbltaskchecklists`
+--
+ALTER TABLE `tbltaskchecklists`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `taskid` (`taskid`);
 
 --
 -- Indexes for table `tbltaskstimers`
@@ -3354,44 +3641,27 @@ ALTER TABLE `tbltaskstimers`
   ADD KEY `staff_id` (`staff_id`);
 
 --
--- Indexes for table `tbltasks_checklist_templates`
---
-ALTER TABLE `tbltasks_checklist_templates`
-  ADD PRIMARY KEY (`id`);
-
---
--- Indexes for table `tbltask_assigned`
---
-ALTER TABLE `tbltask_assigned`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `taskid` (`taskid`),
-  ADD KEY `staffid` (`staffid`);
-
---
--- Indexes for table `tbltask_checklist_items`
---
-ALTER TABLE `tbltask_checklist_items`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `taskid` (`taskid`);
-
---
--- Indexes for table `tbltask_comments`
---
-ALTER TABLE `tbltask_comments`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `file_id` (`file_id`),
-  ADD KEY `taskid` (`taskid`);
-
---
--- Indexes for table `tbltask_followers`
---
-ALTER TABLE `tbltask_followers`
-  ADD PRIMARY KEY (`id`);
-
---
 -- Indexes for table `tbltaxes`
 --
 ALTER TABLE `tbltaxes`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `tblticketattachments`
+--
+ALTER TABLE `tblticketattachments`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `tblticketpipelog`
+--
+ALTER TABLE `tblticketpipelog`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `tblticketreplies`
+--
+ALTER TABLE `tblticketreplies`
   ADD PRIMARY KEY (`id`);
 
 --
@@ -3408,57 +3678,27 @@ ALTER TABLE `tbltickets`
   ADD KEY `contactid` (`contactid`);
 
 --
--- Indexes for table `tbltickets_pipe_log`
+-- Indexes for table `tblticketsspamcontrol`
 --
-ALTER TABLE `tbltickets_pipe_log`
+ALTER TABLE `tblticketsspamcontrol`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indexes for table `tbltickets_predefined_replies`
+-- Indexes for table `tblticketstatus`
 --
-ALTER TABLE `tbltickets_predefined_replies`
-  ADD PRIMARY KEY (`id`);
-
---
--- Indexes for table `tbltickets_priorities`
---
-ALTER TABLE `tbltickets_priorities`
-  ADD PRIMARY KEY (`priorityid`);
-
---
--- Indexes for table `tbltickets_status`
---
-ALTER TABLE `tbltickets_status`
+ALTER TABLE `tblticketstatus`
   ADD PRIMARY KEY (`ticketstatusid`);
 
 --
--- Indexes for table `tblticket_attachments`
+-- Indexes for table `tbltodoitems`
 --
-ALTER TABLE `tblticket_attachments`
-  ADD PRIMARY KEY (`id`);
-
---
--- Indexes for table `tblticket_replies`
---
-ALTER TABLE `tblticket_replies`
-  ADD PRIMARY KEY (`id`);
-
---
--- Indexes for table `tbltodos`
---
-ALTER TABLE `tbltodos`
+ALTER TABLE `tbltodoitems`
   ADD PRIMARY KEY (`todoid`);
 
 --
--- Indexes for table `tbltracked_mails`
+-- Indexes for table `tblusermeta`
 --
-ALTER TABLE `tbltracked_mails`
-  ADD PRIMARY KEY (`id`);
-
---
--- Indexes for table `tbluser_meta`
---
-ALTER TABLE `tbluser_meta`
+ALTER TABLE `tblusermeta`
   ADD PRIMARY KEY (`umeta_id`);
 
 --
@@ -3468,15 +3708,15 @@ ALTER TABLE `tblvault`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indexes for table `tblviews_tracking`
+-- Indexes for table `tblviewstracking`
 --
-ALTER TABLE `tblviews_tracking`
+ALTER TABLE `tblviewstracking`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indexes for table `tblweb_to_lead`
+-- Indexes for table `tblwebtolead`
 --
-ALTER TABLE `tblweb_to_lead`
+ALTER TABLE `tblwebtolead`
   ADD PRIMARY KEY (`id`);
 
 --
@@ -3484,9 +3724,9 @@ ALTER TABLE `tblweb_to_lead`
 --
 
 --
--- AUTO_INCREMENT for table `tblactivity_log`
+-- AUTO_INCREMENT for table `tblactivitylog`
 --
-ALTER TABLE `tblactivity_log`
+ALTER TABLE `tblactivitylog`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
@@ -3496,10 +3736,28 @@ ALTER TABLE `tblannouncements`
   MODIFY `announcementid` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `tblcheckliststemplates`
+--
+ALTER TABLE `tblcheckliststemplates`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `tblclients`
 --
 ALTER TABLE `tblclients`
   MODIFY `userid` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `tblcommentlikes`
+--
+ALTER TABLE `tblcommentlikes`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `tblconsentpurposes`
+--
+ALTER TABLE `tblconsentpurposes`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `tblconsents`
@@ -3508,9 +3766,9 @@ ALTER TABLE `tblconsents`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `tblconsent_purposes`
+-- AUTO_INCREMENT for table `tblcontactpermissions`
 --
-ALTER TABLE `tblconsent_purposes`
+ALTER TABLE `tblcontactpermissions`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
@@ -3520,9 +3778,15 @@ ALTER TABLE `tblcontacts`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `tblcontact_permissions`
+-- AUTO_INCREMENT for table `tblcontractcomments`
 --
-ALTER TABLE `tblcontact_permissions`
+ALTER TABLE `tblcontractcomments`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `tblcontractrenewals`
+--
+ALTER TABLE `tblcontractrenewals`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
@@ -3532,21 +3796,9 @@ ALTER TABLE `tblcontracts`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `tblcontracts_types`
+-- AUTO_INCREMENT for table `tblcontracttypes`
 --
-ALTER TABLE `tblcontracts_types`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `tblcontract_comments`
---
-ALTER TABLE `tblcontract_comments`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `tblcontract_renewals`
---
-ALTER TABLE `tblcontract_renewals`
+ALTER TABLE `tblcontracttypes`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
@@ -3562,12 +3814,6 @@ ALTER TABLE `tblcreditnotes`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `tblcreditnote_refunds`
---
-ALTER TABLE `tblcreditnote_refunds`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
 -- AUTO_INCREMENT for table `tblcredits`
 --
 ALTER TABLE `tblcredits`
@@ -3580,15 +3826,15 @@ ALTER TABLE `tblcurrencies`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
--- AUTO_INCREMENT for table `tblcustomers_groups`
+-- AUTO_INCREMENT for table `tblcustomergroups_in`
 --
-ALTER TABLE `tblcustomers_groups`
+ALTER TABLE `tblcustomergroups_in`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `tblcustomer_groups`
+-- AUTO_INCREMENT for table `tblcustomersgroups`
 --
-ALTER TABLE `tblcustomer_groups`
+ALTER TABLE `tblcustomersgroups`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
@@ -3610,16 +3856,34 @@ ALTER TABLE `tbldepartments`
   MODIFY `departmentid` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `tbldismissed_announcements`
+-- AUTO_INCREMENT for table `tbldismissedannouncements`
 --
-ALTER TABLE `tbldismissed_announcements`
+ALTER TABLE `tbldismissedannouncements`
   MODIFY `dismissedannouncementid` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `tblemaillists`
+--
+ALTER TABLE `tblemaillists`
+  MODIFY `listid` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `tblemailqueue`
+--
+ALTER TABLE `tblemailqueue`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `tblemailstracking`
+--
+ALTER TABLE `tblemailstracking`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `tblemailtemplates`
 --
 ALTER TABLE `tblemailtemplates`
-  MODIFY `emailtemplateid` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=75;
+  MODIFY `emailtemplateid` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=74;
 
 --
 -- AUTO_INCREMENT for table `tblestimates`
@@ -3640,9 +3904,9 @@ ALTER TABLE `tblexpenses`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `tblexpenses_categories`
+-- AUTO_INCREMENT for table `tblexpensescategories`
 --
-ALTER TABLE `tblexpenses_categories`
+ALTER TABLE `tblexpensescategories`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
@@ -3652,33 +3916,33 @@ ALTER TABLE `tblfiles`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `tblform_questions`
+-- AUTO_INCREMENT for table `tblformquestionboxes`
 --
-ALTER TABLE `tblform_questions`
-  MODIFY `questionid` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `tblform_question_box`
---
-ALTER TABLE `tblform_question_box`
+ALTER TABLE `tblformquestionboxes`
   MODIFY `boxid` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `tblform_question_box_description`
+-- AUTO_INCREMENT for table `tblformquestionboxesdescription`
 --
-ALTER TABLE `tblform_question_box_description`
+ALTER TABLE `tblformquestionboxesdescription`
   MODIFY `questionboxdescriptionid` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `tblform_results`
+-- AUTO_INCREMENT for table `tblformquestions`
 --
-ALTER TABLE `tblform_results`
+ALTER TABLE `tblformquestions`
+  MODIFY `questionid` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `tblformresults`
+--
+ALTER TABLE `tblformresults`
   MODIFY `resultid` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `tblgdpr_requests`
+-- AUTO_INCREMENT for table `tblgoals`
 --
-ALTER TABLE `tblgdpr_requests`
+ALTER TABLE `tblgoals`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
@@ -3688,15 +3952,15 @@ ALTER TABLE `tblinvoicepaymentrecords`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `tblinvoicepaymentsmodes`
+--
+ALTER TABLE `tblinvoicepaymentsmodes`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
 -- AUTO_INCREMENT for table `tblinvoices`
 --
 ALTER TABLE `tblinvoices`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `tblitemable`
---
-ALTER TABLE `tblitemable`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
@@ -3706,34 +3970,52 @@ ALTER TABLE `tblitems`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `tblitemsrelated`
+--
+ALTER TABLE `tblitemsrelated`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `tblitemstax`
+--
+ALTER TABLE `tblitemstax`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `tblitems_groups`
 --
 ALTER TABLE `tblitems_groups`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `tblitem_tax`
+-- AUTO_INCREMENT for table `tblitems_in`
 --
-ALTER TABLE `tblitem_tax`
+ALTER TABLE `tblitems_in`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `tblknowedge_base_article_feedback`
+-- AUTO_INCREMENT for table `tblknowledgebase`
 --
-ALTER TABLE `tblknowedge_base_article_feedback`
-  MODIFY `articleanswerid` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `tblknowledge_base`
---
-ALTER TABLE `tblknowledge_base`
+ALTER TABLE `tblknowledgebase`
   MODIFY `articleid` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `tblknowledge_base_groups`
+-- AUTO_INCREMENT for table `tblknowledgebasearticleanswers`
 --
-ALTER TABLE `tblknowledge_base_groups`
+ALTER TABLE `tblknowledgebasearticleanswers`
+  MODIFY `articleanswerid` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `tblknowledgebasegroups`
+--
+ALTER TABLE `tblknowledgebasegroups`
   MODIFY `groupid` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `tblleadactivitylog`
+--
+ALTER TABLE `tblleadactivitylog`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `tblleads`
@@ -3742,75 +4024,51 @@ ALTER TABLE `tblleads`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `tblleads_email_integration`
+-- AUTO_INCREMENT for table `tblleadsemailintegrationemails`
 --
-ALTER TABLE `tblleads_email_integration`
+ALTER TABLE `tblleadsemailintegrationemails`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `tblleadsintegration`
+--
+ALTER TABLE `tblleadsintegration`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'the ID always must be 1', AUTO_INCREMENT=2;
 
 --
--- AUTO_INCREMENT for table `tblleads_sources`
+-- AUTO_INCREMENT for table `tblleadssources`
 --
-ALTER TABLE `tblleads_sources`
+ALTER TABLE `tblleadssources`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
--- AUTO_INCREMENT for table `tblleads_status`
+-- AUTO_INCREMENT for table `tblleadsstatus`
 --
-ALTER TABLE `tblleads_status`
+ALTER TABLE `tblleadsstatus`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
--- AUTO_INCREMENT for table `tbllead_activity_log`
+-- AUTO_INCREMENT for table `tbllistemails`
 --
-ALTER TABLE `tbllead_activity_log`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+ALTER TABLE `tbllistemails`
+  MODIFY `emailid` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `tbllead_integration_emails`
+-- AUTO_INCREMENT for table `tblmaillistscustomfields`
 --
-ALTER TABLE `tbllead_integration_emails`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+ALTER TABLE `tblmaillistscustomfields`
+  MODIFY `customfieldid` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `tblmail_queue`
+-- AUTO_INCREMENT for table `tblmaillistscustomfieldvalues`
 --
-ALTER TABLE `tblmail_queue`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+ALTER TABLE `tblmaillistscustomfieldvalues`
+  MODIFY `customfieldvalueid` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `tblmilestones`
 --
 ALTER TABLE `tblmilestones`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `tblmodules`
---
-ALTER TABLE `tblmodules`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `tblnewsfeed_comment_likes`
---
-ALTER TABLE `tblnewsfeed_comment_likes`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `tblnewsfeed_posts`
---
-ALTER TABLE `tblnewsfeed_posts`
-  MODIFY `postid` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `tblnewsfeed_post_comments`
---
-ALTER TABLE `tblnewsfeed_post_comments`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `tblnewsfeed_post_likes`
---
-ALTER TABLE `tblnewsfeed_post_likes`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
@@ -3829,18 +4087,54 @@ ALTER TABLE `tblnotifications`
 -- AUTO_INCREMENT for table `tbloptions`
 --
 ALTER TABLE `tbloptions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=290;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=300;
 
 --
--- AUTO_INCREMENT for table `tblpayment_modes`
+-- AUTO_INCREMENT for table `tblpermissions`
 --
-ALTER TABLE `tblpayment_modes`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+ALTER TABLE `tblpermissions`
+  MODIFY `permissionid` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
 
 --
--- AUTO_INCREMENT for table `tblpinned_projects`
+-- AUTO_INCREMENT for table `tblpinnedprojects`
 --
-ALTER TABLE `tblpinned_projects`
+ALTER TABLE `tblpinnedprojects`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `tblpostcomments`
+--
+ALTER TABLE `tblpostcomments`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `tblpostlikes`
+--
+ALTER TABLE `tblpostlikes`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `tblposts`
+--
+ALTER TABLE `tblposts`
+  MODIFY `postid` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `tblpredefinedreplies`
+--
+ALTER TABLE `tblpredefinedreplies`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `tblpriorities`
+--
+ALTER TABLE `tblpriorities`
+  MODIFY `priorityid` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- AUTO_INCREMENT for table `tblprojectactivity`
+--
+ALTER TABLE `tblprojectactivity`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
@@ -3856,39 +4150,39 @@ ALTER TABLE `tblprojectdiscussions`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `tblprojectfiles`
+--
+ALTER TABLE `tblprojectfiles`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `tblprojectmembers`
+--
+ALTER TABLE `tblprojectmembers`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `tblprojectnotes`
+--
+ALTER TABLE `tblprojectnotes`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `tblprojects`
 --
 ALTER TABLE `tblprojects`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `tblproject_activity`
+-- AUTO_INCREMENT for table `tblprojectsettings`
 --
-ALTER TABLE `tblproject_activity`
+ALTER TABLE `tblprojectsettings`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `tblproject_files`
+-- AUTO_INCREMENT for table `tblproposalcomments`
 --
-ALTER TABLE `tblproject_files`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `tblproject_members`
---
-ALTER TABLE `tblproject_members`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `tblproject_notes`
---
-ALTER TABLE `tblproject_notes`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `tblproject_settings`
---
-ALTER TABLE `tblproject_settings`
+ALTER TABLE `tblproposalcomments`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
@@ -3898,22 +4192,22 @@ ALTER TABLE `tblproposals`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `tblproposal_comments`
---
-ALTER TABLE `tblproposal_comments`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `tblrelated_items`
---
-ALTER TABLE `tblrelated_items`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
 -- AUTO_INCREMENT for table `tblreminders`
 --
 ALTER TABLE `tblreminders`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `tblrequestsgdpr`
+--
+ALTER TABLE `tblrequestsgdpr`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `tblrolepermissions`
+--
+ALTER TABLE `tblrolepermissions`
+  MODIFY `rolepermissionid` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `tblroles`
@@ -3922,9 +4216,9 @@ ALTER TABLE `tblroles`
   MODIFY `roleid` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
--- AUTO_INCREMENT for table `tblsales_activity`
+-- AUTO_INCREMENT for table `tblsalesactivity`
 --
-ALTER TABLE `tblsales_activity`
+ALTER TABLE `tblsalesactivity`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
@@ -3934,27 +4228,75 @@ ALTER TABLE `tblservices`
   MODIFY `serviceid` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `tblspam_filters`
---
-ALTER TABLE `tblspam_filters`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
 -- AUTO_INCREMENT for table `tblstaff`
 --
 ALTER TABLE `tblstaff`
   MODIFY `staffid` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `tblstaff_departments`
+-- AUTO_INCREMENT for table `tblstaffdepartments`
 --
-ALTER TABLE `tblstaff_departments`
+ALTER TABLE `tblstaffdepartments`
   MODIFY `staffdepartmentid` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `tblstaffpermissions`
+--
+ALTER TABLE `tblstaffpermissions`
+  MODIFY `staffpermid` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `tblstafftaskassignees`
+--
+ALTER TABLE `tblstafftaskassignees`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `tblstafftaskcomments`
+--
+ALTER TABLE `tblstafftaskcomments`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `tblstafftasks`
+--
+ALTER TABLE `tblstafftasks`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `tblstafftasksfollowers`
+--
+ALTER TABLE `tblstafftasksfollowers`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `tblsubscriptions`
 --
 ALTER TABLE `tblsubscriptions`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `tblsurveyresultsets`
+--
+ALTER TABLE `tblsurveyresultsets`
+  MODIFY `resultsetid` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `tblsurveys`
+--
+ALTER TABLE `tblsurveys`
+  MODIFY `surveyid` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `tblsurveysemailsendcron`
+--
+ALTER TABLE `tblsurveysemailsendcron`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `tblsurveysendlog`
+--
+ALTER TABLE `tblsurveysendlog`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
@@ -3964,9 +4306,9 @@ ALTER TABLE `tbltags`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `tbltasks`
+-- AUTO_INCREMENT for table `tbltaskchecklists`
 --
-ALTER TABLE `tbltasks`
+ALTER TABLE `tbltaskchecklists`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
@@ -3976,39 +4318,27 @@ ALTER TABLE `tbltaskstimers`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `tbltasks_checklist_templates`
---
-ALTER TABLE `tbltasks_checklist_templates`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `tbltask_assigned`
---
-ALTER TABLE `tbltask_assigned`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `tbltask_checklist_items`
---
-ALTER TABLE `tbltask_checklist_items`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `tbltask_comments`
---
-ALTER TABLE `tbltask_comments`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `tbltask_followers`
---
-ALTER TABLE `tbltask_followers`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
 -- AUTO_INCREMENT for table `tbltaxes`
 --
 ALTER TABLE `tbltaxes`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `tblticketattachments`
+--
+ALTER TABLE `tblticketattachments`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `tblticketpipelog`
+--
+ALTER TABLE `tblticketpipelog`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `tblticketreplies`
+--
+ALTER TABLE `tblticketreplies`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
@@ -4018,57 +4348,27 @@ ALTER TABLE `tbltickets`
   MODIFY `ticketid` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `tbltickets_pipe_log`
+-- AUTO_INCREMENT for table `tblticketsspamcontrol`
 --
-ALTER TABLE `tbltickets_pipe_log`
+ALTER TABLE `tblticketsspamcontrol`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `tbltickets_predefined_replies`
+-- AUTO_INCREMENT for table `tblticketstatus`
 --
-ALTER TABLE `tbltickets_predefined_replies`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `tbltickets_priorities`
---
-ALTER TABLE `tbltickets_priorities`
-  MODIFY `priorityid` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
-
---
--- AUTO_INCREMENT for table `tbltickets_status`
---
-ALTER TABLE `tbltickets_status`
+ALTER TABLE `tblticketstatus`
   MODIFY `ticketstatusid` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
--- AUTO_INCREMENT for table `tblticket_attachments`
+-- AUTO_INCREMENT for table `tbltodoitems`
 --
-ALTER TABLE `tblticket_attachments`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `tblticket_replies`
---
-ALTER TABLE `tblticket_replies`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `tbltodos`
---
-ALTER TABLE `tbltodos`
+ALTER TABLE `tbltodoitems`
   MODIFY `todoid` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `tbltracked_mails`
+-- AUTO_INCREMENT for table `tblusermeta`
 --
-ALTER TABLE `tbltracked_mails`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `tbluser_meta`
---
-ALTER TABLE `tbluser_meta`
+ALTER TABLE `tblusermeta`
   MODIFY `umeta_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
@@ -4078,15 +4378,15 @@ ALTER TABLE `tblvault`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `tblviews_tracking`
+-- AUTO_INCREMENT for table `tblviewstracking`
 --
-ALTER TABLE `tblviews_tracking`
+ALTER TABLE `tblviewstracking`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `tblweb_to_lead`
+-- AUTO_INCREMENT for table `tblwebtolead`
 --
-ALTER TABLE `tblweb_to_lead`
+ALTER TABLE `tblwebtolead`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 COMMIT;
 

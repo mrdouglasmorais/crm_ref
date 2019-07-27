@@ -30,7 +30,7 @@ function vault_re_enter_password(id, e) {
     var vaultEntry = $('#vaultEntry-' + id);
     var $confirmPasswordVaultModal = $('#vaultConfirmPassword');
 
-    appValidateForm($confirmPasswordVaultModal.find('form'), {
+    _validate_form($confirmPasswordVaultModal.find('form'), {
         user_password: 'required'
     }, vault_encrypt_password);
 

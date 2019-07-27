@@ -10,6 +10,7 @@
 namespace Twilio\Rest\Authy\V1\Service\Entity;
 
 use Twilio\ListResource;
+use Twilio\Options;
 use Twilio\Values;
 use Twilio\Version;
 
@@ -38,16 +39,20 @@ class FactorList extends ListResource {
      * Create a new FactorInstance
      * 
      * @param string $binding A unique binding for this Factor
-     * @param string $friendlyName The friendly name of this Factor
      * @param string $factorType The Type of this Factor
+     * @param string $friendlyName The friendly name of this Factor
+     * @param array|Options $options Optional Arguments
      * @return FactorInstance Newly created FactorInstance
      * @throws TwilioException When an HTTP error occurs.
      */
-    public function create($binding, $friendlyName, $factorType) {
+    public function create($binding, $factorType, $friendlyName, $options = array()) {
+        $options = new Values($options);
+
         $data = Values::of(array(
             'Binding' => $binding,
-            'FriendlyName' => $friendlyName,
             'FactorType' => $factorType,
+            'FriendlyName' => $friendlyName,
+            'Config' => $options['config'],
         ));
 
         $payload = $this->version->create(

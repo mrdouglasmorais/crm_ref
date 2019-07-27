@@ -2,7 +2,7 @@
 
 defined('BASEPATH') or exit('No direct script access allowed');
 
-class Utilities_model extends App_Model
+class Utilities_model extends CRM_Model
 {
     public function __construct()
     {
@@ -31,7 +31,7 @@ class Utilities_model extends App_Model
         if (isset($data['eventid'])) {
             unset($data['userid']);
             $this->db->where('eventid', $data['eventid']);
-            $event = $this->db->get(db_prefix() . 'events')->row();
+            $event = $this->db->get('tblevents')->row();
             if (!$event) {
                 return false;
             }
@@ -41,20 +41,15 @@ class Utilities_model extends App_Model
                 }
             }
 
-            $data = hooks()->apply_filters('event_update_data', $data, $data['eventid']);
-
             $this->db->where('eventid', $data['eventid']);
-            $this->db->update(db_prefix() . 'events', $data);
+            $this->db->update('tblevents', $data);
             if ($this->db->affected_rows() > 0) {
                 return true;
             }
 
             return false;
         }
-
-        $data = hooks()->apply_filters('event_create_data', $data);
-
-        $this->db->insert(db_prefix() . 'events', $data);
+        $this->db->insert('tblevents', $data);
         $insert_id = $this->db->insert_id();
 
         if ($insert_id) {
@@ -73,7 +68,7 @@ class Utilities_model extends App_Model
     {
         $this->db->where('eventid', $id);
 
-        return $this->db->get(db_prefix() . 'events')->row();
+        return $this->db->get('tblevents')->row();
     }
 
     /**
@@ -91,14 +86,14 @@ class Utilities_model extends App_Model
             $this->db->or_where('public', 1);
         }
 
-        return $this->db->get(db_prefix() . 'events')->result_array();
+        return $this->db->get('tblevents')->result_array();
     }
 
     public function get_event($id)
     {
         $this->db->where('eventid', $id);
 
-        return $this->db->get(db_prefix() . 'events')->row();
+        return $this->db->get('tblevents')->row();
     }
 
     public function get_calendar_data($start, $end, $client_id = '', $contact_id = '', $filters = false)
@@ -126,15 +121,18 @@ class Utilities_model extends App_Model
             $has_contact_permission_projects  = has_contact_permission('projects', $contact_id);
         }
 
-        $hook = [
+        $hook_data = [
+            'data'        => $data,
             'client_data' => $client_data,
         ];
+
         if ($client_data == true) {
-            $hook['client_id']  = $client_id;
-            $hook['contact_id'] = $contact_id;
+            $hook_data['client_id']  = $client_id;
+            $hook_data['contact_id'] = $contact_id;
         }
 
-        $data = hooks()->apply_filters('before_fetch_events', $data, $hook);
+        $hook_data = do_action('before_fetch_events', $hook_data);
+        $data      = $hook_data['data'];
 
         $ff = false;
         if ($filters) {
@@ -143,12 +141,9 @@ class Utilities_model extends App_Model
         }
 
         if (get_option('show_invoices_on_calendar') == 1 && !$ff || $ff && array_key_exists('invoices', $filters)) {
-
-            $noPermissionsQuery = get_invoices_where_sql_for_staff(get_staff_user_id());
-
             $this->db->select('duedate as date,number,id,clientid,hash,' . get_sql_select_client_company());
-            $this->db->from(db_prefix() . 'invoices');
-            $this->db->join(db_prefix() . 'clients', db_prefix() . 'clients.userid=' . db_prefix() . 'invoices.clientid', 'left');
+            $this->db->from('tblinvoices');
+            $this->db->join('tblclients', 'tblclients.userid=tblinvoices.clientid', 'left');
             $this->db->where_not_in('status', [
                 2,
                 5,
@@ -164,7 +159,7 @@ class Utilities_model extends App_Model
                 }
             } else {
                 if (!$has_permission_invoices) {
-                    $this->db->where($noPermissionsQuery);
+                    $this->db->where(get_invoices_where_sql_for_staff(get_staff_user_id()));
                 }
             }
             $invoices = $this->db->get()->result_array();
@@ -198,11 +193,9 @@ class Utilities_model extends App_Model
             }
         }
         if (get_option('show_estimates_on_calendar') == 1 && !$ff || $ff && array_key_exists('estimates', $filters)) {
-            $noPermissionsQuery = get_estimates_where_sql_for_staff(get_staff_user_id());
-
             $this->db->select('number,id,clientid,hash,CASE WHEN expirydate IS NULL THEN date ELSE expirydate END as date,' . get_sql_select_client_company(), false);
-            $this->db->from(db_prefix() . 'estimates');
-            $this->db->join(db_prefix() . 'clients', db_prefix() . 'clients.userid=' . db_prefix() . 'estimates.clientid', 'left');
+            $this->db->from('tblestimates');
+            $this->db->join('tblclients', 'tblclients.userid=tblestimates.clientid', 'left');
             $this->db->where('status !=', 3, false);
             $this->db->where('status !=', 4, false);
             // $this->db->where('expirydate IS NOT NULL');
@@ -217,7 +210,7 @@ class Utilities_model extends App_Model
                 }
             } else {
                 if (!$has_permission_estimates) {
-                    $this->db->where($noPermissionsQuery);
+                    $this->db->where(get_estimates_where_sql_for_staff(get_staff_user_id()));
                 }
             }
 
@@ -246,11 +239,8 @@ class Utilities_model extends App_Model
             }
         }
         if (get_option('show_proposals_on_calendar') == 1 && !$ff || $ff && array_key_exists('proposals', $filters)) {
-
-            $noPermissionsQuery = get_proposals_sql_where_staff(get_staff_user_id());
-
             $this->db->select('subject,id,hash,CASE WHEN open_till IS NULL THEN date ELSE open_till END as date', false);
-            $this->db->from(db_prefix() . 'proposals');
+            $this->db->from('tblproposals');
             $this->db->where('status !=', 2, false);
             $this->db->where('status !=', 3, false);
 
@@ -266,7 +256,7 @@ class Utilities_model extends App_Model
                 }
             } else {
                 if (!$has_permission_proposals) {
-                    $this->db->where($noPermissionsQuery);
+                    $this->db->where(get_proposals_sql_where_staff(get_staff_user_id()));
                 }
             }
 
@@ -291,21 +281,21 @@ class Utilities_model extends App_Model
         if (get_option('show_tasks_on_calendar') == 1 && !$ff || $ff && array_key_exists('tasks', $filters)) {
             if ($client_data && !$has_contact_permission_projects) {
             } else {
-                $this->db->select(db_prefix() . 'tasks.name as title,id,' . tasks_rel_name_select_query() . ' as rel_name,rel_id,status,CASE WHEN duedate IS NULL THEN startdate ELSE duedate END as date', false);
-                $this->db->from(db_prefix() . 'tasks');
+                $this->db->select('name as title,id,' . tasks_rel_name_select_query() . ' as rel_name,rel_id,status,CASE WHEN duedate IS NULL THEN startdate ELSE duedate END as date', false);
+                $this->db->from('tblstafftasks');
                 $this->db->where('status !=', 5);
 
                 $this->db->where("CASE WHEN duedate IS NULL THEN (startdate BETWEEN '$start' AND '$end') ELSE (duedate BETWEEN '$start' AND '$end') END", null, false);
 
                 if ($client_data) {
                     $this->db->where('rel_type', 'project');
-                    $this->db->where('rel_id IN (SELECT id FROM ' . db_prefix() . 'projects WHERE clientid=' . $client_id . ')');
-                    $this->db->where('rel_id IN (SELECT project_id FROM ' . db_prefix() . 'project_settings WHERE name="view_tasks" AND value=1)');
+                    $this->db->where('rel_id IN (SELECT id FROM tblprojects WHERE clientid=' . $client_id . ')');
+                    $this->db->where('rel_id IN (SELECT project_id FROM tblprojectsettings WHERE name="view_tasks" AND value=1)');
                     $this->db->where('visible_to_client', 1);
                 }
 
                 if ((!$has_permission_tasks_view || get_option('calendar_only_assigned_tasks') == '1') && !$client_data) {
-                    $this->db->where('(id IN (SELECT taskid FROM ' . db_prefix() . 'task_assigned WHERE staffid = ' . get_staff_user_id() . '))');
+                    $this->db->where('(id IN (SELECT taskid FROM tblstafftaskassignees WHERE staffid = ' . get_staff_user_id() . '))');
                 }
 
                 $tasks = $this->db->get()->result_array();
@@ -342,10 +332,10 @@ class Utilities_model extends App_Model
             foreach ($available_reminders as $key) {
                 if (get_option('show_' . $key . '_reminders_on_calendar') == 1 && !$ff || $ff && array_key_exists($key . '_reminders', $filters)) {
                     $this->db->select('date,description,firstname,lastname,creator,staff,rel_id')
-                    ->from(db_prefix() . 'reminders')
+                    ->from('tblreminders')
                     ->where('(date BETWEEN "' . $start . '" AND "' . $end . '")')
                     ->where('rel_type', $key)
-                    ->join(db_prefix() . 'staff', db_prefix() . 'staff.staffid = ' . db_prefix() . 'reminders.staff');
+                    ->join('tblstaff', 'tblstaff.staffid = tblreminders.staff');
                     if ($hideNotifiedReminders == '1') {
                         $this->db->where('isnotified', 0);
                     }
@@ -397,8 +387,8 @@ class Utilities_model extends App_Model
 
         if (get_option('show_contracts_on_calendar') == 1 && !$ff || $ff && array_key_exists('contracts', $filters)) {
             $this->db->select('hash, subject as title, dateend, datestart, id, client, content, ' . get_sql_select_client_company());
-            $this->db->from(db_prefix() . 'contracts');
-            $this->db->join(db_prefix() . 'clients', db_prefix() . 'clients.userid=' . db_prefix() . 'contracts.client');
+            $this->db->from('tblcontracts');
+            $this->db->join('tblclients', 'tblclients.userid=tblcontracts.client');
             $this->db->where('trash', 0);
 
             if ($client_data) {
@@ -406,7 +396,7 @@ class Utilities_model extends App_Model
                 $this->db->where('not_visible_to_client', 0);
             } else {
                 if (!$has_permission_contracts) {
-                    $this->db->where(db_prefix() . 'contracts.addedfrom', get_staff_user_id());
+                    $this->db->where('tblcontracts.addedfrom', get_staff_user_id());
                 }
             }
 
@@ -448,17 +438,17 @@ class Utilities_model extends App_Model
             $this->load->model('projects_model');
             $this->db->select('name as title,id,clientid, CASE WHEN deadline IS NULL THEN start_date ELSE deadline END as date,' . get_sql_select_client_company(), false);
 
-            $this->db->from(db_prefix() . 'projects');
+            $this->db->from('tblprojects');
 
             // Exclude cancelled and finished
             $this->db->where('status !=', 4);
             $this->db->where('status !=', 5);
             $this->db->where("CASE WHEN deadline IS NULL THEN (start_date BETWEEN '$start' AND '$end') ELSE (deadline BETWEEN '$start' AND '$end') END", null, false);
 
-            $this->db->join(db_prefix() . 'clients', db_prefix() . 'clients.userid=' . db_prefix() . 'projects.clientid');
+            $this->db->join('tblclients', 'tblclients.userid=tblprojects.clientid');
 
             if (!$client_data && !$has_permission_projects_view) {
-                $this->db->where('id IN (SELECT project_id FROM ' . db_prefix() . 'project_members WHERE staff_id=' . get_staff_user_id() . ')');
+                $this->db->where('id IN (SELECT project_id FROM tblprojectmembers WHERE staff_id=' . get_staff_user_id() . ')');
             } elseif ($client_data) {
                 $this->db->where('clientid', $client_id);
             }
@@ -503,12 +493,7 @@ class Utilities_model extends App_Model
             }
         }
 
-        return hooks()->apply_filters('calendar_data', $data, [
-            'start'      => $start,
-            'end'        => $end,
-            'client_id'  => $client_id,
-            'contact_id' => $contact_id,
-        ]);
+        return $data;
     }
 
     /**
@@ -519,9 +504,9 @@ class Utilities_model extends App_Model
     public function delete_event($id)
     {
         $this->db->where('eventid', $id);
-        $this->db->delete(db_prefix() . 'events');
+        $this->db->delete('tblevents');
         if ($this->db->affected_rows() > 0) {
-            log_activity('Event Deleted [' . $id . ']');
+            logActivity('Event Deleted [' . $id . ']');
 
             return true;
         }

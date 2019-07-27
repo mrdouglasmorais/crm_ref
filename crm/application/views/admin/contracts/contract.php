@@ -9,8 +9,8 @@
                   <?php echo form_open($this->uri->uri_string(),array('id'=>'contract-form')); ?>
                   <div class="form-group">
                      <div class="checkbox checkbox-primary no-mtop checkbox-inline">
-                        <input type="checkbox" id="trash" name="trash"<?php if(isset($contract)){if($contract->trash == 1){echo ' checked';}}; ?>>
-                        <label for="trash"><i class="fa fa-question-circle" data-toggle="tooltip" data-placement="left" title="<?php echo _l('contract_trash_tooltip'); ?>" ></i> <?php echo _l('contract_trash'); ?></label>
+                        <input type="checkbox" id="trash" name="trash" data-toggle="tooltip" title="<?php echo _l('contract_trash_tooltip'); ?>" <?php if(isset($contract)){if($contract->trash == 1){echo 'checked';}}; ?>>
+                        <label for="trash"><?php echo _l('contract_trash'); ?></label>
                      </div>
                      <div class="checkbox checkbox-primary checkbox-inline">
                         <input type="checkbox" name="not_visible_to_client" id="not_visible_to_client" <?php if(isset($contract)){if($contract->not_visible_to_client == 1){echo 'checked';}}; ?>>
@@ -106,7 +106,7 @@
                               <a href="#tab_comments" aria-controls="tab_comments" role="tab" data-toggle="tab" onclick="get_contract_comments(); return false;">
                               <?php echo _l('contract_comments'); ?>
                               <?php
-                              $totalComments = total_rows(db_prefix().'contract_comments','contract_id='.$contract->id)
+                              $totalComments = total_rows('tblcontractcomments','contract_id='.$contract->id)
                               ?>
                               <span class="badge comments-indicator<?php echo $totalComments == 0 ? ' hide' : ''; ?>"><?php echo $totalComments; ?></span>
                               </a>
@@ -191,7 +191,6 @@
                                        <?php echo _l('view_contract'); ?>
                                        </a>
                                     </li>
-                                    <?php hooks()->do_action('after_contract_view_as_client_link', $contract); ?>
                                     <?php if(has_permission('contracts','','create')){ ?>
                                     <li>
                                        <a href="<?php echo admin_url('contracts/copy/'.$contract->id); ?>">
@@ -223,11 +222,12 @@
                                  <ul class="list-group">
                                     <?php
                                        foreach($contract_merge_fields as $field){
-                                           foreach($field as $f){
-                                              echo '<li class="list-group-item"><b>'.$f['name'].'</b>  <a href="#" class="pull-right" onclick="insert_merge_field(this); return false">'.$f['key'].'</a></li>';
-                                          }
+                                        foreach($field as $f){
+                                         if(strpos($f['key'],'statement_') === FALSE && strpos($f['key'],'password') === FALSE && strpos($f['key'],'email_signature') === FALSE){
+                                           echo '<li class="list-group-item"><b>'.$f['name'].'</b>  <a href="#" class="pull-right" onclick="insert_merge_field(this); return false">'.$f['key'].'</a></li>';
+                                         }
                                        }
-                                    ?>
+                                       } ?>
                                  </ul>
                               </div>
                               <?php } ?>
@@ -237,7 +237,7 @@
                         <div class="editable tc-content" style="border:1px solid #d2d2d2;min-height:70px; border-radius:4px;">
                            <?php
                               if(empty($contract->content)){
-                               echo hooks()->apply_filters('new_contract_default_content', '<span class="text-danger text-uppercase mtop15 editor-add-content-notice"> ' . _l('click_to_add_content') . '</span>');
+                               echo do_action('new_contract_default_content','<span class="text-danger text-uppercase mtop15 editor-add-content-notice"> ' . _l('click_to_add_content') . '</span>');
                               } else {
                                echo $contract->content;
                               }
@@ -368,10 +368,10 @@
                                  <?php if($renewal['new_value'] > 0){
                                     $contract_renewal_value_tooltip = '';
                                     if($renewal['old_value'] > 0){
-                                     $contract_renewal_value_tooltip = ' data-toggle="tooltip" data-title="'._l('contract_renewal_old_value', app_format_money($renewal['old_value'], $base_currency)).'"';
+                                     $contract_renewal_value_tooltip = ' data-toggle="tooltip" data-title="'._l('contract_renewal_old_value',_format_number($renewal['old_value'])).'"';
                                     } ?>
                                  <span class="text-success bold"<?php echo $contract_renewal_value_tooltip; ?>>
-                                 <?php echo _l('contract_renewal_new_value', app_format_money($renewal['new_value'], $base_currency)); ?>
+                                 <?php echo _l('contract_renewal_new_value',_format_number($renewal['new_value'])); ?>
                                  </span>
                                  <br />
                                  <?php } ?>
@@ -415,7 +415,7 @@
    $(function () {
 
     if ($('#contract-attachments-form').length > 0) {
-       new Dropzone("#contract-attachments-form",appCreateDropzoneOptions({
+       new Dropzone("#contract-attachments-form", $.extend({}, _dropzone_defaults(), {
           success: function (file) {
              if (this.getUploadingFiles().length === 0 && this.getQueuedFiles().length === 0) {
                 var location = window.location.href;
@@ -444,17 +444,16 @@
              });
           },
           linkType: "preview",
-          extensions: app.options.allowed_files.split(','),
+          extensions: app_allowed_files.split(','),
        }));
     }
 
-    appValidateForm($('#contract-form'), {
+    _validate_form($('#contract-form'), {
        client: 'required',
        datestart: 'required',
        subject: 'required'
     });
-
-    appValidateForm($('#renew-contract-form'), {
+    _validate_form($('#renew-contract-form'), {
        new_start_date: 'required'
     });
 
@@ -517,6 +516,7 @@
           editor.on('blur', function () {
              $.Shortcuts.start();
           });
+
 
           editor.on('focus', function () {
              $.Shortcuts.stop();

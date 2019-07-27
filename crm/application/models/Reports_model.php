@@ -2,7 +2,7 @@
 
 defined('BASEPATH') or exit('No direct script access allowed');
 
-class Reports_model extends App_Model
+class Reports_model extends CRM_Model
 {
     public function __construct()
     {
@@ -16,7 +16,7 @@ class Reports_model extends App_Model
      */
     public function leads_monthly_report($month)
     {
-        $result      = $this->db->query('select last_status_change from ' . db_prefix() . 'leads where MONTH(last_status_change) = ' . $month . ' AND status = 1 and lost = 0')->result_array();
+        $result      = $this->db->query('select last_status_change from tblleads where MONTH(last_status_change) = ' . $month . ' AND status = 1 and lost = 0')->result_array();
         $month_dates = [];
         $data        = [];
         for ($d = 1; $d <= 31; $d++) {
@@ -80,7 +80,7 @@ class Reports_model extends App_Model
                 }
             }
             array_push($chart['labels'], $category['name']);
-            array_push($chart['datasets'][0]['data'], total_rows(db_prefix() . 'expenses', $_where));
+            array_push($chart['datasets'][0]['data'], total_rows('tblexpenses', $_where));
         }
 
         return $chart;
@@ -99,7 +99,7 @@ class Reports_model extends App_Model
         }
         for ($m = 1; $m <= 12; $m++) {
             array_push($months_labels, _l(date('F', mktime(0, 0, 0, $m, 1))));
-            $this->db->select('id')->from(db_prefix() . 'expenses')->where('MONTH(date)', $m)->where('YEAR(date)', $year);
+            $this->db->select('id')->from('tblexpenses')->where('MONTH(date)', $m)->where('YEAR(date)', $year);
             $expenses = $this->db->get()->result_array();
             if (!isset($total_expenses[$i])) {
                 $total_expenses[$i] = [];
@@ -123,10 +123,10 @@ class Reports_model extends App_Model
             $total_expenses[$i] = array_sum($total_expenses[$i]);
             // Calculate the income
             $this->db->select('amount');
-            $this->db->from(db_prefix() . 'invoicepaymentrecords');
-            $this->db->join(db_prefix() . 'invoices', '' . db_prefix() . 'invoices.id = ' . db_prefix() . 'invoicepaymentrecords.invoiceid');
-            $this->db->where('MONTH(' . db_prefix() . 'invoicepaymentrecords.date)', $m);
-            $this->db->where('YEAR(' . db_prefix() . 'invoicepaymentrecords.date)', $year);
+            $this->db->from('tblinvoicepaymentrecords');
+            $this->db->join('tblinvoices', 'tblinvoices.id = tblinvoicepaymentrecords.invoiceid');
+            $this->db->where('MONTH(tblinvoicepaymentrecords.date)', $m);
+            $this->db->where('YEAR(tblinvoicepaymentrecords.date)', $year);
             $payments = $this->db->get()->result_array();
             if (!isset($total_income[$m])) {
                 $total_income[$i] = [];
@@ -173,7 +173,7 @@ class Reports_model extends App_Model
     public function leads_this_week_report()
     {
         $this->db->where('CAST(last_status_change as DATE) >= "' . date('Y-m-d', strtotime('monday this week')) . '" AND CAST(last_status_change as DATE) <= "' . date('Y-m-d', strtotime('sunday this week')) . '" AND status = 1 and lost = 0');
-        $weekly = $this->db->get(db_prefix() . 'leads')->result_array();
+        $weekly = $this->db->get('tblleads')->result_array();
         $colors = get_system_favourite_colors();
         $chart  = [
             'labels' => [
@@ -273,23 +273,23 @@ class Reports_model extends App_Model
             if (!isset($to_date) && !isset($from_date)) {
                 $this->db->where('CASE WHEN assigned=0 THEN addedfrom=' . $member['staffid'] . ' ELSE assigned=' . $member['staffid'] . ' END
                     AND status=1', '', false);
-                $total_rows_converted = $this->db->count_all_results(db_prefix() . 'leads');
+                $total_rows_converted = $this->db->count_all_results('tblleads');
 
-                $total_rows_created = total_rows(db_prefix() . 'leads', [
+                $total_rows_created = total_rows('tblleads', [
                     'addedfrom' => $member['staffid'],
                 ]);
 
                 $this->db->where('CASE WHEN assigned=0 THEN addedfrom=' . $member['staffid'] . ' ELSE assigned=' . get_staff_user_id() . ' END
                     AND lost=1', '', false);
-                $total_rows_lost = $this->db->count_all_results(db_prefix() . 'leads');
+                $total_rows_lost = $this->db->count_all_results('tblleads');
             } else {
-                $sql                  = 'SELECT COUNT(' . db_prefix() . 'leads.id) as total FROM ' . db_prefix() . "leads WHERE DATE(last_status_change) BETWEEN '" . $from_date . "' AND '" . $to_date . "' AND status = 1 AND CASE WHEN assigned=0 THEN addedfrom=" . $member['staffid'] . ' ELSE assigned=' . $member['staffid'] . ' END';
+                $sql                  = "SELECT COUNT(tblleads.id) as total FROM tblleads WHERE DATE(last_status_change) BETWEEN '" . $from_date . "' AND '" . $to_date . "' AND status = 1 AND CASE WHEN assigned=0 THEN addedfrom=" . $member['staffid'] . ' ELSE assigned=' . $member['staffid'] . ' END';
                 $total_rows_converted = $this->db->query($sql)->row()->total;
 
-                $sql                = 'SELECT COUNT(' . db_prefix() . 'leads.id) as total FROM ' . db_prefix() . "leads WHERE DATE(dateadded) BETWEEN '" . $from_date . "' AND '" . $to_date . "' AND addedfrom=" . $member['staffid'] . '';
+                $sql                = "SELECT COUNT(tblleads.id) as total FROM tblleads WHERE DATE(dateadded) BETWEEN '" . $from_date . "' AND '" . $to_date . "' AND addedfrom=" . $member['staffid'] . '';
                 $total_rows_created = $this->db->query($sql)->row()->total;
 
-                $sql = 'SELECT COUNT(' . db_prefix() . 'leads.id) as total FROM ' . db_prefix() . "leads WHERE DATE(last_status_change) BETWEEN '" . $from_date . "' AND '" . $to_date . "' AND lost = 1 AND CASE WHEN assigned=0 THEN addedfrom=" . $member['staffid'] . ' ELSE assigned=' . $member['staffid'] . ' END';
+                $sql = "SELECT COUNT(tblleads.id) as total FROM tblleads WHERE DATE(last_status_change) BETWEEN '" . $from_date . "' AND '" . $to_date . "' AND lost = 1 AND CASE WHEN assigned=0 THEN addedfrom=" . $member['staffid'] . ' ELSE assigned=' . $member['staffid'] . ' END';
 
                 $total_rows_lost = $this->db->query($sql)->row()->total;
             }
@@ -323,7 +323,7 @@ class Reports_model extends App_Model
         ];
         foreach ($sources as $source) {
             array_push($chart['labels'], $source['name']);
-            array_push($chart['datasets'][0]['data'], total_rows(db_prefix() . 'leads', [
+            array_push($chart['datasets'][0]['data'], total_rows('tblleads', [
                 'source' => $source['id'],
                 'status' => 1,
                 'lost'   => 0,
@@ -351,16 +351,16 @@ class Reports_model extends App_Model
                     $endMonth   = date('Y-m-t');
                 }
 
-                $custom_date_select = '(' . db_prefix() . 'invoicepaymentrecords.date BETWEEN "' . $beginMonth . '" AND "' . $endMonth . '")';
+                $custom_date_select = '(tblinvoicepaymentrecords.date BETWEEN "' . $beginMonth . '" AND "' . $endMonth . '")';
             } elseif ($months_report == 'this_month') {
-                $custom_date_select = '(' . db_prefix() . 'invoicepaymentrecords.date BETWEEN "' . date('Y-m-01') . '" AND "' . date('Y-m-t') . '")';
+                $custom_date_select = '(tblinvoicepaymentrecords.date BETWEEN "' . date('Y-m-01') . '" AND "' . date('Y-m-t') . '")';
             } elseif ($months_report == 'this_year') {
-                $custom_date_select = '(' . db_prefix() . 'invoicepaymentrecords.date BETWEEN "' .
+                $custom_date_select = '(tblinvoicepaymentrecords.date BETWEEN "' .
                 date('Y-m-d', strtotime(date('Y-01-01'))) .
                 '" AND "' .
                 date('Y-m-d', strtotime(date('Y-12-31'))) . '")';
             } elseif ($months_report == 'last_year') {
-                $custom_date_select = '(' . db_prefix() . 'invoicepaymentrecords.date BETWEEN "' .
+                $custom_date_select = '(tblinvoicepaymentrecords.date BETWEEN "' .
                 date('Y-m-d', strtotime(date(date('Y', strtotime('last year')) . '-01-01'))) .
                 '" AND "' .
                 date('Y-m-d', strtotime(date(date('Y', strtotime('last year')) . '-12-31'))) . '")';
@@ -368,18 +368,18 @@ class Reports_model extends App_Model
                 $from_date = to_sql_date($this->input->post('report_from'));
                 $to_date   = to_sql_date($this->input->post('report_to'));
                 if ($from_date == $to_date) {
-                    $custom_date_select = db_prefix() . 'invoicepaymentrecords.date ="' . $from_date . '"';
+                    $custom_date_select = 'tblinvoicepaymentrecords.date ="' . $from_date . '"';
                 } else {
-                    $custom_date_select = '(' . db_prefix() . 'invoicepaymentrecords.date BETWEEN "' . $from_date . '" AND "' . $to_date . '")';
+                    $custom_date_select = '(tblinvoicepaymentrecords.date BETWEEN "' . $from_date . '" AND "' . $to_date . '")';
                 }
             }
             $this->db->where($custom_date_select);
         }
-        $this->db->select('amount,' . db_prefix() . 'invoicepaymentrecords.date,' . db_prefix() . 'invoices.clientid,(SELECT GROUP_CONCAT(name) FROM ' . db_prefix() . 'customers_groups LEFT JOIN ' . db_prefix() . 'customer_groups ON ' . db_prefix() . 'customer_groups.groupid = ' . db_prefix() . 'customers_groups.id WHERE customer_id = ' . db_prefix() . 'invoices.clientid) as customerGroups');
-        $this->db->from(db_prefix() . 'invoicepaymentrecords');
-        $this->db->join(db_prefix() . 'invoices', db_prefix() . 'invoices.id = ' . db_prefix() . 'invoicepaymentrecords.invoiceid');
-        $this->db->where(db_prefix() . 'invoices.clientid IN (select customer_id FROM ' . db_prefix() . 'customer_groups)');
-        $this->db->where(db_prefix().'invoices.status !=', 5);
+        $this->db->select('amount,tblinvoicepaymentrecords.date,tblinvoices.clientid,(SELECT GROUP_CONCAT(name) FROM tblcustomersgroups LEFT JOIN tblcustomergroups_in ON tblcustomergroups_in.groupid = tblcustomersgroups.id WHERE customer_id = tblinvoices.clientid) as customerGroups');
+        $this->db->from('tblinvoicepaymentrecords');
+        $this->db->join('tblinvoices', 'tblinvoices.id = tblinvoicepaymentrecords.invoiceid');
+        $this->db->where('tblinvoices.clientid IN (select customer_id FROM tblcustomergroups_in)');
+        $this->db->where('tblinvoices.status !=', 5);
         $by_currency = $this->input->post('report_currency');
         if ($by_currency) {
             $this->db->where('currency', $by_currency);
@@ -438,10 +438,10 @@ class Reports_model extends App_Model
         $modes  = $this->payment_modes_model->get('', [], true, true);
         $year   = $this->input->post('year');
         $colors = get_system_favourite_colors();
-        $this->db->select('amount,' . db_prefix() . 'invoicepaymentrecords.date');
-        $this->db->from(db_prefix() . 'invoicepaymentrecords');
-        $this->db->where('YEAR(' . db_prefix() . 'invoicepaymentrecords.date)', $year);
-        $this->db->join(db_prefix() . 'invoices', '' . db_prefix() . 'invoices.id = ' . db_prefix() . 'invoicepaymentrecords.invoiceid');
+        $this->db->select('amount,tblinvoicepaymentrecords.date');
+        $this->db->from('tblinvoicepaymentrecords');
+        $this->db->where('YEAR(tblinvoicepaymentrecords.date)', $year);
+        $this->db->join('tblinvoices', 'tblinvoices.id = tblinvoicepaymentrecords.invoiceid');
         $by_currency = $this->input->post('report_currency');
         if ($by_currency) {
             $this->db->where('currency', $by_currency);
@@ -473,7 +473,7 @@ class Reports_model extends App_Model
         }
         $i = 0;
         foreach ($modes as $mode) {
-            if (total_rows(db_prefix() . 'invoicepaymentrecords', [
+            if (total_rows('tblinvoicepaymentrecords', [
                 'paymentmode' => $mode['id'],
             ]) == 0) {
                 continue;
@@ -482,11 +482,11 @@ class Reports_model extends App_Model
             if (isset($colors[$i])) {
                 $color = $colors[$i];
             }
-            $this->db->select('amount,' . db_prefix() . 'invoicepaymentrecords.date');
-            $this->db->from(db_prefix() . 'invoicepaymentrecords');
-            $this->db->where('YEAR(' . db_prefix() . 'invoicepaymentrecords.date)', $year);
-            $this->db->where(db_prefix() . 'invoicepaymentrecords.paymentmode', $mode['id']);
-            $this->db->join(db_prefix() . 'invoices', '' . db_prefix() . 'invoices.id = ' . db_prefix() . 'invoicepaymentrecords.invoiceid');
+            $this->db->select('amount,tblinvoicepaymentrecords.date');
+            $this->db->from('tblinvoicepaymentrecords');
+            $this->db->where('YEAR(tblinvoicepaymentrecords.date)', $year);
+            $this->db->where('tblinvoicepaymentrecords.paymentmode', $mode['id']);
+            $this->db->join('tblinvoices', 'tblinvoices.id = tblinvoicepaymentrecords.invoiceid');
             $by_currency = $this->input->post('report_currency');
             if ($by_currency) {
                 $this->db->where('currency', $by_currency);
@@ -531,10 +531,10 @@ class Reports_model extends App_Model
     public function total_income_report()
     {
         $year = $this->input->post('year');
-        $this->db->select('amount,' . db_prefix() . 'invoicepaymentrecords.date');
-        $this->db->from(db_prefix() . 'invoicepaymentrecords');
-        $this->db->where('YEAR(' . db_prefix() . 'invoicepaymentrecords.date)', $year);
-        $this->db->join(db_prefix() . 'invoices', '' . db_prefix() . 'invoices.id = ' . db_prefix() . 'invoicepaymentrecords.invoiceid');
+        $this->db->select('amount,tblinvoicepaymentrecords.date');
+        $this->db->from('tblinvoicepaymentrecords');
+        $this->db->where('YEAR(tblinvoicepaymentrecords.date)', $year);
+        $this->db->join('tblinvoices', 'tblinvoices.id = tblinvoicepaymentrecords.invoiceid');
         $by_currency = $this->input->post('report_currency');
         if ($by_currency) {
             $this->db->where('currency', $by_currency);
@@ -590,11 +590,11 @@ class Reports_model extends App_Model
 
     public function get_distinct_payments_years()
     {
-        return $this->db->query('SELECT DISTINCT(YEAR(date)) as year FROM ' . db_prefix() . 'invoicepaymentrecords')->result_array();
+        return $this->db->query('SELECT DISTINCT(YEAR(date)) as year FROM tblinvoicepaymentrecords')->result_array();
     }
 
     public function get_distinct_customer_invoices_years()
     {
-        return $this->db->query('SELECT DISTINCT(YEAR(date)) as year FROM ' . db_prefix() . 'invoices WHERE clientid=' . get_client_user_id())->result_array();
+        return $this->db->query('SELECT DISTINCT(YEAR(date)) as year FROM tblinvoices WHERE clientid=' . get_client_user_id())->result_array();
     }
 }

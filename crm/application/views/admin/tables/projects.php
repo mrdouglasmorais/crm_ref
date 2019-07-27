@@ -7,22 +7,22 @@ $hasPermissionDelete = has_permission('projects', '', 'delete');
 $hasPermissionCreate = has_permission('projects', '', 'create');
 
 $aColumns = [
-    db_prefix() . 'projects.id as id',
+    'tblprojects.id as id',
     'name',
     get_sql_select_client_company(),
-    '(SELECT GROUP_CONCAT(name SEPARATOR ",") FROM ' . db_prefix() . 'taggables JOIN ' . db_prefix() . 'tags ON ' . db_prefix() . 'taggables.tag_id = ' . db_prefix() . 'tags.id WHERE rel_id = ' . db_prefix() . 'projects.id and rel_type="project" ORDER by tag_order ASC) as tags',
+    '(SELECT GROUP_CONCAT(name SEPARATOR ",") FROM tbltags_in JOIN tbltags ON tbltags_in.tag_id = tbltags.id WHERE rel_id = tblprojects.id and rel_type="project" ORDER by tag_order ASC) as tags',
     'start_date',
     'deadline',
-    '(SELECT GROUP_CONCAT(CONCAT(firstname, \' \', lastname) SEPARATOR ",") FROM ' . db_prefix() . 'project_members JOIN ' . db_prefix() . 'staff on ' . db_prefix() . 'staff.staffid = ' . db_prefix() . 'project_members.staff_id WHERE project_id=' . db_prefix() . 'projects.id ORDER BY staff_id) as members',
+    '(SELECT GROUP_CONCAT(CONCAT(firstname, \' \', lastname) SEPARATOR ",") FROM tblprojectmembers JOIN tblstaff on tblstaff.staffid = tblprojectmembers.staff_id WHERE project_id=tblprojects.id ORDER BY staff_id) as members',
     'status',
     ];
 
 
 $sIndexColumn = 'id';
-$sTable       = db_prefix() . 'projects';
+$sTable       = 'tblprojects';
 
 $join = [
-    'JOIN ' . db_prefix() . 'clients ON ' . db_prefix() . 'clients.userid = ' . db_prefix() . 'projects.clientid',
+    'JOIN tblclients ON tblclients.userid = tblprojects.clientid',
 ];
 
 $where  = [];
@@ -33,7 +33,7 @@ if ($clientid != '') {
 }
 
 if (!has_permission('projects', '', 'view') || $this->ci->input->post('my_projects')) {
-    array_push($where, ' AND ' . db_prefix() . 'projects.id IN (SELECT project_id FROM ' . db_prefix() . 'project_members WHERE staff_id=' . get_staff_user_id() . ')');
+    array_push($where, ' AND tblprojects.id IN (SELECT project_id FROM tblprojectmembers WHERE staff_id=' . get_staff_user_id() . ')');
 }
 
 $statusIds = [];
@@ -58,10 +58,10 @@ foreach ($custom_fields as $key => $field) {
     $selectAs = (is_cf_date($field) ? 'date_picker_cvalue_' . $key : 'cvalue_' . $key);
     array_push($customFieldsColumns, $selectAs);
     array_push($aColumns, 'ctable_' . $key . '.value as ' . $selectAs);
-    array_push($join, 'LEFT JOIN ' . db_prefix() . 'customfieldsvalues as ctable_' . $key . ' ON ' . db_prefix() . 'projects.id = ctable_' . $key . '.relid AND ctable_' . $key . '.fieldto="' . $field['fieldto'] . '" AND ctable_' . $key . '.fieldid=' . $field['id']);
+    array_push($join, 'LEFT JOIN tblcustomfieldsvalues as ctable_' . $key . ' ON tblprojects.id = ctable_' . $key . '.relid AND ctable_' . $key . '.fieldto="' . $field['fieldto'] . '" AND ctable_' . $key . '.fieldid=' . $field['id']);
 }
 
-$aColumns = hooks()->apply_filters('projects_table_sql_columns', $aColumns);
+$aColumns = do_action('projects_table_sql_columns', $aColumns);
 
 // Fix for big queries. Some hosting have max_join_limit
 if (count($custom_fields) > 4) {
@@ -70,7 +70,7 @@ if (count($custom_fields) > 4) {
 
 $result = data_tables_init($aColumns, $sIndexColumn, $sTable, $join, $where, [
     'clientid',
-    '(SELECT GROUP_CONCAT(staff_id SEPARATOR ",") FROM ' . db_prefix() . 'project_members WHERE project_id=' . db_prefix() . 'projects.id ORDER BY staff_id) as members_ids',
+    '(SELECT GROUP_CONCAT(staff_id SEPARATOR ",") FROM tblprojectmembers WHERE project_id=tblprojects.id ORDER BY staff_id) as members_ids',
 ]);
 
 $output  = $result['output'];
@@ -87,18 +87,18 @@ foreach ($rResult as $aRow) {
 
     $name .= '<div class="row-options">';
 
-    $name .= '<a href="' . $link . '">' . _l('view') . '</a>';
+    $name .= '<a href="'.$link.'">'._l('view').'</a>';
 
     if ($hasPermissionCreate && !$clientid) {
-        $name .= ' | <a href="#" onclick="copy_project(' . $aRow['id'] . ');return false;">' . _l('copy_project') . '</a>';
+        $name .= ' | <a href="#" onclick="copy_project(' . $aRow['id'] . ');return false;">'._l('copy_project').'</a>';
     }
 
     if ($hasPermissionEdit) {
-        $name .= ' | <a href="' . admin_url('projects/project/' . $aRow['id']) . '">' . _l('edit') . '</a>';
+        $name .= ' | <a href="'.admin_url('projects/project/'. $aRow['id']).'">'._l('edit').'</a>';
     }
 
     if ($hasPermissionDelete) {
-        $name .= ' | <a href="' . admin_url('projects/delete/' . $aRow['id']) . '" class="text-danger _delete">' . _l('delete') . '</a>';
+        $name .= ' | <a href="'.admin_url('projects/delete/'. $aRow['id']).'" class="text-danger _delete">'._l('delete').'</a>';
     }
 
     $name .= '</div>';
@@ -144,9 +144,12 @@ foreach ($rResult as $aRow) {
         $row[] = (strpos($customFieldColumn, 'date_picker_') !== false ? _d($aRow[$customFieldColumn]) : $aRow[$customFieldColumn]);
     }
 
+    $hook = do_action('projects_table_row_data', [
+        'output' => $row,
+        'row'    => $aRow,
+    ]);
+
+    $row = $hook['output'];
     $row['DT_RowClass'] = 'has-row-options';
-
-    $row = hooks()->apply_filters('projects_table_row_data', $row, $aRow);
-
     $output['aaData'][] = $row;
 }

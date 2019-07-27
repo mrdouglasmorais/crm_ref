@@ -2,85 +2,85 @@
 
 $error = false;
 
-if (version_compare(PHP_VERSION, '5.6.4') >= 0) {
-    $requirement1 = "<span class='label label-success'>v." . PHP_VERSION . '</span>';
+if (phpversion() < "5.6") {
+	$error = true;
+	$requirement1 = "<span class='label label-danger'>Your PHP version is " . phpversion() . "</span>";
 } else {
-    $error        = true;
-    $requirement1 = "<span class='label label-danger'>Your PHP version is " . PHP_VERSION . '</span>';
+	$requirement1 = "<span class='label label-success'>v." . phpversion() . "</span>";
 }
 
 if (!extension_loaded('mysqli')) {
-    $error        = true;
-    $requirement2 = "<span class='label label-danger'>Not enabled</span>";
+	$error = true;
+	$requirement2 = "<span class='label label-danger'>Not enabled</span>";
 } else {
-    $requirement2 = "<span class='label label-success'>Enabled</span>";
+	$requirement2 = "<span class='label label-success'>Enabled</span>";
 }
 
 if (!extension_loaded('pdo')) {
-    $error        = true;
-    $requirement3 = "<span class='label label-danger'>Not enabled</span>";
+	$error = true;
+	$requirement3 = "<span class='label label-danger'>Not enabled</span>";
 } else {
-    $requirement3 = "<span class='label label-success'>Enabled</span>";
+	$requirement3 = "<span class='label label-success'>Enabled</span>";
 }
 
 if (!extension_loaded('curl')) {
-    $error        = true;
-    $requirement4 = "<span class='label label-danger'>Not enabled</span>";
+	$error = true;
+	$requirement4 = "<span class='label label-danger'>Not enabled</span>";
 } else {
-    $requirement4 = "<span class='label label-success'>Enabled</span>";
+	$requirement4 = "<span class='label label-success'>Enabled</span>";
 }
 
 if (!extension_loaded('openssl')) {
-    $error        = true;
-    $requirement5 = "<span class='label label-danger'>Not enabled</span>";
+	$error = true;
+	$requirement5 = "<span class='label label-danger'>Not enabled</span>";
 } else {
-    $requirement5 = "<span class='label label-success'>Enabled</span>";
+	$requirement5 = "<span class='label label-success'>Enabled</span>";
 }
 
 if (!extension_loaded('mbstring')) {
-    $error        = true;
-    $requirement6 = "<span class='label label-danger'>Not enabled</span>";
+	$error = true;
+	$requirement6 = "<span class='label label-danger'>Not enabled</span>";
 } else {
-    $requirement6 = "<span class='label label-success'>Enabled</span>";
+	$requirement6 = "<span class='label label-success'>Enabled</span>";
 }
 
 if (!extension_loaded('iconv') && !function_exists('iconv')) {
-    $error        = true;
-    $requirement7 = "<span class='label label-danger'>Not enabled</span>";
+	$error = true;
+	$requirement7 = "<span class='label label-danger'>Not enabled</span>";
 } else {
-    $requirement7 = "<span class='label label-success'>Enabled</span>";
+	$requirement7 = "<span class='label label-success'>Enabled</span>";
 }
 
 if (!extension_loaded('imap')) {
-    $error        = true;
-    $requirement8 = "<span class='label label-danger'>Not enabled</span>";
+	$error = true;
+	$requirement8 = "<span class='label label-danger'>Not enabled</span>";
 } else {
-    $requirement8 = "<span class='label label-success'>Enabled</span>";
+	$requirement8 = "<span class='label label-success'>Enabled</span>";
 }
 
 if (!extension_loaded('gd')) {
-    $error        = true;
-    $requirement9 = "<span class='label label-danger'>Not enabled</span>";
+	$error = true;
+	$requirement9 = "<span class='label label-danger'>Not enabled</span>";
 } else {
-    $requirement9 = "<span class='label label-success'>Enabled</span>";
+	$requirement9 = "<span class='label label-success'>Enabled</span>";
 }
 
 if (!extension_loaded('zip')) {
-    $error         = true;
-    $requirement10 = "<span class='label label-danger'>Zip Extension is not enabled</span>";
+	$error = true;
+	$requirement10 = "<span class='label label-danger'>Zip Extension is not enabled</span>";
 } else {
-    $requirement10 = "<span class='label label-success'>Enabled</span>";
+	$requirement10 = "<span class='label label-success'>Enabled</span>";
 }
 
 $url_f_open = ini_get('allow_url_fopen');
-if ($url_f_open != '1'
-    && strcasecmp($url_f_open, 'On') != 0
-    && strcasecmp($url_f_open, 'true') != 0
-    && strcasecmp($url_f_open, 'yes') != 0) {
-    $error         = true;
-    $requirement11 = "<span class='label label-danger'>Allow_url_fopen is not enabled!</span>";
+if ($url_f_open != "1"
+	&& strcasecmp($url_f_open,'On') != 0
+	&& strcasecmp($url_f_open,'true') != 0
+	&& strcasecmp($url_f_open,'yes') != 0) {
+	$error = true;
+	$requirement11 = "<span class='label label-danger'>Allow_url_fopen is not enabled!</span>";
 } else {
-    $requirement11 = "<span class='label label-success'>Enabled</span>";
+	$requirement11 = "<span class='label label-success'>Enabled</span>";
 }
 
 ?>
@@ -93,7 +93,7 @@ if ($url_f_open != '1'
 	</thead>
 	<tbody>
 		<tr>
-			<td>PHP 5.6.4+ </td>
+			<td>PHP 5.6+ </td>
 			<td><?php echo $requirement1; ?></td>
 		</tr>
 		<tr>
@@ -139,15 +139,15 @@ if ($url_f_open != '1'
 	</tbody>
 </table>
 <hr />
-<?php if ($error == true) {
-    echo '<div class="text-center alert alert-danger">You need to fix the requirements in order to continue installing Perfex CRM</div>';
+<?php if ($error == true){
+	echo '<div class="text-center alert alert-danger">You need to fix the requirements in order to continue installing Perfex CRM</div>';
 } else {
-    echo '<div class="text-center">';
-    echo '<form action="" method="post" accept-charset="utf-8">';
-    echo '<input type="hidden" value="true" name="requirements_success">';
-    echo '<div class="text-left">';
-    echo '<button type="submit" class="btn btn-success">Go to files/folders permissions</button>';
-    echo '</div>';
-    echo '</form>';
-    echo '</div>';
+	echo '<div class="text-center">';
+	echo '<form action="" method="post" accept-charset="utf-8">';
+	echo '<input type="hidden" value="true" name="requirements_success">';
+	echo '<div class="text-left">';
+	echo '<button type="submit" class="btn btn-success">Go to files/folders permissions</button>';
+	echo '</div>';
+	echo '</form>';
+	echo '</div>';
 }

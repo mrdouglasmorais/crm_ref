@@ -52,10 +52,7 @@
             <tbody>
               <tr class="project-overview-customer">
                   <td class="bold"><?php echo _l('project_customer'); ?></td>
-                  <td>
-                      <a href="<?php echo admin_url(); ?>clients/client/<?php echo $project->clientid; ?>">
-                        <?php echo $project->client_data->company; ?>
-                      </a>
+                  <td><a href="<?php echo admin_url(); ?>clients/client/<?php echo $project->clientid; ?>"><?php echo $project->client_data->company; ?></a>
                   </td>
               </tr>
                <?php if(has_permission('projects','','create') || has_permission('projects','','edit')){ ?>
@@ -77,10 +74,10 @@
                   echo '<tr>';
                   if($project->billing_type == 1){
                     echo '<td class="bold">'._l('project_total_cost').'</td>';
-                    echo '<td>'.app_format_money($project->project_cost, $currency).'</td>';
+                    echo '<td>'.format_money($project->project_cost,$currency->symbol).'</td>';
                  } else {
                     echo '<td class="bold">'._l('project_rate_per_hour').'</td>';
-                    echo '<td>'.app_format_money($project->project_rate_per_hour, $currency).'</td>';
+                    echo '<td>'.format_money($project->project_rate_per_hour,$currency->symbol).'</td>';
                  }
                  echo '<tr>';
               }
@@ -137,7 +134,7 @@
    </table>
 </div>
 <div class="col-md-5 text-center project-percent-col mtop10">
-   <p class="bold"><?php echo _l('project_progress_text'); ?></p>
+   <p class="bold"><?php echo _l('project'). ' ' . _l('project_progress'); ?></p>
    <div class="project-progress relative mtop15" data-value="<?php echo $percent_circle; ?>" data-size="150" data-thickness="22" data-reverse="true">
       <strong class="project-percent"></strong>
    </div>
@@ -253,28 +250,28 @@
          $data = $this->projects_model->total_logged_time_by_billing_type($project->id);
          ?>
          <p class="text-uppercase text-muted"><?php echo _l('project_overview_logged_hours'); ?> <span class="bold"><?php echo $data['logged_time']; ?></span></p>
-         <p class="bold font-medium"><?php echo app_format_money($data['total_money'], $currency); ?></p>
+         <p class="bold font-medium"><?php echo format_money($data['total_money'],$currency->symbol); ?></p>
       </div>
       <div class="col-md-3">
          <?php
          $data = $this->projects_model->data_billable_time($project->id);
          ?>
          <p class="text-uppercase text-info"><?php echo _l('project_overview_billable_hours'); ?> <span class="bold"><?php echo $data['logged_time'] ?></span></p>
-         <p class="bold font-medium"><?php echo app_format_money($data['total_money'], $currency); ?></p>
+         <p class="bold font-medium"><?php echo format_money($data['total_money'],$currency->symbol); ?></p>
       </div>
       <div class="col-md-3">
          <?php
          $data = $this->projects_model->data_billed_time($project->id);
          ?>
          <p class="text-uppercase text-success"><?php echo _l('project_overview_billed_hours'); ?> <span class="bold"><?php echo $data['logged_time']; ?></span></p>
-         <p class="bold font-medium"><?php echo app_format_money($data['total_money'], $currency); ?></p>
+         <p class="bold font-medium"><?php echo format_money($data['total_money'],$currency->symbol); ?></p>
       </div>
       <div class="col-md-3">
          <?php
          $data = $this->projects_model->data_unbilled_time($project->id);
          ?>
          <p class="text-uppercase text-danger"><?php echo _l('project_overview_unbilled_hours'); ?> <span class="bold"><?php echo $data['logged_time']; ?></span></p>
-         <p class="bold font-medium"><?php echo app_format_money($data['total_money'], $currency); ?></p>
+         <p class="bold font-medium"><?php echo format_money($data['total_money'],$currency->symbol); ?></p>
       </div>
       <div class="clearfix"></div>
       <hr class="hr-panel-heading" />
@@ -285,19 +282,19 @@
    <div class="col-md-12 project-overview-expenses-finance">
       <div class="col-md-3">
          <p class="text-uppercase text-muted"><?php echo _l('project_overview_expenses'); ?></p>
-         <p class="bold font-medium"><?php echo app_format_money(sum_from_table(db_prefix().'expenses',array('where'=>array('project_id'=>$project->id),'field'=>'amount')), $currency); ?></p>
+         <p class="bold font-medium"><?php echo format_money(sum_from_table('tblexpenses',array('where'=>array('project_id'=>$project->id),'field'=>'amount')),$currency->symbol); ?></p>
       </div>
       <div class="col-md-3">
          <p class="text-uppercase text-info"><?php echo _l('project_overview_expenses_billable'); ?></p>
-         <p class="bold font-medium"><?php echo app_format_money(sum_from_table(db_prefix().'expenses',array('where'=>array('project_id'=>$project->id,'billable'=>1),'field'=>'amount')), $currency); ?></p>
+         <p class="bold font-medium"><?php echo format_money(sum_from_table('tblexpenses',array('where'=>array('project_id'=>$project->id,'billable'=>1),'field'=>'amount')),$currency->symbol); ?></p>
       </div>
       <div class="col-md-3">
          <p class="text-uppercase text-success"><?php echo _l('project_overview_expenses_billed'); ?></p>
-         <p class="bold font-medium"><?php echo app_format_money(sum_from_table(db_prefix().'expenses',array('where'=>array('project_id'=>$project->id,'invoiceid !='=>'NULL','billable'=>1),'field'=>'amount')), $currency); ?></p>
+         <p class="bold font-medium"><?php echo format_money(sum_from_table('tblexpenses',array('where'=>array('project_id'=>$project->id,'invoiceid !='=>'NULL','billable'=>1),'field'=>'amount')),$currency->symbol); ?></p>
       </div>
       <div class="col-md-3">
          <p class="text-uppercase text-danger"><?php echo _l('project_overview_expenses_unbilled'); ?></p>
-         <p class="bold font-medium"><?php echo app_format_money(sum_from_table(db_prefix().'expenses',array('where'=>array('project_id'=>$project->id,'invoiceid IS NULL','billable'=>1),'field'=>'amount')), $currency); ?></p>
+         <p class="bold font-medium"><?php echo format_money(sum_from_table('tblexpenses',array('where'=>array('project_id'=>$project->id,'invoiceid IS NULL','billable'=>1),'field'=>'amount')),$currency->symbol); ?></p>
       </div>
    </div>
 </div>

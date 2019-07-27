@@ -7,7 +7,7 @@ $aColumns = [
     'description',
     ];
 $sIndexColumn = 'id';
-$sTable       = db_prefix().'expenses_categories';
+$sTable       = 'tblexpensescategories';
 $result       = data_tables_init($aColumns, $sIndexColumn, $sTable, [], [], [
     'id',
     ]);

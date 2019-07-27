@@ -64,8 +64,6 @@ class SIMAuthorizeRequest extends SIMAbstractRequest
      * modified en-route.
      * It uses the TransactionKey, which is a shared secret between the merchant
      * and Authorize.Net The sequence and timestamp provide additional salt.
-     * @param $data
-     * @return string
      */
     public function getHash($data)
     {
@@ -80,19 +78,11 @@ class SIMAuthorizeRequest extends SIMAbstractRequest
         ).'^';
 
         // If x_currency_code is specified, then it must follow the final trailing carat.
-
         if ($this->getCurrency()) {
             $fingerprint .= $this->getCurrency();
         }
 
-        // The md5 hash against the transactionKey is being removed 2019 and
-        // replaced with an SHA-512 hash against the signatureKey.
-
-        if ($signatureKey = $this->getSignatureKey()) {
-            return hash_hmac('sha512', $fingerprint, hex2bin($signatureKey));
-        } else {
-            return hash_hmac('md5', $fingerprint, $this->getTransactionKey());
-        }
+        return hash_hmac('md5', $fingerprint, $this->getTransactionKey());
     }
 
     public function sendData($data)

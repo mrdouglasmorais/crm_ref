@@ -11,37 +11,37 @@ $statuses              = $this->ci->leads_model->get_status();
 
 $aColumns = [
     '1',
-    db_prefix() . 'leads.id as id',
-    db_prefix() . 'leads.name as name',
+    'tblleads.id as id',
+    'tblleads.name as name',
     ];
 if (is_gdpr() && $consentLeads == '1') {
     $aColumns[] = '1';
 }
 $aColumns = array_merge($aColumns, ['company',
-    db_prefix() . 'leads.email as email',
-    db_prefix() . 'leads.phonenumber as phonenumber',
-    '(SELECT GROUP_CONCAT(name SEPARATOR ",") FROM ' . db_prefix() . 'taggables JOIN ' . db_prefix() . 'tags ON ' . db_prefix() . 'taggables.tag_id = ' . db_prefix() . 'tags.id WHERE rel_id = ' . db_prefix() . 'leads.id and rel_type="lead" ORDER by tag_order ASC LIMIT 1) as tags',
+    'tblleads.email as email',
+    'tblleads.phonenumber as phonenumber',
+    '(SELECT GROUP_CONCAT(name SEPARATOR ",") FROM tbltags_in JOIN tbltags ON tbltags_in.tag_id = tbltags.id WHERE rel_id = tblleads.id and rel_type="lead" ORDER by tag_order ASC LIMIT 1) as tags',
     'firstname as assigned_firstname',
-    db_prefix() . 'leads_status.name as status_name',
-    db_prefix() . 'leads_sources.name as source_name',
+    'tblleadsstatus.name as status_name',
+    'tblleadssources.name as source_name',
     'lastcontact',
     'dateadded',
 ]);
 
 $sIndexColumn = 'id';
-$sTable       = db_prefix() . 'leads';
+$sTable       = 'tblleads';
 
 $join = [
-    'LEFT JOIN ' . db_prefix() . 'staff ON ' . db_prefix() . 'staff.staffid = ' . db_prefix() . 'leads.assigned',
-    'LEFT JOIN ' . db_prefix() . 'leads_status ON ' . db_prefix() . 'leads_status.id = ' . db_prefix() . 'leads.status',
-    'JOIN ' . db_prefix() . 'leads_sources ON ' . db_prefix() . 'leads_sources.id = ' . db_prefix() . 'leads.source',
+    'LEFT JOIN tblstaff ON tblstaff.staffid = tblleads.assigned',
+    'LEFT JOIN tblleadsstatus ON tblleadsstatus.id = tblleads.status',
+    'LEFT JOIN tblleadssources ON tblleadssources.id = tblleads.source',
 ];
 
 foreach ($custom_fields as $key => $field) {
     $selectAs = (is_cf_date($field) ? 'date_picker_cvalue_' . $key : 'cvalue_' . $key);
     array_push($customFieldsColumns, $selectAs);
     array_push($aColumns, 'ctable_' . $key . '.value as ' . $selectAs);
-    array_push($join, 'LEFT JOIN ' . db_prefix() . 'customfieldsvalues as ctable_' . $key . ' ON ' . db_prefix() . 'leads.id = ctable_' . $key . '.relid AND ctable_' . $key . '.fieldto="' . $field['fieldto'] . '" AND ctable_' . $key . '.fieldid=' . $field['id']);
+    array_push($join, 'LEFT JOIN tblcustomfieldsvalues as ctable_' . $key . ' ON tblleads.id = ctable_' . $key . '.relid AND ctable_' . $key . '.fieldto="' . $field['fieldto'] . '" AND ctable_' . $key . '.fieldid=' . $field['id']);
 }
 
 $where  = [];
@@ -61,8 +61,8 @@ if ($this->ci->input->post('custom_view')) {
         array_push($where, 'AND dateadded LIKE "' . date('Y-m-d') . '%"');
     } elseif ($filter == 'public') {
         array_push($where, 'AND is_public = 1');
-    } elseif (startsWith($filter, 'consent_')) {
-        array_push($where, 'AND ' . db_prefix() . 'leads.id IN (SELECT lead_id FROM ' . db_prefix() . 'consents WHERE purpose_id=' . strafter($filter, 'consent_') . ' and action="opt-in" AND date IN (SELECT MAX(date) FROM ' . db_prefix() . 'consents WHERE purpose_id=' . strafter($filter, 'consent_') . ' AND lead_id=' . db_prefix() . 'leads.id))');
+    } elseif (_startsWith($filter, 'consent_')) {
+        array_push($where, 'AND tblleads.id IN (SELECT lead_id FROM tblconsents WHERE purpose_id=' . strafter($filter, 'consent_') . ' and action="opt-in" AND date IN (SELECT MAX(date) FROM tblconsents WHERE purpose_id=' . strafter($filter, 'consent_') . ' AND lead_id=tblleads.id))');
     }
 }
 
@@ -88,22 +88,21 @@ if (!has_permission('leads', '', 'view')) {
     array_push($where, 'AND (assigned =' . get_staff_user_id() . ' OR addedfrom = ' . get_staff_user_id() . ' OR is_public = 1)');
 }
 
-$aColumns = hooks()->apply_filters('leads_table_sql_columns', $aColumns);
+$aColumns = do_action('leads_table_sql_columns', $aColumns);
 
 // Fix for big queries. Some hosting have max_join_limit
 if (count($custom_fields) > 4) {
     @$this->ci->db->query('SET SQL_BIG_SELECTS=1');
 }
-
-$additionalColumns = hooks()->apply_filters('leads_table_additional_columns_sql', [
+$additionalColumns = do_action('leads_table_additional_columns_sql', [
     'junk',
     'lost',
     'color',
     'status',
     'assigned',
     'lastname as assigned_lastname',
-    db_prefix() . 'leads.addedfrom as addedfrom',
-    '(SELECT count(leadid) FROM ' . db_prefix() . 'clients WHERE ' . db_prefix() . 'clients.leadid=' . db_prefix() . 'leads.id) as is_converted',
+    'tblleads.addedfrom as addedfrom',
+    '(SELECT count(leadid) FROM tblclients WHERE tblclients.leadid=tblleads.id) as is_converted',
     'zip',
 ]);
 
@@ -208,13 +207,26 @@ foreach ($rResult as $aRow) {
 
     $row[] = $aRow['source_name'];
 
-    $row[] = ($aRow['lastcontact'] == '0000-00-00 00:00:00' || !is_date($aRow['lastcontact']) ? '' : '<span data-toggle="tooltip" data-title="' . _dt($aRow['lastcontact']) . '" class="text-has-action is-date">' . time_ago($aRow['lastcontact']) . '</span>');
+    $row[] = ($aRow['lastcontact'] == '0000-00-00 00:00:00' || !is_date($aRow['lastcontact']) ? '' : '<span data-toggle="tooltip" data-title="' . _dt($aRow['lastcontact']) . '" class="text-has-action">' . time_ago($aRow['lastcontact']) . '</span>');
 
-    $row[] = '<span data-toggle="tooltip" data-title="' . _dt($aRow['dateadded']) . '" class="text-has-action is-date">' . time_ago($aRow['dateadded']) . '</span>';
+    $row[] = '<span data-toggle="tooltip" data-title="' . _dt($aRow['dateadded']) . '" class="text-has-action">' . time_ago($aRow['dateadded']) . '</span>';
 
     // Custom fields add values
     foreach ($customFieldsColumns as $customFieldColumn) {
         $row[] = (strpos($customFieldColumn, 'date_picker_') !== false ? _d($aRow[$customFieldColumn]) : $aRow[$customFieldColumn]);
+    }
+
+    $hook_data = do_action('leads_table_row_data', [
+        'output' => $row,
+        'row'    => $aRow,
+    ]);
+
+    $row = $hook_data['output'];
+
+    $options = '';
+
+    if ($aRow['addedfrom'] == get_staff_user_id() || $has_permission_delete) {
+        $options .= icon_btn('leads/delete/' . $aRow['id'], 'remove', 'btn-danger _delete');
     }
 
     $row['DT_RowId'] = 'lead_' . $aRow['id'];
@@ -228,8 +240,6 @@ foreach ($rResult as $aRow) {
     } else {
         $row['DT_RowClass'] = 'has-row-options';
     }
-
-    $row = hooks()->apply_filters('leads_table_row_data', $row, $aRow);
 
     $output['aaData'][] = $row;
 }

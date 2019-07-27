@@ -141,7 +141,7 @@ class IpAccessControlListList extends ListResource {
     /**
      * Constructs a IpAccessControlListContext
      * 
-     * @param string $sid A string that identifies the resource to fetch
+     * @param string $sid Fetch by unique ip-access-control-list Sid
      * @return \Twilio\Rest\Api\V2010\Account\Sip\IpAccessControlListContext 
      */
     public function getContext($sid) {

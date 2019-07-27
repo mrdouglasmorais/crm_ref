@@ -3,7 +3,7 @@
 foreach ($milestones as $milestone) {
  $milestonesTasksWhere = array();
  if ($milestones_exclude_completed_tasks) {
-   $milestonesTasksWhere['status !='] = Tasks_model::STATUS_COMPLETE;
+   $milestonesTasksWhere['status !='] = 5;
  }
  $cpicker = '';
  if (has_permission('projects', '', 'create') && $milestone['id'] != 0) {

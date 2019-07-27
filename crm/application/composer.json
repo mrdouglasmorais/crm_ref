@@ -6,10 +6,11 @@
         "neitanod/forceutf8": "~2.0",
         "pusher/pusher-php-server": "^3.0",
         "tecnickcom/tcpdf": "^6.2",
-        "studio-42/elfinder": "^2.1",
+        "Studio-42/elFinder": "2.1.42",
         "stripe/stripe-php": "^6.0",
         "phpmailer/phpmailer": "^5.2.26",
         "erusev/parsedown": "^1.7",
+        "backup-manager/backup-manager": "^1.2",
         "zbateson/mail-mime-parser": "^0.4.9",
         "league/omnipay": "^3.0",
         "omnipay/mollie": "^4.0",
@@ -18,12 +19,6 @@
         "omnipay/authorizenet": "3.x@dev",
         "2checkout/2checkout-php": "^0.3.1",
         "willdurand/email-reply-parser": "^2.8",
-        "instamojo/instamojo-php": "^0.3.0",
-        "bainternet/php-hooks": "^1.0",
-        "guzzlehttp/guzzle": "^6.3",
-        "illuminate/database": "^5.4",
-        "illuminate/events": "^5.4",
-        "illuminate/pagination": "^5.4",
-        "paypal/paypal-checkout-sdk": "1.0.0"
+        "instamojo/instamojo-php": "^0.3.0"
     }
 }

@@ -9,8 +9,6 @@ use Http\Message\StreamFactory;
  * Finds a Stream Factory.
  *
  * @author Михаил Красильников <m.krasilnikov@yandex.ru>
- *
- * @deprecated This will be removed in 2.0. Consider using Psr17FactoryDiscovery.
  */
 final class StreamFactoryDiscovery extends ClassDiscovery
 {

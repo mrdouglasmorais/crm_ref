@@ -17,7 +17,6 @@ use Twilio\Rest\Taskrouter\V1\Workspace\Worker\WorkerChannelList;
 use Twilio\Rest\Taskrouter\V1\Workspace\Worker\WorkerStatisticsList;
 use Twilio\Rest\Taskrouter\V1\Workspace\Worker\WorkersCumulativeStatisticsList;
 use Twilio\Rest\Taskrouter\V1\Workspace\Worker\WorkersRealTimeStatisticsList;
-use Twilio\Serialize;
 use Twilio\Values;
 use Twilio\Version;
 
@@ -94,7 +93,6 @@ class WorkerContext extends InstanceContext {
             'ActivitySid' => $options['activitySid'],
             'Attributes' => $options['attributes'],
             'FriendlyName' => $options['friendlyName'],
-            'RejectPendingReservations' => Serialize::booleanToString($options['rejectPendingReservations']),
         ));
 
         $payload = $this->version->update(

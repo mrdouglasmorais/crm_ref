@@ -20,7 +20,7 @@
                         </div>
                         <?php echo render_color_picker('color',_l('kb_group_color')); ?>
                         <?php echo render_textarea('description','kb_group_add_edit_description'); ?>
-                        <?php echo render_input('group_order','kb_group_order',total_rows(db_prefix().'knowledge_base_groups') + 1,'number'); ?>
+                        <?php echo render_input('group_order','kb_group_order',total_rows('tblknowledgebasegroups') + 1,'number'); ?>
                         <div class="kb-group-disable-option">
                             <div class="checkbox checkbox-primary">
                                 <input type="checkbox" name="disabled" id="disabled">
@@ -45,7 +45,7 @@
     window.addEventListener('load',function(){
 
     // Validating the knowledge group form
-    appValidateForm($('#kb_group_form'), {
+    _validate_form($('#kb_group_form'), {
         name: 'required'
     }, manage_kb_groups);
 

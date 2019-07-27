@@ -17,7 +17,7 @@ abstract class CommandOptions {
      * @param string $sim Only return Commands to or from this SIM.
      * @param string $status Only return Commands with this status value.
      * @param string $direction Only return Commands with this direction value.
-     * @param string $transport Only return Commands with this transport value.
+     * @param string $transport The transport
      * @return ReadCommandOptions Options builder
      */
     public static function read($sim = Values::NONE, $status = Values::NONE, $direction = Values::NONE, $transport = Values::NONE) {
@@ -37,9 +37,7 @@ abstract class CommandOptions {
      *                           Command in the message body, which could be used
      *                           to ensure that the device does not process the
      *                           same Command more than once.
-     * @param boolean $deliveryReceiptRequested A boolean representing whether to
-     *                                          request delivery receipt from the
-     *                                          recipient.
+     * @param boolean $deliveryReceiptRequested The delivery_receipt_requested
      * @return CreateCommandOptions Options builder
      */
     public static function create($sim = Values::NONE, $callbackMethod = Values::NONE, $callbackUrl = Values::NONE, $commandMode = Values::NONE, $includeSid = Values::NONE, $deliveryReceiptRequested = Values::NONE) {
@@ -52,7 +50,7 @@ class ReadCommandOptions extends Options {
      * @param string $sim Only return Commands to or from this SIM.
      * @param string $status Only return Commands with this status value.
      * @param string $direction Only return Commands with this direction value.
-     * @param string $transport Only return Commands with this transport value.
+     * @param string $transport The transport
      */
     public function __construct($sim = Values::NONE, $status = Values::NONE, $direction = Values::NONE, $transport = Values::NONE) {
         $this->options['sim'] = $sim;
@@ -95,9 +93,9 @@ class ReadCommandOptions extends Options {
     }
 
     /**
-     * Only return Commands with this transport value.
+     * The transport
      * 
-     * @param string $transport Only return Commands with this transport value.
+     * @param string $transport The transport
      * @return $this Fluent Builder
      */
     public function setTransport($transport) {
@@ -135,9 +133,7 @@ class CreateCommandOptions extends Options {
      *                           Command in the message body, which could be used
      *                           to ensure that the device does not process the
      *                           same Command more than once.
-     * @param boolean $deliveryReceiptRequested A boolean representing whether to
-     *                                          request delivery receipt from the
-     *                                          recipient.
+     * @param boolean $deliveryReceiptRequested The delivery_receipt_requested
      */
     public function __construct($sim = Values::NONE, $callbackMethod = Values::NONE, $callbackUrl = Values::NONE, $commandMode = Values::NONE, $includeSid = Values::NONE, $deliveryReceiptRequested = Values::NONE) {
         $this->options['sim'] = $sim;
@@ -211,11 +207,9 @@ class CreateCommandOptions extends Options {
     }
 
     /**
-     * A boolean representing whether to request delivery receipt from the recipient. For Commands that request delivery receipt, the Command state transitions to 'delivered' once the server has received a delivery receipt from the device. Defaults to true.
+     * The delivery_receipt_requested
      * 
-     * @param boolean $deliveryReceiptRequested A boolean representing whether to
-     *                                          request delivery receipt from the
-     *                                          recipient.
+     * @param boolean $deliveryReceiptRequested The delivery_receipt_requested
      * @return $this Fluent Builder
      */
     public function setDeliveryReceiptRequested($deliveryReceiptRequested) {

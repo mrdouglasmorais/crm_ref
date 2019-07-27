@@ -2,8 +2,15 @@
 
 defined('BASEPATH') or exit('No direct script access allowed');
 
-class Staff_model extends App_Model
+class Staff_model extends CRM_Model
 {
+    private $perm_statements = ['view', 'view_own', 'edit', 'create', 'delete'];
+
+    public function __construct()
+    {
+        parent::__construct();
+    }
+
     public function delete($id, $transfer_data_to)
     {
         if (!is_numeric($transfer_data_to)) {
@@ -14,7 +21,7 @@ class Staff_model extends App_Model
             return false;
         }
 
-        hooks()->do_action('before_delete_staff_member', [
+        do_action('before_delete_staff_member', [
             'id'               => $id,
             'transfer_data_to' => $transfer_data_to,
         ]);
@@ -23,166 +30,171 @@ class Staff_model extends App_Model
         $transferred_to = get_staff_full_name($transfer_data_to);
 
         $this->db->where('addedfrom', $id);
-        $this->db->update(db_prefix() . 'estimates', [
+        $this->db->update('tblestimates', [
             'addedfrom' => $transfer_data_to,
         ]);
 
         $this->db->where('sale_agent', $id);
-        $this->db->update(db_prefix() . 'estimates', [
+        $this->db->update('tblestimates', [
             'sale_agent' => $transfer_data_to,
         ]);
 
         $this->db->where('addedfrom', $id);
-        $this->db->update(db_prefix() . 'invoices', [
+        $this->db->update('tblinvoices', [
             'addedfrom' => $transfer_data_to,
         ]);
 
         $this->db->where('sale_agent', $id);
-        $this->db->update(db_prefix() . 'invoices', [
+        $this->db->update('tblinvoices', [
             'sale_agent' => $transfer_data_to,
         ]);
 
         $this->db->where('addedfrom', $id);
-        $this->db->update(db_prefix() . 'expenses', [
+        $this->db->update('tblexpenses', [
             'addedfrom' => $transfer_data_to,
         ]);
 
         $this->db->where('addedfrom', $id);
-        $this->db->update(db_prefix() . 'notes', [
+        $this->db->update('tblnotes', [
             'addedfrom' => $transfer_data_to,
         ]);
 
         $this->db->where('userid', $id);
-        $this->db->update(db_prefix() . 'newsfeed_post_comments', [
+        $this->db->update('tblpostcomments', [
             'userid' => $transfer_data_to,
         ]);
 
         $this->db->where('creator', $id);
-        $this->db->update(db_prefix() . 'newsfeed_posts', [
+        $this->db->update('tblposts', [
             'creator' => $transfer_data_to,
         ]);
 
         $this->db->where('staff_id', $id);
-        $this->db->update(db_prefix() . 'projectdiscussions', [
+        $this->db->update('tblprojectdiscussions', [
             'staff_id' => $transfer_data_to,
         ]);
 
         $this->db->where('addedfrom', $id);
-        $this->db->update(db_prefix() . 'projects', [
+        $this->db->update('tblprojects', [
             'addedfrom' => $transfer_data_to,
         ]);
 
         $this->db->where('addedfrom', $id);
-        $this->db->update(db_prefix() . 'creditnotes', [
+        $this->db->update('tblcreditnotes', [
             'addedfrom' => $transfer_data_to,
         ]);
 
         $this->db->where('staff_id', $id);
-        $this->db->update(db_prefix() . 'credits', [
+        $this->db->update('tblcredits', [
+            'staff_id' => $transfer_data_to,
+        ]);
+
+        $this->db->where('staff_id', $id);
+        $this->db->update('tblgoals', [
             'staff_id' => $transfer_data_to,
         ]);
 
         $this->db->where('staffid', $id);
-        $this->db->update(db_prefix() . 'project_files', [
+        $this->db->update('tblprojectfiles', [
             'staffid' => $transfer_data_to,
         ]);
 
         $this->db->where('staffid', $id);
-        $this->db->update(db_prefix() . 'proposal_comments', [
+        $this->db->update('tblproposalcomments', [
             'staffid' => $transfer_data_to,
         ]);
 
         $this->db->where('addedfrom', $id);
-        $this->db->update(db_prefix() . 'proposals', [
+        $this->db->update('tblproposals', [
             'addedfrom' => $transfer_data_to,
         ]);
 
         $this->db->where('staffid', $id);
-        $this->db->update(db_prefix() . 'task_comments', [
+        $this->db->update('tblstafftaskcomments', [
             'staffid' => $transfer_data_to,
         ]);
 
         $this->db->where('addedfrom', $id);
         $this->db->where('is_added_from_contact', 0);
-        $this->db->update(db_prefix() . 'tasks', [
+        $this->db->update('tblstafftasks', [
             'addedfrom' => $transfer_data_to,
         ]);
 
         $this->db->where('staffid', $id);
-        $this->db->update(db_prefix() . 'files', [
+        $this->db->update('tblfiles', [
             'staffid' => $transfer_data_to,
         ]);
 
         $this->db->where('renewed_by_staff_id', $id);
-        $this->db->update(db_prefix() . 'contract_renewals', [
+        $this->db->update('tblcontractrenewals', [
             'renewed_by_staff_id' => $transfer_data_to,
         ]);
 
         $this->db->where('addedfrom', $id);
-        $this->db->update(db_prefix() . 'task_checklist_items', [
+        $this->db->update('tbltaskchecklists', [
             'addedfrom' => $transfer_data_to,
         ]);
 
         $this->db->where('finished_from', $id);
-        $this->db->update(db_prefix() . 'task_checklist_items', [
+        $this->db->update('tbltaskchecklists', [
             'finished_from' => $transfer_data_to,
         ]);
 
         $this->db->where('admin', $id);
-        $this->db->update(db_prefix() . 'ticket_replies', [
+        $this->db->update('tblticketreplies', [
             'admin' => $transfer_data_to,
         ]);
 
         $this->db->where('admin', $id);
-        $this->db->update(db_prefix() . 'tickets', [
+        $this->db->update('tbltickets', [
             'admin' => $transfer_data_to,
         ]);
 
         $this->db->where('addedfrom', $id);
-        $this->db->update(db_prefix() . 'leads', [
+        $this->db->update('tblleads', [
             'addedfrom' => $transfer_data_to,
         ]);
 
         $this->db->where('assigned', $id);
-        $this->db->update(db_prefix() . 'leads', [
+        $this->db->update('tblleads', [
             'assigned' => $transfer_data_to,
         ]);
 
         $this->db->where('staff_id', $id);
-        $this->db->update(db_prefix() . 'taskstimers', [
+        $this->db->update('tbltaskstimers', [
             'staff_id' => $transfer_data_to,
         ]);
 
         $this->db->where('addedfrom', $id);
-        $this->db->update(db_prefix() . 'contracts', [
+        $this->db->update('tblcontracts', [
             'addedfrom' => $transfer_data_to,
         ]);
 
         $this->db->where('assigned_from', $id);
         $this->db->where('is_assigned_from_contact', 0);
-        $this->db->update(db_prefix() . 'task_assigned', [
+        $this->db->update('tblstafftaskassignees', [
             'assigned_from' => $transfer_data_to,
         ]);
 
         $this->db->where('responsible', $id);
-        $this->db->update(db_prefix() . 'leads_email_integration', [
+        $this->db->update('tblleadsintegration', [
             'responsible' => $transfer_data_to,
         ]);
 
         $this->db->where('responsible', $id);
-        $this->db->update(db_prefix() . 'web_to_lead', [
+        $this->db->update('tblwebtolead', [
             'responsible' => $transfer_data_to,
         ]);
 
         $this->db->where('created_from', $id);
-        $this->db->update(db_prefix() . 'subscriptions', [
+        $this->db->update('tblsubscriptions', [
             'created_from' => $transfer_data_to,
         ]);
 
         $this->db->where('notify_type', 'specific_staff');
-        $web_to_lead = $this->db->get(db_prefix() . 'web_to_lead')->result_array();
+        $webtolead = $this->db->get('tblwebtolead')->result_array();
 
-        foreach ($web_to_lead as $form) {
+        foreach ($webtolead as $form) {
             if (!empty($form['notify_ids'])) {
                 $staff = unserialize($form['notify_ids']);
                 if (is_array($staff)) {
@@ -191,7 +203,7 @@ class Staff_model extends App_Model
                             unset($staff[$key]);
                             $staff = serialize(array_values($staff));
                             $this->db->where('id', $form['id']);
-                            $this->db->update(db_prefix() . 'web_to_lead', [
+                            $this->db->update('tblwebtolead', [
                                 'notify_ids' => $staff,
                             ]);
                         }
@@ -201,7 +213,7 @@ class Staff_model extends App_Model
         }
 
         $this->db->where('id', 1);
-        $leads_email_integration = $this->db->get(db_prefix() . 'leads_email_integration')->row();
+        $leads_email_integration = $this->db->get('tblleadsintegration')->row();
 
         if ($leads_email_integration->notify_type == 'specific_staff') {
             if (!empty($leads_email_integration->notify_ids)) {
@@ -212,7 +224,7 @@ class Staff_model extends App_Model
                             unset($staff[$key]);
                             $staff = serialize(array_values($staff));
                             $this->db->where('id', 1);
-                            $this->db->update(db_prefix() . 'leads_email_integration', [
+                            $this->db->update('tblleadsintegration', [
                                 'notify_ids' => $staff,
                             ]);
                         }
@@ -222,73 +234,72 @@ class Staff_model extends App_Model
         }
 
         $this->db->where('assigned', $id);
-        $this->db->update(db_prefix() . 'tickets', [
+        $this->db->update('tbltickets', [
             'assigned' => 0,
         ]);
 
         $this->db->where('staff', 1);
         $this->db->where('userid', $id);
-        $this->db->delete(db_prefix() . 'dismissed_announcements');
+        $this->db->delete('tbldismissedannouncements');
 
         $this->db->where('userid', $id);
-        $this->db->delete(db_prefix() . 'newsfeed_comment_likes');
+        $this->db->delete('tblcommentlikes');
 
         $this->db->where('userid', $id);
-        $this->db->delete(db_prefix() . 'newsfeed_post_likes');
+        $this->db->delete('tblpostlikes');
 
         $this->db->where('staff_id', $id);
-        $this->db->delete(db_prefix() . 'customer_admins');
+        $this->db->delete('tblcustomeradmins');
 
         $this->db->where('fieldto', 'staff');
         $this->db->where('relid', $id);
-        $this->db->delete(db_prefix() . 'customfieldsvalues');
+        $this->db->delete('tblcustomfieldsvalues');
 
         $this->db->where('userid', $id);
-        $this->db->delete(db_prefix() . 'events');
+        $this->db->delete('tblevents');
 
         $this->db->where('touserid', $id);
-        $this->db->delete(db_prefix() . 'notifications');
+        $this->db->delete('tblnotifications');
 
         $this->db->where('staff_id', $id);
-        $this->db->delete(db_prefix() . 'user_meta');
+        $this->db->delete('tblusermeta');
 
         $this->db->where('staff_id', $id);
-        $this->db->delete(db_prefix() . 'project_members');
+        $this->db->delete('tblprojectmembers');
 
         $this->db->where('staff_id', $id);
-        $this->db->delete(db_prefix() . 'project_notes');
+        $this->db->delete('tblprojectnotes');
 
         $this->db->where('creator', $id);
         $this->db->or_where('staff', $id);
-        $this->db->delete(db_prefix() . 'reminders');
+        $this->db->delete('tblreminders');
 
         $this->db->where('staffid', $id);
-        $this->db->delete(db_prefix() . 'staff_departments');
+        $this->db->delete('tblstaffdepartments');
 
         $this->db->where('staffid', $id);
-        $this->db->delete(db_prefix() . 'todos');
+        $this->db->delete('tbltodoitems');
 
         $this->db->where('staff', 1);
         $this->db->where('user_id', $id);
-        $this->db->delete(db_prefix() . 'user_auto_login');
+        $this->db->delete('tbluserautologin');
+
+        $this->db->where('staffid', $id);
+        $this->db->delete('tblstaffpermissions');
+
+        $this->db->where('staffid', $id);
+        $this->db->delete('tblstafftaskassignees');
+
+        $this->db->where('staffid', $id);
+        $this->db->delete('tblstafftasksfollowers');
 
         $this->db->where('staff_id', $id);
-        $this->db->delete(db_prefix() . 'staff_permissions');
+        $this->db->delete('tblpinnedprojects');
 
         $this->db->where('staffid', $id);
-        $this->db->delete(db_prefix() . 'task_assigned');
-
-        $this->db->where('staffid', $id);
-        $this->db->delete(db_prefix() . 'task_followers');
-
-        $this->db->where('staff_id', $id);
-        $this->db->delete(db_prefix() . 'pinned_projects');
-
-        $this->db->where('staffid', $id);
-        $this->db->delete(db_prefix() . 'staff');
-        log_activity('Staff Member Deleted [Name: ' . $name . ', Data Transferred To: ' . $transferred_to . ']');
-
-        hooks()->do_action('staff_member_deleted', [
+        $this->db->delete('tblstaff');
+        logActivity('Staff Member Deleted [Name: ' . $name . ', Data Transferred To: ' . $transferred_to . ']');
+        do_action('staff_member_deleted', [
             'id'               => $id,
             'transfer_data_to' => $transfer_data_to,
         ]);
@@ -306,18 +317,19 @@ class Staff_model extends App_Model
     {
         $select_str = '*,CONCAT(firstname," ",lastname) as full_name';
 
-        // Used to prevent multiple queries on logged in staff to check the total unread notifications in core/AdminController.php
+        // Used to prevent multiple queries on logged in staff to check the total unread notifications in admin_controller.php
         if (is_staff_logged_in() && $id != '' && $id == get_staff_user_id()) {
-            $select_str .= ',(SELECT COUNT(*) FROM ' . db_prefix() . 'notifications WHERE touserid=' . get_staff_user_id() . ' and isread=0) as total_unread_notifications, (SELECT COUNT(*) FROM ' . db_prefix() . 'todos WHERE finished=0 AND staffid=' . get_staff_user_id() . ') as total_unfinished_todos';
+            $select_str .= ',(SELECT COUNT(*) FROM tblnotifications WHERE touserid=' . get_staff_user_id() . ' and isread=0) as total_unread_notifications, (SELECT COUNT(*) FROM tbltodoitems WHERE finished=0 AND staffid=' . get_staff_user_id() . ') as total_unfinished_todos';
         }
 
         $this->db->select($select_str);
+
+
         $this->db->where($where);
 
         if (is_numeric($id)) {
             $this->db->where('staffid', $id);
-            $staff = $this->db->get(db_prefix() . 'staff')->row();
-
+            $staff = $this->db->get('tblstaff')->row();
             if ($staff) {
                 $staff->permissions = $this->get_staff_permissions($id);
             }
@@ -326,28 +338,19 @@ class Staff_model extends App_Model
         }
         $this->db->order_by('firstname', 'desc');
 
-        return $this->db->get(db_prefix() . 'staff')->result_array();
+        return $this->db->get('tblstaff')->result_array();
     }
 
-    /**
-     * Get staff permissions
-     * @param  mixed $id staff id
-     * @return array
-     */
     public function get_staff_permissions($id)
     {
-        // Fix for version 2.3.1 tables upgrade
-        if (defined('DOING_DATABASE_UPGRADE')) {
-            return [];
-        }
-
-        $permissions = $this->app_object_cache->get('staff-' . $id . '-permissions');
+        $permissions = $this->object_cache->get('staff-' . $id . '-permissions');
 
         if (!$permissions && !is_array($permissions)) {
-            $this->db->where('staff_id', $id);
-            $permissions = $this->db->get('staff_permissions')->result_array();
-
-            $this->app_object_cache->add('staff-' . $id . '-permissions', $permissions);
+            $this->db->select('tblstaffpermissions.*,tblpermissions.shortname as permission_name');
+            $this->db->join('tblpermissions', 'tblpermissions.permissionid = tblstaffpermissions.permissionid');
+            $this->db->where('staffid', $id);
+            $permissions = $this->db->get('tblstaffpermissions')->result();
+            $this->object_cache->add('staff-' . $id . '-permissions', $permissions);
         }
 
         return $permissions;
@@ -367,7 +370,7 @@ class Staff_model extends App_Model
         }
         // First check for all cases if the email exists.
         $this->db->where('email', $data['email']);
-        $email = $this->db->get(db_prefix() . 'staff')->row();
+        $email = $this->db->get('tblstaff')->row();
         if ($email) {
             die('Email already exists');
         }
@@ -386,18 +389,36 @@ class Staff_model extends App_Model
         } else {
             unset($data['send_welcome_email']);
         }
-
-        $data['password']        = app_hash_password($data['password']);
-        $data['datecreated']     = date('Y-m-d H:i:s');
+        $data['email_signature'] = nl2br_save_html($data['email_signature']);
+        $this->load->helper('phpass');
+        $hasher              = new PasswordHash(PHPASS_HASH_STRENGTH, PHPASS_HASH_PORTABLE);
+        $data['password']    = $hasher->HashPassword($data['password']);
+        $data['datecreated'] = date('Y-m-d H:i:s');
         if (isset($data['departments'])) {
             $departments = $data['departments'];
             unset($data['departments']);
         }
 
         $permissions = [];
-        if (isset($data['permissions'])) {
-            $permissions = $data['permissions'];
-            unset($data['permissions']);
+        if (isset($data['view'])) {
+            $permissions['view'] = $data['view'];
+            unset($data['view']);
+        }
+        if (isset($data['view_own'])) {
+            $permissions['view_own'] = $data['view_own'];
+            unset($data['view_own']);
+        }
+        if (isset($data['edit'])) {
+            $permissions['edit'] = $data['edit'];
+            unset($data['edit']);
+        }
+        if (isset($data['create'])) {
+            $permissions['create'] = $data['create'];
+            unset($data['create']);
+        }
+        if (isset($data['delete'])) {
+            $permissions['delete'] = $data['delete'];
+            unset($data['delete']);
         }
 
         if (isset($data['custom_fields'])) {
@@ -409,22 +430,23 @@ class Staff_model extends App_Model
             $data['is_not_staff'] = 0;
         }
 
-        $this->db->insert(db_prefix() . 'staff', $data);
+        $this->db->insert('tblstaff', $data);
         $staffid = $this->db->insert_id();
         if ($staffid) {
-            $slug = $data['firstname'] . ' ' . $data['lastname'];
-
-            if ($slug == ' ') {
-                $slug = 'unknown-' . $staffid;
+            $sl = $data['firstname'] . ' ' . $data['lastname'];
+            if ($sl == ' ') {
+                $sl = 'unknown-' . $staffid;
             }
 
             if ($send_welcome_email == true) {
-                send_mail_template('staff_created', $data['email'], $staffid, $original_password);
+                $this->load->model('emails_model');
+                $merge_fields = [];
+                $merge_fields = array_merge($merge_fields, get_staff_merge_fields($staffid, $original_password));
+                $this->emails_model->send_email_template('new-staff-created', $data['email'], $merge_fields);
             }
-
             $this->db->where('staffid', $staffid);
-            $this->db->update(db_prefix() . 'staff', [
-                'media_path_slug' => slug_it($slug),
+            $this->db->update('tblstaff', [
+                'media_path_slug' => slug_it($sl),
             ]);
 
             if (isset($custom_fields)) {
@@ -432,31 +454,59 @@ class Staff_model extends App_Model
             }
             if (isset($departments)) {
                 foreach ($departments as $department) {
-                    $this->db->insert(db_prefix() . 'staff_departments', [
+                    $this->db->insert('tblstaffdepartments', [
                         'staffid'      => $staffid,
                         'departmentid' => $department,
                     ]);
                 }
             }
 
+
+            $_all_permissions = $this->roles_model->get_permissions();
+            foreach ($_all_permissions as $permission) {
+                $this->db->insert('tblstaffpermissions', [
+                    'permissionid' => $permission['permissionid'],
+                    'staffid'      => $staffid,
+                    'can_view'     => 0,
+                    'can_view_own' => 0,
+                    'can_edit'     => 0,
+                    'can_create'   => 0,
+                    'can_delete'   => 0,
+                ]);
+            }
+            foreach ($this->perm_statements as $c) {
+                foreach ($permissions as $key => $p) {
+                    if ($key == $c) {
+                        foreach ($p as $perm) {
+                            $this->db->where('staffid', $staffid);
+                            $this->db->where('permissionid', $perm);
+                            $this->db->update('tblstaffpermissions', [
+                                'can_' . $c => 1,
+                            ]);
+                        }
+                    }
+                }
+            }
+
+            logActivity('New Staff Member Added [ID: ' . $staffid . ', ' . $data['firstname'] . ' ' . $data['lastname'] . ']');
             // Delete all staff permission if is admin we dont need permissions stored in database (in case admin check some permissions)
-            $this->update_permissions($data['admin'] == 1 ? [] : $permissions, $staffid);
-
-            log_activity('New Staff Member Added [ID: ' . $staffid . ', ' . $data['firstname'] . ' ' . $data['lastname'] . ']');
-
+            if ($data['admin'] == 1) {
+                $this->db->where('staffid', $staffid);
+                $this->db->delete('tblstaffpermissions');
+            }
             // Get all announcements and set it to read.
             $this->db->select('announcementid');
-            $this->db->from(db_prefix() . 'announcements');
+            $this->db->from('tblannouncements');
             $this->db->where('showtostaff', 1);
             $announcements = $this->db->get()->result_array();
             foreach ($announcements as $announcement) {
-                $this->db->insert(db_prefix() . 'dismissed_announcements', [
+                $this->db->insert('tbldismissedannouncements', [
                     'announcementid' => $announcement['announcementid'],
                     'staff'          => 1,
                     'userid'         => $staffid,
                 ]);
             }
-            hooks()->do_action('staff_member_created', $staffid);
+            do_action('staff_member_created', $staffid);
 
             return $staffid;
         }
@@ -479,7 +529,11 @@ class Staff_model extends App_Model
             unset($data['fakepasswordremembered']);
         }
 
-        $data = hooks()->apply_filters('before_update_staff_member', $data, $id);
+        $hook_data['data']   = $data;
+        $hook_data['userid'] = $id;
+        $hook_data           = do_action('before_update_staff_member', $hook_data);
+        $data                = $hook_data['data'];
+        $id                  = $hook_data['userid'];
 
         if (is_admin()) {
             if (isset($data['administrator'])) {
@@ -506,13 +560,28 @@ class Staff_model extends App_Model
             $departments = $data['departments'];
             unset($data['departments']);
         }
-
         $permissions = [];
-        if (isset($data['permissions'])) {
-            $permissions = $data['permissions'];
-            unset($data['permissions']);
+        if (isset($data['view'])) {
+            $permissions['view'] = $data['view'];
+            unset($data['view']);
         }
 
+        if (isset($data['view_own'])) {
+            $permissions['view_own'] = $data['view_own'];
+            unset($data['view_own']);
+        }
+        if (isset($data['edit'])) {
+            $permissions['edit'] = $data['edit'];
+            unset($data['edit']);
+        }
+        if (isset($data['create'])) {
+            $permissions['create'] = $data['create'];
+            unset($data['create']);
+        }
+        if (isset($data['delete'])) {
+            $permissions['delete'] = $data['delete'];
+            unset($data['delete']);
+        }
         if (isset($data['custom_fields'])) {
             $custom_fields = $data['custom_fields'];
             if (handle_custom_fields_post($id, $custom_fields)) {
@@ -523,7 +592,9 @@ class Staff_model extends App_Model
         if (empty($data['password'])) {
             unset($data['password']);
         } else {
-            $data['password']             = app_hash_password($data['password']);
+            $this->load->helper('phpass');
+            $hasher                       = new PasswordHash(PHPASS_HASH_STRENGTH, PHPASS_HASH_PORTABLE);
+            $data['password']             = $hasher->HashPassword($data['password']);
             $data['last_password_change'] = date('Y-m-d H:i:s');
         }
 
@@ -540,7 +611,7 @@ class Staff_model extends App_Model
             $data['is_not_staff'] = 0;
         }
 
-        if (isset($data['admin']) && $data['admin'] == 1) {
+        if ($data['admin'] == 1) {
             $data['is_not_staff'] = 0;
         }
 
@@ -551,14 +622,14 @@ class Staff_model extends App_Model
         if (sizeof($staff_departments) > 0) {
             if (!isset($data['departments'])) {
                 $this->db->where('staffid', $id);
-                $this->db->delete(db_prefix() . 'staff_departments');
+                $this->db->delete('tblstaffdepartments');
             } else {
                 foreach ($staff_departments as $staff_department) {
                     if (isset($departments)) {
                         if (!in_array($staff_department['departmentid'], $departments)) {
                             $this->db->where('staffid', $id);
                             $this->db->where('departmentid', $staff_department['departmentid']);
-                            $this->db->delete(db_prefix() . 'staff_departments');
+                            $this->db->delete('tblstaffdepartments');
                             if ($this->db->affected_rows() > 0) {
                                 $affectedRows++;
                             }
@@ -570,9 +641,9 @@ class Staff_model extends App_Model
                 foreach ($departments as $department) {
                     $this->db->where('staffid', $id);
                     $this->db->where('departmentid', $department);
-                    $_exists = $this->db->get(db_prefix() . 'staff_departments')->row();
+                    $_exists = $this->db->get('tblstaffdepartments')->row();
                     if (!$_exists) {
-                        $this->db->insert(db_prefix() . 'staff_departments', [
+                        $this->db->insert('tblstaffdepartments', [
                             'staffid'      => $id,
                             'departmentid' => $department,
                         ]);
@@ -585,7 +656,7 @@ class Staff_model extends App_Model
         } else {
             if (isset($departments)) {
                 foreach ($departments as $department) {
-                    $this->db->insert(db_prefix() . 'staff_departments', [
+                    $this->db->insert('tblstaffdepartments', [
                         'staffid'      => $id,
                         'departmentid' => $department,
                     ]);
@@ -598,19 +669,22 @@ class Staff_model extends App_Model
 
 
         $this->db->where('staffid', $id);
-        $this->db->update(db_prefix() . 'staff', $data);
-
+        $this->db->update('tblstaff', $data);
         if ($this->db->affected_rows() > 0) {
             $affectedRows++;
         }
 
-        if ($this->update_permissions((isset($data['admin']) && $data['admin'] == 1 ? [] : $permissions), $id)) {
+        if ($this->update_permissions($permissions, $id)) {
             $affectedRows++;
         }
 
+        if (isset($data['admin']) && $data['admin'] == 1) {
+            $this->db->where('staffid', $id);
+            $this->db->delete('tblstaffpermissions');
+        }
         if ($affectedRows > 0) {
-            hooks()->do_action('staff_member_updated', $id);
-            log_activity('Staff Member Updated [ID: ' . $id . ', ' . $data['firstname'] . ' ' . $data['lastname'] . ']');
+            do_action('staff_member_updated', $id);
+            logActivity('Staff Member Updated [ID: ' . $id . ', ' . $data['firstname'] . ' ' . $data['lastname'] . ']');
 
             return true;
         }
@@ -620,34 +694,76 @@ class Staff_model extends App_Model
 
     public function update_permissions($permissions, $id)
     {
-        $this->db->where('staff_id', $id);
-        $this->db->delete('staff_permissions');
-
-        $is_staff_member = is_staff_member($id);
-
-        foreach ($permissions as $feature => $capabilities) {
-            foreach ($capabilities as $capability) {
-
-                // Maybe do this via hook.
-                if ($feature == 'leads' && !$is_staff_member) {
-                    continue;
+        $all_permissions = $this->roles_model->get_permissions();
+        if (total_rows('tblstaffpermissions', [
+            'staffid' => $id,
+        ]) == 0) {
+            foreach ($all_permissions as $p) {
+                $_ins                 = [];
+                $_ins['staffid']      = $id;
+                $_ins['permissionid'] = $p['permissionid'];
+                $this->db->insert('tblstaffpermissions', $_ins);
+            }
+        } elseif (total_rows('tblstaffpermissions', [
+                'staffid' => $id,
+            ]) != count($all_permissions)) {
+            foreach ($all_permissions as $p) {
+                if (total_rows('tblstaffpermissions', [
+                    'staffid' => $id,
+                    'permissionid' => $p['permissionid'],
+                ]) == 0) {
+                    $_ins                 = [];
+                    $_ins['staffid']      = $id;
+                    $_ins['permissionid'] = $p['permissionid'];
+                    $this->db->insert('tblstaffpermissions', $_ins);
                 }
-
-                $this->db->insert('staff_permissions', ['staff_id' => $id, 'feature' => $feature, 'capability' => $capability]);
             }
         }
-
-        return true;
+        $_permission_restore_affected_rows = 0;
+        foreach ($all_permissions as $permission) {
+            foreach ($this->perm_statements as $c) {
+                $this->db->where('staffid', $id);
+                $this->db->where('permissionid', $permission['permissionid']);
+                $this->db->update('tblstaffpermissions', [
+                    'can_' . $c => 0,
+                ]);
+                if ($this->db->affected_rows() > 0) {
+                    $_permission_restore_affected_rows++;
+                }
+            }
+        }
+        $_new_permissions_added_affected_rows = 0;
+        foreach ($permissions as $key => $val) {
+            foreach ($val as $p) {
+                $this->db->where('staffid', $id);
+                $this->db->where('permissionid', $p);
+                $this->db->update('tblstaffpermissions', [
+                    'can_' . $key => 1,
+                ]);
+                if ($this->db->affected_rows() > 0) {
+                    $_new_permissions_added_affected_rows++;
+                }
+            }
+        }
+        if ($_new_permissions_added_affected_rows != $_permission_restore_affected_rows) {
+            return true;
+        }
     }
 
     public function update_profile($data, $id)
     {
-        $data = hooks()->apply_filters('before_staff_update_profile', $data, $id);
+        $hook_data['data']   = $data;
+        $hook_data['userid'] = $id;
+        $hook_data           = do_action('before_staff_update_profile', $hook_data);
+        $data                = $hook_data['data'];
+        $id                  = $hook_data['userid'];
 
         if (empty($data['password'])) {
             unset($data['password']);
         } else {
-            $data['password']             = app_hash_password($data['password']);
+            $this->load->helper('phpass');
+            $hasher                       = new PasswordHash(PHPASS_HASH_STRENGTH, PHPASS_HASH_PORTABLE);
+            $data['password']             = $hasher->HashPassword($data['password']);
             $data['last_password_change'] = date('Y-m-d H:i:s');
         }
 
@@ -657,12 +773,13 @@ class Staff_model extends App_Model
             $data['two_factor_auth_enabled'] = 0;
         }
 
+        $data['email_signature'] = nl2br_save_html($data['email_signature']);
 
         $this->db->where('staffid', $id);
-        $this->db->update(db_prefix() . 'staff', $data);
+        $this->db->update('tblstaff', $data);
         if ($this->db->affected_rows() > 0) {
-            hooks()->do_action('staff_member_profile_updated', $id);
-            log_activity('Staff Profile Updated [Staff: ' . get_staff_full_name($id) . ']');
+            do_action('staff_member_profile_updated', $id);
+            logActivity('Staff Profile Updated [Staff: ' . get_staff_full_name($id) . ']');
 
             return true;
         }
@@ -678,7 +795,11 @@ class Staff_model extends App_Model
      */
     public function change_password($data, $userid)
     {
-        $data = hooks()->apply_filters('before_staff_change_password', $data, $userid);
+        $hook_data['data']   = $data;
+        $hook_data['userid'] = $userid;
+        $hook_data           = do_action('before_staff_change_password', $hook_data);
+        $data                = $hook_data['data'];
+        $userid              = $hook_data['userid'];
 
         $member = $this->get($userid);
         // CHeck if member is active
@@ -689,25 +810,24 @@ class Staff_model extends App_Model
                 ],
             ];
         }
-
+        $this->load->helper('phpass');
+        $hasher = new PasswordHash(PHPASS_HASH_STRENGTH, PHPASS_HASH_PORTABLE);
         // Check new old password
-        if (!app_hasher()->CheckPassword($data['oldpassword'], $member->password)) {
+        if (!$hasher->CheckPassword($data['oldpassword'], $member->password)) {
             return [
                 [
                     'passwordnotmatch' => true,
                 ],
             ];
         }
-
-        $data['newpasswordr'] = app_hash_password($data['newpasswordr']);
-
+        $data['newpasswordr'] = $hasher->HashPassword($data['newpasswordr']);
         $this->db->where('staffid', $userid);
-        $this->db->update(db_prefix() . 'staff', [
+        $this->db->update('tblstaff', [
             'password'             => $data['newpasswordr'],
             'last_password_change' => date('Y-m-d H:i:s'),
         ]);
         if ($this->db->affected_rows() > 0) {
-            log_activity('Staff Password Changed [' . $userid . ']');
+            logActivity('Staff Password Changed [' . $userid . ']');
 
             return true;
         }
@@ -722,14 +842,17 @@ class Staff_model extends App_Model
      */
     public function change_staff_status($id, $status)
     {
-        $status = hooks()->apply_filters('before_staff_status_change', $status, $id);
+        $hook_data['id']     = $id;
+        $hook_data['status'] = $status;
+        $hook_data           = do_action('before_staff_status_change', $hook_data);
+        $status              = $hook_data['status'];
+        $id                  = $hook_data['id'];
 
         $this->db->where('staffid', $id);
-        $this->db->update(db_prefix() . 'staff', [
+        $this->db->update('tblstaff', [
             'active' => $status,
         ]);
-
-        log_activity('Staff Status Changed [StaffID: ' . $id . ' - Status(Active/Inactive): ' . $status . ']');
+        logActivity('Staff Status Changed [StaffID: ' . $id . ' - Status(Active/Inactive): ' . $status . ']');
     }
 
     public function get_logged_time_data($id = '', $filter_data = [])
@@ -757,10 +880,10 @@ class Staff_model extends App_Model
         $first_day_last_week = date('Y-m-d', strtotime('monday last week'));
         $last_day_last_week  = date('Y-m-d 23:59:59', strtotime('sunday last week'));
 
-        $this->db->select('task_id,start_time,end_time,staff_id,' . db_prefix() . 'taskstimers.hourly_rate,name,' . db_prefix() . 'taskstimers.id,rel_id,rel_type, billed');
+        $this->db->select('task_id,start_time,end_time,staff_id,tbltaskstimers.hourly_rate,name,tbltaskstimers.id,rel_id,rel_type');
         $this->db->where('staff_id', $id);
-        $this->db->join(db_prefix() . 'tasks', db_prefix() . 'tasks.id = ' . db_prefix() . 'taskstimers.task_id', 'left');
-        $timers           = $this->db->get(db_prefix() . 'taskstimers')->result_array();
+        $this->db->join('tblstafftasks', 'tblstafftasks.id = tbltaskstimers.task_id', 'left');
+        $timers           = $this->db->get('tbltaskstimers')->result_array();
         $_end_time_static = time();
 
         $filter_period = false;
@@ -775,19 +898,17 @@ class Staff_model extends App_Model
         foreach ($timers as $timer) {
             $start_date = strftime('%Y-%m-%d', $timer['start_time']);
 
-            $end_time    = $timer['end_time'];
-            $notFinished = false;
+            $end_time = $timer['end_time'];
+
             if ($timer['end_time'] == null) {
-                $end_time    = $_end_time_static;
-                $notFinished = true;
+                $end_time = $_end_time_static;
             }
 
             $total = $end_time - $timer['start_time'];
 
-            $result['total'][]     = $total;
-            $timer['total']        = $total;
-            $timer['end_time']     = $end_time;
-            $timer['not_finished'] = $notFinished;
+            $result['total'][] = $total;
+            $timer['total']    = $total;
+            $timer['end_time'] = $end_time;
 
             if ($start_date >= $first_day_this_month && $start_date <= $last_day_this_month) {
                 $result['this_month'][] = $total;

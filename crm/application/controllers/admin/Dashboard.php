@@ -2,7 +2,7 @@
 
 defined('BASEPATH') or exit('No direct script access allowed');
 
-class Dashboard extends AdminController
+class Dashboard extends Admin_controller
 {
     public function __construct()
     {
@@ -47,8 +47,14 @@ class Dashboard extends AdminController
         $data['staff_announcements']             = $this->announcements_model->get();
         $data['total_undismissed_announcements'] = $this->announcements_model->get_total_undismissed_announcements();
 
+        $data['goals'] = [];
+        if (is_staff_member()) {
+            $this->load->model('goals_model');
+            $data['goals'] = $this->goals_model->get_staff_goals(get_staff_user_id());
+        }
+
         $this->load->model('projects_model');
-        $data['projects_activity'] = $this->projects_model->get_activity('', hooks()->apply_filters('projects_activity_dashboard_limit', 20));
+        $data['projects_activity'] = $this->projects_model->get_activity('', do_action('projects_activity_dashboard_limit', 20));
         add_calendar_assets();
         $this->load->model('utilities_model');
         $this->load->model('estimates_model');
@@ -74,7 +80,7 @@ class Dashboard extends AdminController
         }
         $data['user_dashboard_visibility'] = json_encode($data['user_dashboard_visibility']);
 
-        $data = hooks()->apply_filters('before_dashboard_render', $data);
+        $data = do_action('before_dashboard_render', $data);
         $this->load->view('admin/dashboard/dashboard', $data);
     }
 

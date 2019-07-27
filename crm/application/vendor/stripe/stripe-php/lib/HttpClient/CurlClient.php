@@ -42,10 +42,6 @@ class CurlClient implements ClientInterface
 
     protected $userAgentInfo;
 
-    protected $enablePersistentConnections = null;
-
-    protected $curlHandle = null;
-
     /**
      * CurlClient constructor.
      *
@@ -64,15 +60,6 @@ class CurlClient implements ClientInterface
         $this->defaultOptions = $defaultOptions;
         $this->randomGenerator = $randomGenerator ?: new Util\RandomGenerator();
         $this->initUserAgentInfo();
-
-        // TODO: curl_reset requires PHP >= 5.5.0. Once we drop support for PHP 5.4, we can simply
-        // initialize this to true.
-        $this->enablePersistentConnections = function_exists('curl_reset');
-    }
-
-    public function __destruct()
-    {
-        $this->closeCurlHandle();
     }
 
     public function initUserAgentInfo()
@@ -92,22 +79,6 @@ class CurlClient implements ClientInterface
     public function getUserAgentInfo()
     {
         return $this->userAgentInfo;
-    }
-
-    /**
-     * @return boolean
-     */
-    public function getEnablePersistentConnections()
-    {
-        return $this->enablePersistentConnections;
-    }
-
-    /**
-     * @param boolean $enable
-     */
-    public function setEnablePersistentConnections($enable)
-    {
-        $this->enablePersistentConnections = $enable;
     }
 
     // USER DEFINED TIMEOUTS
@@ -228,10 +199,8 @@ class CurlClient implements ClientInterface
             $opts[CURLOPT_SSL_VERIFYPEER] = false;
         }
 
-        if (!isset($opts[CURLOPT_HTTP_VERSION])) {
-            // For HTTPS requests, enable HTTP/2, if supported
-            $opts[CURLOPT_HTTP_VERSION] = CURL_HTTP_VERSION_2TLS;
-        }
+        // For HTTPS requests, enable HTTP/2, if supported
+        $opts[CURLOPT_HTTP_VERSION] = CURL_HTTP_VERSION_2TLS;
 
         list($rbody, $rcode) = $this->executeRequestWithRetries($opts, $absUrl);
 
@@ -249,19 +218,17 @@ class CurlClient implements ClientInterface
             $rcode = 0;
             $errno = 0;
 
-            $this->resetCurlHandle();
-            curl_setopt_array($this->curlHandle, $opts);
-            $rbody = curl_exec($this->curlHandle);
+            $curl = curl_init();
+            curl_setopt_array($curl, $opts);
+            $rbody = curl_exec($curl);
 
             if ($rbody === false) {
-                $errno = curl_errno($this->curlHandle);
-                $message = curl_error($this->curlHandle);
+                $errno = curl_errno($curl);
+                $message = curl_error($curl);
             } else {
-                $rcode = curl_getinfo($this->curlHandle, CURLINFO_HTTP_CODE);
+                $rcode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
             }
-            if (!$this->getEnablePersistentConnections()) {
-                $this->closeCurlHandle();
-            }
+            curl_close($curl);
 
             if ($this->shouldRetry($errno, $rcode, $numRetries)) {
                 $numRetries += 1;
@@ -372,38 +339,5 @@ class CurlClient implements ClientInterface
         $sleepSeconds = max(Stripe::getInitialNetworkRetryDelay(), $sleepSeconds);
 
         return $sleepSeconds;
-    }
-
-    /**
-     * Initializes the curl handle. If already initialized, the handle is closed first.
-     */
-    private function initCurlHandle()
-    {
-        $this->closeCurlHandle();
-        $this->curlHandle = curl_init();
-    }
-
-    /**
-     * Closes the curl handle if initialized. Do nothing if already closed.
-     */
-    private function closeCurlHandle()
-    {
-        if (!is_null($this->curlHandle)) {
-            curl_close($this->curlHandle);
-            $this->curlHandle = null;
-        }
-    }
-
-    /**
-     * Resets the curl handle. If the handle is not already initialized, or if persistent
-     * connections are disabled, the handle is reinitialized instead.
-     */
-    private function resetCurlHandle()
-    {
-        if (!is_null($this->curlHandle) && $this->getEnablePersistentConnections()) {
-            curl_reset($this->curlHandle);
-        } else {
-            $this->initCurlHandle();
-        }
     }
 }

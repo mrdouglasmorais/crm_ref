@@ -6,7 +6,7 @@
 		<?php if($company_logo != ''){ ?>
 			<div class="row">
 				<div class="col-md-9">
-					<img src="<?php echo base_url('uploads/company/'.$company_logo); ?>" class="img img-responsive">
+					<img src="<?php echo base_url('uploads/company/'.$company_logo); ?>" class="img img-responsive" alt="<?php get_option('companyname'); ?>">
 				</div>
 				<?php if(has_permission('settings','','delete')){ ?>
 					<div class="col-md-3 text-right">
@@ -25,7 +25,7 @@
 		<?php if($company_logo_dark != ''){ ?>
 			<div class="row">
 				<div class="col-md-9">
-					<img src="<?php echo base_url('uploads/company/'.$company_logo_dark); ?>" class="img img-responsive">
+					<img src="<?php echo base_url('uploads/company/'.$company_logo_dark); ?>" class="img img-responsive" alt="<?php get_option('companyname'); ?>">
 				</div>
 				<?php if(has_permission('settings','','delete')){ ?>
 					<div class="col-md-3 text-right">

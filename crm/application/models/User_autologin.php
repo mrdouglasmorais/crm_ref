@@ -2,7 +2,7 @@
 
 defined('BASEPATH') or exit('No direct script access allowed');
 
-class User_Autologin extends App_Model
+class User_Autologin extends CRM_Model
 {
     public function __construct()
     {
@@ -20,26 +20,26 @@ class User_Autologin extends App_Model
         // check if user is staff
         $this->db->where('user_id', $user_id);
         $this->db->where('key_id', $key);
-        $user = $this->db->get(db_prefix() . 'user_auto_login')->row();
+        $user = $this->db->get('tbluserautologin')->row();
         if (!$user) {
             return null;
         }
         if ($user->staff == 1) {
-            $table = db_prefix() . 'staff';
+            $table = 'tblstaff';
             $this->db->select($table . '.staffid as id');
             $_id   = 'staffid';
             $staff = true;
         } else {
-            $table = db_prefix() . 'contacts';
+            $table = 'tblcontacts';
             $this->db->select($table . '.id as id');
             $_id   = 'id';
             $staff = false;
         }
         $this->db->select($table . '.' . $_id);
         $this->db->from($table);
-        $this->db->join(db_prefix() . 'user_auto_login', db_prefix() . 'user_auto_login.user_id = ' . $table . '.' . $_id);
-        $this->db->where(db_prefix() . 'user_auto_login.user_id', $user_id);
-        $this->db->where(db_prefix() . 'user_auto_login.key_id', $key);
+        $this->db->join('tbluserautologin', 'tbluserautologin.user_id = ' . $table . '.' . $_id);
+        $this->db->where('tbluserautologin.user_id', $user_id);
+        $this->db->where('tbluserautologin.key_id', $key);
         $query = $this->db->get();
         if ($query) {
             if ($query->num_rows() == 1) {
@@ -61,7 +61,7 @@ class User_Autologin extends App_Model
      */
     public function set($user_id, $key, $staff)
     {
-        return $this->db->insert(db_prefix() . 'user_auto_login', [
+        return $this->db->insert('tbluserautologin', [
             'user_id'    => $user_id,
             'key_id'     => $key,
             'user_agent' => substr($this->input->user_agent(), 0, 149),
@@ -81,6 +81,6 @@ class User_Autologin extends App_Model
         $this->db->where('user_id', $user_id);
         $this->db->where('key_id', $key);
         $this->db->where('staff', $staff);
-        $this->db->delete(db_prefix() . 'user_auto_login');
+        $this->db->delete('tbluserautologin');
     }
 }

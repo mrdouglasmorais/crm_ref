@@ -10,22 +10,22 @@ $aColumns = [
     'total_tax',
     'YEAR(date) as year',
     get_sql_select_client_company(),
-    db_prefix() . 'projects.name as project_name',
-    '(SELECT GROUP_CONCAT(name SEPARATOR ",") FROM ' . db_prefix() . 'taggables JOIN ' . db_prefix() . 'tags ON ' . db_prefix() . 'taggables.tag_id = ' . db_prefix() . 'tags.id WHERE rel_id = ' . db_prefix() . 'estimates.id and rel_type="estimate" ORDER by tag_order ASC) as tags',
+    'tblprojects.name as project_name',
+    '(SELECT GROUP_CONCAT(name SEPARATOR ",") FROM tbltags_in JOIN tbltags ON tbltags_in.tag_id = tbltags.id WHERE rel_id = tblestimates.id and rel_type="estimate" ORDER by tag_order ASC) as tags',
     'date',
     'expirydate',
     'reference_no',
-    db_prefix() . 'estimates.status',
+    'tblestimates.status',
     ];
 
 $join = [
-    'LEFT JOIN ' . db_prefix() . 'clients ON ' . db_prefix() . 'clients.userid = ' . db_prefix() . 'estimates.clientid',
-    'LEFT JOIN ' . db_prefix() . 'currencies ON ' . db_prefix() . 'currencies.id = ' . db_prefix() . 'estimates.currency',
-    'LEFT JOIN ' . db_prefix() . 'projects ON ' . db_prefix() . 'projects.id = ' . db_prefix() . 'estimates.project_id',
+    'LEFT JOIN tblclients ON tblclients.userid = tblestimates.clientid',
+    'LEFT JOIN tblcurrencies ON tblcurrencies.id = tblestimates.currency',
+    'LEFT JOIN tblprojects ON tblprojects.id = tblestimates.project_id',
 ];
 
 $sIndexColumn = 'id';
-$sTable       = db_prefix() . 'estimates';
+$sTable       = 'tblestimates';
 
 $custom_fields = get_table_custom_fields('estimate');
 
@@ -33,14 +33,14 @@ foreach ($custom_fields as $key => $field) {
     $selectAs = (is_cf_date($field) ? 'date_picker_cvalue_' . $key : 'cvalue_' . $key);
     array_push($customFieldsColumns, $selectAs);
     array_push($aColumns, 'ctable_' . $key . '.value as ' . $selectAs);
-    array_push($join, 'LEFT JOIN ' . db_prefix() . 'customfieldsvalues as ctable_' . $key . ' ON ' . db_prefix() . 'estimates.id = ctable_' . $key . '.relid AND ctable_' . $key . '.fieldto="' . $field['fieldto'] . '" AND ctable_' . $key . '.fieldid=' . $field['id']);
+    array_push($join, 'LEFT JOIN tblcustomfieldsvalues as ctable_' . $key . ' ON tblestimates.id = ctable_' . $key . '.relid AND ctable_' . $key . '.fieldto="' . $field['fieldto'] . '" AND ctable_' . $key . '.fieldid=' . $field['id']);
 }
 
 $where  = [];
 $filter = [];
 
 if ($this->ci->input->post('not_sent')) {
-    array_push($filter, 'OR (sent= 0 AND ' . db_prefix() . 'estimates.status NOT IN (2,3,4))');
+    array_push($filter, 'OR (sent= 0 AND tblestimates.status NOT IN (2,3,4))');
 }
 if ($this->ci->input->post('invoiced')) {
     array_push($filter, 'OR invoiceid IS NOT NULL');
@@ -57,7 +57,7 @@ foreach ($statuses as $status) {
     }
 }
 if (count($statusIds) > 0) {
-    array_push($filter, 'AND ' . db_prefix() . 'estimates.status IN (' . implode(', ', $statusIds) . ')');
+    array_push($filter, 'AND tblestimates.status IN (' . implode(', ', $statusIds) . ')');
 }
 
 $agents    = $this->ci->estimates_model->get_sale_agents();
@@ -87,7 +87,7 @@ if (count($filter) > 0) {
 }
 
 if ($clientid != '') {
-    array_push($where, 'AND ' . db_prefix() . 'estimates.clientid=' . $clientid);
+    array_push($where, 'AND tblestimates.clientid=' . $clientid);
 }
 
 if ($project_id) {
@@ -99,7 +99,7 @@ if (!has_permission('estimates', '', 'view')) {
     array_push($where, $userWhere);
 }
 
-$aColumns = hooks()->apply_filters('estimates_table_sql_columns', $aColumns);
+$aColumns = do_action('estimates_table_sql_columns', $aColumns);
 
 // Fix for big queries. Some hosting have max_join_limit
 if (count($custom_fields) > 4) {
@@ -107,10 +107,10 @@ if (count($custom_fields) > 4) {
 }
 
 $result = data_tables_init($aColumns, $sIndexColumn, $sTable, $join, $where, [
-    db_prefix() . 'estimates.id',
-    db_prefix() . 'estimates.clientid',
-    db_prefix() . 'estimates.invoiceid',
-    db_prefix() . 'currencies.name as currency_name',
+    'tblestimates.id',
+    'tblestimates.clientid',
+    'tblestimates.invoiceid',
+    'symbol',
     'project_id',
     'deleted_customer_name',
     'hash',
@@ -140,7 +140,7 @@ foreach ($rResult as $aRow) {
 
     $row[] = $numberOutput;
 
-    $amount = app_format_money($aRow['total'], $aRow['currency_name']);
+    $amount = format_money($aRow['total'], $aRow['symbol']);
 
     if ($aRow['invoiceid']) {
         $amount .= '<br /><span class="hide"> - </span><span class="text-success">' . _l('estimate_invoiced') . '</span>';
@@ -148,7 +148,7 @@ foreach ($rResult as $aRow) {
 
     $row[] = $amount;
 
-    $row[] = app_format_money($aRow['total_tax'], $aRow['currency_name']);
+    $row[] = format_money($aRow['total_tax'], $aRow['symbol']);
 
     $row[] = $aRow['year'];
 
@@ -168,17 +168,19 @@ foreach ($rResult as $aRow) {
 
     $row[] = $aRow['reference_no'];
 
-    $row[] = format_estimate_status($aRow[db_prefix() . 'estimates.status']);
+    $row[] = format_estimate_status($aRow['tblestimates.status']);
 
     // Custom fields add values
     foreach ($customFieldsColumns as $customFieldColumn) {
         $row[] = (strpos($customFieldColumn, 'date_picker_') !== false ? _d($aRow[$customFieldColumn]) : $aRow[$customFieldColumn]);
     }
 
-    $row['DT_RowClass'] = 'has-row-options';
+    $hook = do_action('estimates_table_row_data', [
+        'output' => $row,
+        'row'    => $aRow,
+    ]);
 
-    $row = hooks()->apply_filters('estimates_table_row_data', $row, $aRow);
-
+    $row                = $hook['output'];
     $output['aaData'][] = $row;
 }
 

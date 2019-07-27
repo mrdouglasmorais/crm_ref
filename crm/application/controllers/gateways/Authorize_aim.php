@@ -1,8 +1,13 @@
 <?php
 defined('BASEPATH') or exit('No direct script access allowed');
 
-class Authorize_aim extends App_Controller
+class Authorize_aim extends CRM_Controller
 {
+    public function __construct()
+    {
+        parent::__construct();
+    }
+
     public function complete_purchase()
     {
 
@@ -73,7 +78,7 @@ class Authorize_aim extends App_Controller
             $contact              = $this->clients_model->get_contact(get_contact_user_id());
             $data['billing_name'] = $contact->firstname . ' ' . $contact->lastname;
         } else {
-            if (total_rows(db_prefix().'contacts', ['userid' => $invoice->clientid]) == 1) {
+            if (total_rows('tblcontacts', ['userid' => $invoice->clientid]) == 1) {
                 $contact = $this->clients_model->get_contact(get_primary_contact_user_id($invoice->clientid));
                 if ($contact) {
                     $data['billing_name'] = $contact->firstname . ' ' . $contact->lastname;
@@ -100,7 +105,7 @@ class Authorize_aim extends App_Controller
                                 <?php echo _l('payment_for_invoice'); ?> <a href="<?php echo site_url('invoice/' . $data['invoice']->id . '/' . $data['invoice']->hash); ?>"><?php echo format_invoice_number($data['invoice']->id); ?></a>
                              </h4>
                              <hr />
-                             <h4 class="mbot20"><?php echo _l('payment_total', app_format_money($data['total'], $data['invoice']->currency_name)); ?></h4>
+                             <h4 class="mbot20"><?php echo _l('payment_total', format_money($data['total'], $data['invoice']->symbol)); ?></h4>
                              <?php echo form_open(site_url('gateways/authorize_aim/complete_purchase'), ['novalidate' => true, 'id' => 'authorize_form']); ?>
                              <?php echo form_hidden('invoiceid', $data['invoice']->id); ?>
                              <?php echo form_hidden('total', $data['total']); ?>

@@ -39,8 +39,8 @@
                           echo '<td>' .get_custom_field_value($credit['id'],$field['id'],'credit_note') .'</td>';
                         }
                     ?>
-                    <td><?php echo app_format_money($credit['total'], $customer_currency) ?></td>
-                    <td><?php echo app_format_money($credit['available_credits'], $customer_currency) ?></td>
+                    <td><?php echo format_money($credit['total'],$customer_currency->symbol) ?></td>
+                    <td><?php echo format_money($credit['available_credits'],$customer_currency->symbol) ?></td>
                     <td>
                         <input type="number" max="<?php echo $credit['available_credits']; ?>" name="amount[<?php echo $credit['id']; ?>]" class="form-control apply-credits-field" value="0">
                     </td>
@@ -57,13 +57,13 @@
                      <tr>
                         <td class="bold"><?php echo _l('amount_to_credit'); ?>:</td>
                         <td class="amount-to-credit">
-                            <?php echo app_format_money(0, $invoice->currency_name); ?>
+                            <?php echo _format_number(0); ?>
                         </td>
                     </tr>
                     <tr>
                         <td class="bold"><?php echo _l('balance_due'); ?>:</td>
                         <td class="invoice-balance-due">
-                            <?php echo app_format_money($invoice->total_left_to_pay, $invoice->currency_name); ?>
+                            <?php echo _format_number($invoice->total_left_to_pay); ?>
                         </td>
                     </tr>
                 </tbody>
@@ -81,10 +81,8 @@
 </div>
 </div>
 <script>
-    $('body').addClass('no-calculate-total');
-    init_currency(<?php echo $invoice->currency; ?>);
     $(function(){
-        appValidateForm('#apply_credits_form');
+        _validate_form('#apply_credits_form');
     });
 </script>
 <?php } ?>

@@ -192,13 +192,11 @@
        <div class="row">
         <div class="col-md-6">
          <?php
-
-         $credit_note_currency_attr = array('disabled'=>true,'data-show-subtext'=>true);
-         $credit_note_currency_attr = apply_filters_deprecated('credit_note_currency_disabled', [$credit_note_currency_attr], '2.3.0', 'credit_note_currency_attributes');
-
+         $s_attrs = array('disabled'=>true,'data-show-subtext'=>true);
+         $s_attrs = do_action('credit_note_currency_disabled',$s_attrs);
          foreach($currencies as $currency){
           if($currency['isdefault'] == 1){
-           $credit_note_currency_attr['data-base'] = $currency['id'];
+           $s_attrs['data-base'] = $currency['id'];
          }
          if(isset($credit_note)){
            if($currency['id'] == $credit_note->currency){
@@ -210,9 +208,8 @@
           }
         }
       }
-      $credit_note_currency_attr = hooks()->apply_filters('credit_note_currency_attributes',$credit_note_currency_attr);
       ?>
-      <?php echo render_select('currency', $currencies, array('id','name','symbol'), 'currency', $selected, $credit_note_currency_attr); ?>
+      <?php echo render_select('currency',$currencies,array('id','name','symbol'),'currency',$selected,$s_attrs); ?>
     </div>
     <div class="col-md-6">
      <div class="form-group select-placeholder">
@@ -352,7 +349,7 @@
     }
     $table_row .= form_hidden('' . $items_indicator . '[' . $i . '][itemid]', $item['id']);
     $amount = $item['rate'] * $item['qty'];
-    $amount = app_format_number($amount);
+    $amount = _format_number($amount);
                               // order input
     $table_row .= '<input type="hidden" class="order" name="' . $items_indicator . '[' . $i . '][order]">';
     $table_row .= '</td>';
@@ -488,7 +485,7 @@
  $(function(){
    validate_credit_note_form();
        // Init accountacy currency symbol
-       init_currency();
+       init_currency_symbol();
        init_ajax_project_search_by_customer_id();
        // Maybe items ajax search
        init_ajax_search('items','#item_select.ajax-search',undefined,admin_url+'items/search');

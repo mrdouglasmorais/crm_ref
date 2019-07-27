@@ -2,10 +2,10 @@
 
 defined('BASEPATH') or exit('No direct script access allowed');
 
-$aColumns = ['id', 'name', '(SELECT COUNT(id) FROM '.db_prefix().'leads WHERE '.db_prefix().'leads.from_form_id = '.db_prefix().'web_to_lead.id)', 'dateadded'];
+$aColumns = ['id', 'name', '(SELECT COUNT(id) FROM tblleads WHERE tblleads.from_form_id = tblwebtolead.id)', 'dateadded'];
 
 $sIndexColumn = 'id';
-$sTable       = db_prefix().'web_to_lead';
+$sTable       = 'tblwebtolead';
 
 $result  = data_tables_init($aColumns, $sIndexColumn, $sTable, [], [], ['form_key', 'id']);
 $output  = $result['output'];
@@ -23,7 +23,7 @@ foreach ($rResult as $aRow) {
             $_data .= ' | <a href="' . admin_url('leads/delete_form/' . $aRow['id']) . '" class="text-danger _delete">' . _l('delete') . '</a>';
             $_data .= '</div>';
         } elseif ($aColumns[$i] == 'dateadded') {
-            $_data = '<span class="text-has-action is-date" data-toggle="tooltip" data-title="' . _dt($_data) . '">' . time_ago($_data) . '</span>';
+            $_data = '<span class="text-has-action" data-toggle="tooltip" data-title="' . _dt($_data) . '">' . time_ago($_data) . '</span>';
         }
 
         $row[] = $_data;

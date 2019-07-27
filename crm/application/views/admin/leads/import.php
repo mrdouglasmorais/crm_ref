@@ -23,7 +23,7 @@
                 <?php echo form_hidden('leads_import','true'); ?>
                 <?php echo render_input('file_csv','choose_csv_file','','file'); ?>
                 <?php
-                echo render_leads_status_select($statuses, ($this->input->post('status') ? $this->input->post('status') : get_option('leads_default_status')),'lead_import_status','status', [], true);
+                echo render_leads_status_select($statuses, ($this->input->post('status') ? $this->input->post('status') : get_option('leads_default_status')),'lead_import_status');
                 echo render_leads_source_select($sources, ($this->input->post('source') ? $this->input->post('source') : get_option('leads_default_source')),'lead_import_source');
                 ?>
                 <?php echo render_select('responsible',$members,array('staffid',array('firstname','lastname')),'leads_import_assignee',$this->input->post('responsible')); ?>
@@ -44,7 +44,7 @@
 <script src="<?php echo base_url('assets/plugins/jquery-validation/additional-methods.min.js'); ?>"></script>
 <script>
  $(function(){
-    appValidateForm($('#import_form'),{file_csv:{required:true,extension: "csv"},source:'required',status:'required'});
+    _validate_form($('#import_form'),{file_csv:{required:true,extension: "csv"},source:'required',status:'required'});
  });
 </script>
 </body>

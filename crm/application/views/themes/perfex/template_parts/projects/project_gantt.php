@@ -5,7 +5,7 @@
     var gantt_data = <?php echo json_encode($gantt_data); ?>;
     gantt = $("#gantt").gantt({
       source: gantt_data,
-      months:JSON.parse(app.months_json),
+      months:JSON.parse(months_json),
       itemsPerPage: 25,
       navigate: 'scroll',
       onRender:function(){

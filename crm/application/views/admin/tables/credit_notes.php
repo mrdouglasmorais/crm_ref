@@ -6,26 +6,21 @@ $aColumns = [
     'number',
     'date',
     get_sql_select_client_company(),
-    db_prefix() . 'creditnotes.status as status',
-    db_prefix() . 'projects.name as project_name',
+    'tblcreditnotes.status as status',
+    'tblprojects.name as project_name',
     'reference_no',
     'total',
-    '(SELECT ' . db_prefix() . 'creditnotes.total - (
-      (SELECT COALESCE(SUM(amount),0) FROM ' . db_prefix() . 'credits WHERE ' . db_prefix() . 'credits.credit_id=' . db_prefix() . 'creditnotes.id)
-      +
-      (SELECT COALESCE(SUM(amount),0) FROM ' . db_prefix() . 'creditnote_refunds WHERE ' . db_prefix() . 'creditnote_refunds.credit_note_id=' . db_prefix() . 'creditnotes.id)
-      )
-    ) as remaining_amount',
+    '(SELECT tblcreditnotes.total - (SELECT COALESCE(SUM(amount),0) FROM tblcredits WHERE tblcredits.credit_id=tblcreditnotes.id)) as remaining_amount',
     ];
 
 $join = [
-    'LEFT JOIN ' . db_prefix() . 'clients ON ' . db_prefix() . 'clients.userid = ' . db_prefix() . 'creditnotes.clientid',
-    'LEFT JOIN ' . db_prefix() . 'currencies ON ' . db_prefix() . 'currencies.id = ' . db_prefix() . 'creditnotes.currency',
-    'LEFT JOIN ' . db_prefix() . 'projects ON ' . db_prefix() . 'projects.id = ' . db_prefix() . 'creditnotes.project_id',
+    'LEFT JOIN tblclients ON tblclients.userid = tblcreditnotes.clientid',
+    'LEFT JOIN tblcurrencies ON tblcurrencies.id = tblcreditnotes.currency',
+    'LEFT JOIN tblprojects ON tblprojects.id = tblcreditnotes.project_id',
 ];
 
 $sIndexColumn = 'id';
-$sTable       = db_prefix() . 'creditnotes';
+$sTable       = 'tblcreditnotes';
 
 $custom_fields = get_table_custom_fields('credit_note');
 
@@ -33,18 +28,18 @@ foreach ($custom_fields as $key => $field) {
     $selectAs = (is_cf_date($field) ? 'date_picker_cvalue_' . $key : 'cvalue_' . $key);
     array_push($customFieldsColumns, $selectAs);
     array_push($aColumns, 'ctable_' . $key . '.value as ' . $selectAs);
-    array_push($join, 'LEFT JOIN ' . db_prefix() . 'customfieldsvalues as ctable_' . $key . ' ON ' . db_prefix() . 'creditnotes.id = ctable_' . $key . '.relid AND ctable_' . $key . '.fieldto="' . $field['fieldto'] . '" AND ctable_' . $key . '.fieldid=' . $field['id']);
+    array_push($join, 'LEFT JOIN tblcustomfieldsvalues as ctable_' . $key . ' ON tblcreditnotes.id = ctable_' . $key . '.relid AND ctable_' . $key . '.fieldto="' . $field['fieldto'] . '" AND ctable_' . $key . '.fieldid=' . $field['id']);
 }
 
 $where  = [];
 $filter = [];
 
 if ($clientid != '') {
-    array_push($where, 'AND ' . db_prefix() . 'creditnotes.clientid=' . $clientid);
+    array_push($where, 'AND tblcreditnotes.clientid=' . $clientid);
 }
 
 if (!has_permission('credit_notes', '', 'view')) {
-    array_push($where, 'AND ' . db_prefix() . 'creditnotes.addedfrom=' . get_staff_user_id());
+    array_push($where, 'AND tblcreditnotes.addedfrom=' . get_staff_user_id());
 }
 
 $project_id = $this->ci->input->get('project_id');
@@ -62,7 +57,7 @@ foreach ($statuses as $status) {
 }
 
 if (count($statusIds) > 0) {
-    array_push($filter, 'AND ' . db_prefix() . 'creditnotes.status IN (' . implode(', ', $statusIds) . ')');
+    array_push($filter, 'AND tblcreditnotes.status IN (' . implode(', ', $statusIds) . ')');
 }
 
 $years      = $this->ci->credit_notes_model->get_credits_years();
@@ -88,9 +83,9 @@ if (count($custom_fields) > 4) {
 }
 
 $result = data_tables_init($aColumns, $sIndexColumn, $sTable, $join, $where, [
-    db_prefix() . 'creditnotes.id',
-    db_prefix() . 'creditnotes.clientid',
-    db_prefix(). 'currencies.name as currency_name',
+    'tblcreditnotes.id',
+    'tblcreditnotes.clientid',
+    'symbol',
     'project_id',
     'deleted_customer_name',
 ]);
@@ -132,9 +127,9 @@ foreach ($rResult as $aRow) {
 
     $row[] = $aRow['reference_no'];
 
-    $row[] = app_format_money($aRow['total'], $aRow['currency_name']);
+    $row[] = format_money($aRow['total'], $aRow['symbol']);
 
-    $row[] = app_format_money($aRow['remaining_amount'], $aRow['currency_name']);
+    $row[] = format_money($aRow['remaining_amount'], $aRow['symbol']);
 
     // Custom fields add values
     foreach ($customFieldsColumns as $customFieldColumn) {

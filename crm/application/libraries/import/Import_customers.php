@@ -13,7 +13,7 @@ class Import_customers extends App_import
 
     public function __construct()
     {
-        $this->notImportableFields = hooks()->apply_filters('not_importable_clients_fields', ['userid', 'id', 'is_primary', 'password', 'datecreated', 'last_ip', 'last_login', 'last_password_change', 'active', 'new_pass_key', 'new_pass_key_requested', 'leadid', 'default_currency', 'profile_image', 'default_language', 'direction', 'show_primary_contact', 'invoice_emails', 'estimate_emails', 'project_emails', 'task_emails', 'contract_emails', 'credit_note_emails', 'ticket_emails', 'addedfrom', 'registration_confirmed', 'last_active_time', 'email_verified_at', 'email_verification_key', 'email_verification_sent_at']);
+        $this->notImportableFields = do_action('not_importable_clients_fields', ['userid', 'id', 'is_primary', 'password', 'datecreated', 'last_ip', 'last_login', 'last_password_change', 'active', 'new_pass_key', 'new_pass_key_requested', 'leadid', 'default_currency', 'profile_image', 'default_language', 'direction', 'show_primary_contact', 'invoice_emails', 'estimate_emails', 'project_emails', 'task_emails', 'contract_emails', 'credit_note_emails', 'ticket_emails', 'addedfrom', 'registration_confirmed', 'last_active_time','email_verified_at','email_verification_key','email_verification_sent_at']);
 
         if (get_option('company_is_required') == 1) {
             $this->requiredFields[] = 'company';
@@ -51,7 +51,7 @@ class Import_customers extends App_import
                 } elseif ($databaseFields[$i] == 'email') {
                     $duplicate = $this->isDuplicateContact($row[$i]);
                 } elseif ($databaseFields[$i] == 'stripe_id') {
-                    if (empty($row[$i]) || (!empty($row[$i]) && !startsWith($row[$i], 'cus_'))) {
+                    if (empty($row[$i]) || (!empty($row[$i]) && !_startsWith($row[$i], 'cus_'))) {
                         $row[$i] = null;
                     }
                 }
@@ -120,11 +120,6 @@ class Import_customers extends App_import
         return parent::formatFieldNameForHeading($field);
     }
 
-    protected function email_formatSampleData()
-    {
-        return uniqid() . '@example.com';
-    }
-
     protected function failureRedirectURL()
     {
         return admin_url('clients/import');
@@ -144,7 +139,7 @@ class Import_customers extends App_import
     private function insertCustomerGroups($groups, $customer_id)
     {
         foreach ($groups as $group) {
-            $this->ci->db->insert(db_prefix().'customer_groups', [
+            $this->ci->db->insert('tblcustomergroups_in', [
                                                     'customer_id' => $customer_id,
                                                     'groupid'     => $group,
                                                 ]);
@@ -154,7 +149,7 @@ class Import_customers extends App_import
     private function shouldAddContactUnderCustomer($data)
     {
         return (isset($data['company']) && $data['company'] != '' && $data['company'] != '/')
-        && (total_rows(db_prefix().'clients', ['company' => $data['company']]) === 1);
+        && (total_rows('tblclients', ['company' => $data['company']]) === 1);
     }
 
     private function addContactUnderCustomer($data)
@@ -162,7 +157,7 @@ class Import_customers extends App_import
         $contactFields = $this->getContactFields();
         $this->ci->db->where('company', $data['company']);
 
-        $existingCompany = $this->ci->db->get(db_prefix().'clients')->row();
+        $existingCompany = $this->ci->db->get('tblclients')->row();
         $tmpInsert       = [];
 
         foreach ($data as $key => $val) {
@@ -183,12 +178,12 @@ class Import_customers extends App_import
 
     private function getContactFields()
     {
-        return $this->ci->db->list_fields(db_prefix().'contacts');
+        return $this->ci->db->list_fields('tblcontacts');
     }
 
     private function isDuplicateContact($email)
     {
-        return total_rows(db_prefix().'contacts', ['email' => $email]);
+        return total_rows('tblcontacts', ['email' => $email]);
     }
 
     private function formatValuesForSimulation($values)
@@ -218,7 +213,7 @@ class Import_customers extends App_import
             $this->ci->db->where('country_id', $id);
         }
 
-        return  $this->ci->db->get(db_prefix().'countries')->row();
+        return  $this->ci->db->get('tblcountries')->row();
     }
 
     private function countryValue($value)

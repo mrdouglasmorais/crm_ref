@@ -15,8 +15,8 @@ function format_task_status($status, $text = false, $clean = false)
     }
 
     $status_name = $status['name'];
-
-    $status_name = hooks()->apply_filters('task_status_name', $status_name, $status);
+    $hook_data   = do_action('task_status_name', ['current' => $status_name, 'status_id' => $status['id']]);
+    $status_name = $hook_data['current'];
 
     if ($clean == true) {
         return $status_name;
@@ -40,7 +40,7 @@ function format_task_status($status, $text = false, $clean = false)
  */
 function get_tasks_priorities()
 {
-    return hooks()->apply_filters('tasks_priorities', [
+    return do_action('tasks_priorities', [
         [
             'id'     => 1,
             'name'   => _l('task_priority_low'),
@@ -76,7 +76,7 @@ function get_task_subject_by_id($id)
     $CI = & get_instance();
     $CI->db->select('name');
     $CI->db->where('id', $id);
-    $task = $CI->db->get(db_prefix() . 'tasks')->row();
+    $task = $CI->db->get('tblstafftasks')->row();
     if ($task) {
         return $task->name;
     }
@@ -251,9 +251,9 @@ function get_task_array_gantt_data($task)
     $values['to']    = strftime('%Y/%m/%d', strtotime($task['duedate']));
     $values['desc']  = $task['name'] . ' - ' . _l('task_total_logged_time') . ' ' . seconds_to_time_format($task['total_logged_time']);
     $values['label'] = $task['name'];
-    if ($task['duedate'] && date('Y-m-d') > $task['duedate'] && $task['status'] != Tasks_model::STATUS_COMPLETE) {
+    if ($task['duedate'] && date('Y-m-d') > $task['duedate'] && $task['status'] != 5) {
         $values['customClass'] = 'ganttRed';
-    } elseif ($task['status'] == Tasks_model::STATUS_COMPLETE) {
+    } elseif ($task['status'] == 5) {
         $values['label']       = ' <i class="fa fa-check"></i> ' . $values['label'];
         $values['customClass'] = 'ganttGreen';
     }
@@ -273,16 +273,16 @@ function get_task_array_gantt_data($task)
 function tasks_rel_name_select_query()
 {
     return '(CASE rel_type
-        WHEN "contract" THEN (SELECT subject FROM ' . db_prefix() . 'contracts WHERE ' . db_prefix() . 'contracts.id = ' . db_prefix() . 'tasks.rel_id)
-        WHEN "estimate" THEN (SELECT id FROM ' . db_prefix() . 'estimates WHERE ' . db_prefix() . 'estimates.id = ' . db_prefix() . 'tasks.rel_id)
-        WHEN "proposal" THEN (SELECT id FROM ' . db_prefix() . 'proposals WHERE ' . db_prefix() . 'proposals.id = ' . db_prefix() . 'tasks.rel_id)
-        WHEN "invoice" THEN (SELECT id FROM ' . db_prefix() . 'invoices WHERE ' . db_prefix() . 'invoices.id = ' . db_prefix() . 'tasks.rel_id)
-        WHEN "ticket" THEN (SELECT CONCAT(CONCAT("#",' . db_prefix() . 'tickets.ticketid), " - ", ' . db_prefix() . 'tickets.subject) FROM ' . db_prefix() . 'tickets WHERE ' . db_prefix() . 'tickets.ticketid=' . db_prefix() . 'tasks.rel_id)
-        WHEN "lead" THEN (SELECT CASE ' . db_prefix() . 'leads.email WHEN "" THEN ' . db_prefix() . 'leads.name ELSE CONCAT(' . db_prefix() . 'leads.name, " - ", ' . db_prefix() . 'leads.email) END FROM ' . db_prefix() . 'leads WHERE ' . db_prefix() . 'leads.id=' . db_prefix() . 'tasks.rel_id)
-        WHEN "customer" THEN (SELECT CASE company WHEN "" THEN (SELECT CONCAT(firstname, " ", lastname) FROM ' . db_prefix() . 'contacts WHERE userid = ' . db_prefix() . 'clients.userid and is_primary = 1) ELSE company END FROM ' . db_prefix() . 'clients WHERE ' . db_prefix() . 'clients.userid=' . db_prefix() . 'tasks.rel_id)
-        WHEN "project" THEN (SELECT CONCAT(CONCAT(CONCAT("#",' . db_prefix() . 'projects.id)," - ",' . db_prefix() . 'projects.name), " - ", (SELECT CASE company WHEN "" THEN (SELECT CONCAT(firstname, " ", lastname) FROM ' . db_prefix() . 'contacts WHERE userid = ' . db_prefix() . 'clients.userid and is_primary = 1) ELSE company END FROM ' . db_prefix() . 'clients WHERE userid=' . db_prefix() . 'projects.clientid)) FROM ' . db_prefix() . 'projects WHERE ' . db_prefix() . 'projects.id=' . db_prefix() . 'tasks.rel_id)
-        WHEN "expense" THEN (SELECT CASE expense_name WHEN "" THEN ' . db_prefix() . 'expenses_categories.name ELSE
-         CONCAT(' . db_prefix() . 'expenses_categories.name, \' (\',' . db_prefix() . 'expenses.expense_name,\')\') END FROM ' . db_prefix() . 'expenses JOIN ' . db_prefix() . 'expenses_categories ON ' . db_prefix() . 'expenses_categories.id = ' . db_prefix() . 'expenses.category WHERE ' . db_prefix() . 'expenses.id=' . db_prefix() . 'tasks.rel_id)
+        WHEN "contract" THEN (SELECT subject FROM tblcontracts WHERE tblcontracts.id = tblstafftasks.rel_id)
+        WHEN "estimate" THEN (SELECT id FROM tblestimates WHERE tblestimates.id = tblstafftasks.rel_id)
+        WHEN "proposal" THEN (SELECT id FROM tblproposals WHERE tblproposals.id = tblstafftasks.rel_id)
+        WHEN "invoice" THEN (SELECT id FROM tblinvoices WHERE tblinvoices.id = tblstafftasks.rel_id)
+        WHEN "ticket" THEN (SELECT CONCAT(CONCAT("#",tbltickets.ticketid), " - ", tbltickets.subject) FROM tbltickets WHERE tbltickets.ticketid=tblstafftasks.rel_id)
+        WHEN "lead" THEN (SELECT CASE tblleads.email WHEN "" THEN tblleads.name ELSE CONCAT(tblleads.name, " - ", tblleads.email) END FROM tblleads WHERE tblleads.id=tblstafftasks.rel_id)
+        WHEN "customer" THEN (SELECT CASE company WHEN "" THEN (SELECT CONCAT(firstname, " ", lastname) FROM tblcontacts WHERE userid = tblclients.userid and is_primary = 1) ELSE company END FROM tblclients WHERE tblclients.userid=tblstafftasks.rel_id)
+        WHEN "project" THEN (SELECT CONCAT(CONCAT(CONCAT("#",tblprojects.id)," - ",tblprojects.name), " - ", (SELECT CASE company WHEN "" THEN (SELECT CONCAT(firstname, " ", lastname) FROM tblcontacts WHERE userid = tblclients.userid and is_primary = 1) ELSE company END FROM tblclients WHERE userid=tblprojects.clientid)) FROM tblprojects WHERE tblprojects.id=tblstafftasks.rel_id)
+        WHEN "expense" THEN (SELECT CASE expense_name WHEN "" THEN tblexpensescategories.name ELSE
+         CONCAT(tblexpensescategories.name, \' (\',tblexpenses.expense_name,\')\') END FROM tblexpenses JOIN tblexpensescategories ON tblexpensescategories.id = tblexpenses.category WHERE tblexpenses.id=tblstafftasks.rel_id)
         ELSE NULL
         END)';
 }
@@ -341,7 +341,7 @@ function init_relation_tasks_table($table_attributes = [])
         array_push($table_data, $field['name']);
     }
 
-    $table_data = hooks()->apply_filters('tasks_related_table_columns', $table_data);
+    $table_data = do_action('tasks_related_table_columns', $table_data);
 
     $name = 'rel-tasks';
     if ($table_attributes['data-new-rel-type'] == 'lead') {
@@ -358,7 +358,7 @@ function init_relation_tasks_table($table_attributes = [])
         $disabled   = '';
         $table_name = addslashes($table_name);
         if ($table_attributes['data-new-rel-type'] == 'customer' && is_numeric($table_attributes['data-new-rel-id'])) {
-            if (total_rows(db_prefix() . 'clients', [
+            if (total_rows('tblclients', [
                 'active' => 0,
                 'userid' => $table_attributes['data-new-rel-id'],
             ]) > 0) {
@@ -452,13 +452,13 @@ function tasks_summary_data($rel_id = null, $rel_type = null)
         if (!has_permission('tasks', '', 'view')) {
             $tasks_where .= ' ' . get_tasks_where_string();
         }
-        $tasks_my_where = 'id IN(SELECT taskid FROM ' . db_prefix() . 'task_assigned WHERE staffid=' . get_staff_user_id() . ') AND status=' . $status['id'];
+        $tasks_my_where = 'id IN(SELECT taskid FROM tblstafftaskassignees WHERE staffid=' . get_staff_user_id() . ') AND status=' . $status['id'];
         if ($rel_id && $rel_type) {
             $tasks_where .= ' AND rel_id=' . $rel_id . ' AND rel_type="' . $rel_type . '"';
             $tasks_my_where .= ' AND rel_id=' . $rel_id . ' AND rel_type="' . $rel_type . '"';
         } else {
             $sqlProjectTasksWhere = ' AND CASE
-            WHEN rel_type="project" AND rel_id IN (SELECT project_id FROM ' . db_prefix() . 'project_settings WHERE project_id=rel_id AND name="hide_tasks_on_main_tasks_table" AND value=1)
+            WHEN rel_type="project" AND rel_id IN (SELECT project_id FROM tblprojectsettings WHERE project_id=rel_id AND name="hide_tasks_on_main_tasks_table" AND value=1)
             THEN rel_type != "project"
             ELSE 1=1
             END';
@@ -467,8 +467,8 @@ function tasks_summary_data($rel_id = null, $rel_type = null)
         }
 
         $summary                   = [];
-        $summary['total_tasks']    = total_rows(db_prefix() . 'tasks', $tasks_where);
-        $summary['total_my_tasks'] = total_rows(db_prefix() . 'tasks', $tasks_my_where);
+        $summary['total_tasks']    = total_rows('tblstafftasks', $tasks_where);
+        $summary['total_my_tasks'] = total_rows('tblstafftasks', $tasks_my_where);
         $summary['color']          = $status['color'];
         $summary['name']           = $status['name'];
         $summary['status_id']      = $status['id'];
@@ -476,57 +476,4 @@ function tasks_summary_data($rel_id = null, $rel_type = null)
     }
 
     return $tasks_summary;
-}
-
-
-function get_sql_calc_task_logged_time($task_id)
-{
-    /**
-    * Do not remove where task_id=
-    * Used in tasks detailed_overview to overwrite the taskid
-    */
-    return 'SELECT SUM(CASE
-            WHEN end_time is NULL THEN ' . time() . '-start_time
-            ELSE end_time-start_time
-            END) as total_logged_time FROM ' . db_prefix() . 'taskstimers WHERE task_id =' . $task_id;
-}
-
-function get_sql_select_task_assignees_ids()
-{
-    return '(SELECT GROUP_CONCAT(staffid SEPARATOR ",") FROM ' . db_prefix() . 'task_assigned WHERE taskid=' . db_prefix() . 'tasks.id ORDER BY ' . db_prefix() . 'task_assigned.staffid)';
-}
-
-function get_sql_select_task_asignees_full_names()
-{
-    return '(SELECT GROUP_CONCAT(CONCAT(firstname, \' \', lastname) SEPARATOR ",") FROM '.db_prefix().'task_assigned JOIN '.db_prefix().'staff ON '.db_prefix().'staff.staffid = '.db_prefix().'task_assigned.staffid WHERE taskid='.db_prefix().'tasks.id ORDER BY '.db_prefix().'task_assigned.staffid)';
-}
-
-function get_sql_select_task_total_checklist_items()
-{
-    return '(SELECT COUNT(id) FROM '.db_prefix().'task_checklist_items WHERE taskid='.db_prefix().'tasks.id) as total_checklist_items';
-}
-
-function get_sql_select_task_total_finished_checklist_items()
-{
-    return '(SELECT COUNT(id) FROM '.db_prefix().'task_checklist_items WHERE taskid='.db_prefix().'tasks.id AND finished=1) as total_finished_checklist_items';
-}
-
-/**
- * This text is used in WHERE statements for tasks if the staff member don't have permission for tasks VIEW
- * This query will shown only tasks that are created from current user, public tasks or where this user is added is task follower.
- * Other statement will be included the tasks to be visible for this user only if Show All Tasks For Project Members is set to YES
- * @return string
- */
-function get_tasks_where_string($table = true)
-{
-    $_tasks_where = '('.db_prefix().'tasks.id IN (SELECT taskid FROM '.db_prefix().'task_assigned WHERE staffid = ' . get_staff_user_id() . ') OR '.db_prefix().'tasks.id IN (SELECT taskid FROM '.db_prefix().'task_followers WHERE staffid = ' . get_staff_user_id() . ') OR (addedfrom=' . get_staff_user_id() . ' AND is_added_from_contact=0)';
-    if (get_option('show_all_tasks_for_project_member') == 1) {
-        $_tasks_where .= ' OR ('.db_prefix().'tasks.rel_type="project" AND '.db_prefix().'tasks.rel_id IN (SELECT project_id FROM '.db_prefix().'project_members WHERE staff_id=' . get_staff_user_id() . '))';
-    }
-    $_tasks_where .= ' OR is_public = 1)';
-    if ($table == true) {
-        $_tasks_where = 'AND ' . $_tasks_where;
-    }
-
-    return $_tasks_where;
 }

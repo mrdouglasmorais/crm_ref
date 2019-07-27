@@ -72,10 +72,10 @@
 		</div>
 		<?php echo render_input('settings[smtp_email_charset]','settings_email_charset',get_option('smtp_email_charset')); ?>
 		<?php echo render_input('settings[bcc_emails]','bcc_all_emails',get_option('bcc_emails')); ?>
-		<?php echo render_textarea('settings[email_signature]','settings_email_signature',get_option('email_signature'), ['data-entities-encode'=>'true']); ?>
+		<?php echo render_textarea('settings[email_signature]','settings_email_signature',get_option('email_signature')); ?>
 		<hr />
-		<?php echo render_textarea('settings[email_header]','email_header',get_option('email_header'),array('rows'=>15, 'data-entities-encode'=>'true')); ?>
-		<?php echo render_textarea('settings[email_footer]','email_footer',get_option('email_footer'),array('rows'=>15, 'data-entities-encode'=>'true')); ?>
+		<?php echo render_textarea('settings[email_header]','email_header',get_option('email_header'),array('rows'=>15)); ?>
+		<?php echo render_textarea('settings[email_footer]','email_footer',get_option('email_footer'),array('rows'=>15)); ?>
 		<hr />
 		<h4><?php echo _l('settings_send_test_email_heading'); ?></h4>
 		<p class="text-muted"><?php echo _l('settings_send_test_email_subheading'); ?></p>

@@ -85,7 +85,6 @@ class MemberContext extends InstanceContext {
             'LastConsumptionTimestamp' => Serialize::iso8601DateTime($options['lastConsumptionTimestamp']),
             'DateCreated' => Serialize::iso8601DateTime($options['dateCreated']),
             'DateUpdated' => Serialize::iso8601DateTime($options['dateUpdated']),
-            'Attributes' => $options['attributes'],
         ));
 
         $payload = $this->version->update(

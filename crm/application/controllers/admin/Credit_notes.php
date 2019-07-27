@@ -2,7 +2,7 @@
 
 defined('BASEPATH') or exit('No direct script access allowed');
 
-class Credit_notes extends AdminController
+class Credit_notes extends Admin_controller
 {
     public function __construct()
     {
@@ -54,7 +54,7 @@ class Credit_notes extends AdminController
                 $affected_rows = 0;
 
                 $this->db->where('id', $id);
-                $this->db->update(db_prefix() . 'creditnotes', [
+                $this->db->update('tblcreditnotes', [
                     'prefix' => $this->input->post('prefix'),
                 ]);
                 if ($this->db->affected_rows() > 0) {
@@ -84,7 +84,7 @@ class Credit_notes extends AdminController
                 die;
             }
         }
-        if (total_rows(db_prefix() . 'creditnotes', [
+        if (total_rows('tblcreditnotes', [
             'number' => $number,
         ]) > 0) {
             echo 'false';
@@ -144,7 +144,7 @@ class Credit_notes extends AdminController
         $this->load->model('invoice_items_model');
 
         $data['ajaxItems'] = false;
-        if (total_rows(db_prefix() . 'items') <= ajax_on_total_items()) {
+        if (total_rows('tblitems') <= ajax_on_total_items()) {
             $data['items'] = $this->invoice_items_model->get_grouped();
         } else {
             $data['items']     = [];
@@ -192,73 +192,6 @@ class Credit_notes extends AdminController
         redirect(admin_url('invoices/list_invoices/' . $invoice_id));
     }
 
-    public function refund($id, $refund_id = null)
-    {
-        if (has_permission('credit_notes', '', 'edit')) {
-            $this->load->model('payment_modes_model');
-            if (!$refund_id) {
-                $data['payment_modes'] = $this->payment_modes_model->get('', [
-                    'expenses_only !=' => 1,
-                ]);
-            } else {
-                $data['refund']        = $this->credit_notes_model->get_refund($refund_id);
-                $data['payment_modes'] = $this->payment_modes_model->get('', [], true, true);
-                $i                     = 0;
-                foreach ($data['payment_modes'] as $mode) {
-                    if ($mode['active'] == 0 && $data['refund']->payment_mode != $mode['id']) {
-                        unset($data['payment_modes'][$i]);
-                    }
-                    $i++;
-                }
-            }
-
-            $data['credit_note'] = $this->credit_notes_model->get($id);
-            $this->load->view('admin/credit_notes/refund', $data);
-        }
-    }
-
-    public function create_refund($credit_note_id)
-    {
-        if (has_permission('credit_notes', '', 'edit')) {
-            $data                = $this->input->post();
-            $data['refunded_on'] = to_sql_date($data['refunded_on']);
-            $data['staff_id']    = get_staff_user_id();
-            $success             = $this->credit_notes_model->create_refund($credit_note_id, $data);
-
-            if ($success) {
-                set_alert('success', _l('added_successfully', _l('refund')));
-            }
-        }
-
-        redirect(admin_url('credit_notes/list_credit_notes/' . $credit_note_id));
-    }
-
-    public function edit_refund($refund_id, $cerdit_note_id)
-    {
-        if (has_permission('credit_notes', '', 'edit')) {
-            $data                = $this->input->post();
-            $data['refunded_on'] = to_sql_date($data['refunded_on']);
-            $success             = $this->credit_notes_model->edit_refund($refund_id, $data);
-
-            if ($success) {
-                set_alert('success', _l('updated_successfully', _l('refund')));
-            }
-        }
-
-        redirect(admin_url('credit_notes/list_credit_notes/' . $cerdit_note_id));
-    }
-
-    public function delete_refund($refund_id, $credit_note_id)
-    {
-        if (has_permission('credit_notes', '', 'delete')) {
-            $success = $this->credit_notes_model->delete_refund($refund_id, $credit_note_id);
-            if ($success) {
-                set_alert('success', _l('deleted', _l('refund')));
-            }
-        }
-        redirect(admin_url('credit_notes/list_credit_notes/' . $credit_note_id));
-    }
-
     /* Get all invoice note data */
     public function get_credit_note_data_ajax($id)
     {
@@ -278,10 +211,31 @@ class Credit_notes extends AdminController
             die;
         }
 
-        $data = prepare_mail_preview_data('credit_note_send_to_customer', $credit_note->clientid);
+        $template_name = 'credit-note-send-to-client';
+        $contact       = $this->clients_model->get_contact(get_primary_contact_user_id($credit_note->clientid));
+
+        $email = '';
+        if ($contact) {
+            $email = $contact->email;
+        }
+
+        $data['template'] = get_email_template_for_sending($template_name, $email);
+
+        $data['template_name'] = $template_name;
+        $this->db->where('slug', $template_name);
+        $this->db->where('language', 'english');
+        $template_result = $this->db->get('tblemailtemplates')->row();
+
+        $data['template_system_name'] = $template_result->name;
+        $data['template_id']          = $template_result->emailtemplateid;
+
+        $data['template_disabled'] = false;
+        if (total_rows('tblemailtemplates', ['slug' => $data['template_name'], 'active' => 0]) > 0) {
+            $data['template_disabled'] = true;
+        }
 
         $data['credit_note']                   = $credit_note;
-        $data['members']                       = $this->staff_model->get('', ['active' => 1]);
+        $data['members']                       = $this->staff_model->get('', ['active'=>1]);
         $data['available_creditable_invoices'] = $this->credit_notes_model->get_available_creditable_invoices($id);
 
         $this->load->view('admin/credit_notes/credit_note_preview_template', $data);
@@ -289,7 +243,7 @@ class Credit_notes extends AdminController
 
     public function mark_open($id)
     {
-        if (total_rows(db_prefix() . 'creditnotes', ['status' => 3, 'id' => $id]) > 0 && has_permission('credit_notes', '', 'edit')) {
+        if (total_rows('tblcreditnotes', ['status' => 3, 'id' => $id]) > 0 && has_permission('credit_notes', '', 'edit')) {
             $this->credit_notes_model->mark($id, 1);
         }
 

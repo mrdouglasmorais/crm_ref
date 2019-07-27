@@ -52,9 +52,6 @@ class VerificationList extends ListResource {
             'CustomMessage' => $options['customMessage'],
             'SendDigits' => $options['sendDigits'],
             'Locale' => $options['locale'],
-            'CustomCode' => $options['customCode'],
-            'Amount' => $options['amount'],
-            'Payee' => $options['payee'],
         ));
 
         $payload = $this->version->create(

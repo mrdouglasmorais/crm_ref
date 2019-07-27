@@ -2,7 +2,7 @@
 
 defined('BASEPATH') or exit('No direct script access allowed');
 
-class Departments_model extends App_Model
+class Departments_model extends CRM_Model
 {
     public function __construct()
     {
@@ -24,14 +24,14 @@ class Departments_model extends App_Model
         if (is_numeric($id)) {
             $this->db->where('departmentid', $id);
 
-            return $this->db->get(db_prefix() . 'departments')->row();
+            return $this->db->get('tbldepartments')->row();
         }
 
-        $departments = $this->app_object_cache->get('departments');
+        $departments = $this->object_cache->get('departments');
 
         if (!$departments && !is_array($departments)) {
-            $departments = $this->db->get(db_prefix() . 'departments')->result_array();
-            $this->app_object_cache->add('departments', $departments);
+            $departments = $this->db->get('tbldepartments')->result_array();
+            $this->object_cache->add('departments', $departments);
         }
 
         return $departments;
@@ -64,12 +64,12 @@ class Departments_model extends App_Model
             $data['delete_after_import'] = 1;
         }
 
-        $data = hooks()->apply_filters('before_department_added', $data);
-        $this->db->insert(db_prefix() . 'departments', $data);
+        $data = do_action('before_department_added', $data);
+        $this->db->insert('tbldepartments', $data);
         $insert_id = $this->db->insert_id();
         if ($insert_id) {
-            hooks()->do_action('after_department_added', $insert_id);
-            log_activity('New Department Added [' . $data['name'] . ', ID: ' . $insert_id . ']');
+            do_action('after_department_added', $insert_id);
+            logActivity('New Department Added [' . $data['name'] . ', ID: ' . $insert_id . ']');
         }
 
         return $insert_id;
@@ -87,7 +87,11 @@ class Departments_model extends App_Model
         if (!$dep_original) {
             return false;
         }
-
+        $hook_data['data'] = $data;
+        $hook_data['id']   = $id;
+        $hook_data         = do_action('before_department_updated', $hook_data);
+        $data              = $hook_data['data'];
+        $id                = $hook_data['id'];
 
         if (!isset($data['encryption'])) {
             $data['encryption'] = '';
@@ -122,12 +126,10 @@ class Departments_model extends App_Model
             }
         }
 
-        $data = hooks()->apply_filters('before_department_updated', $data, $id);
-
         $this->db->where('departmentid', $id);
-        $this->db->update(db_prefix() . 'departments', $data);
+        $this->db->update('tbldepartments', $data);
         if ($this->db->affected_rows() > 0) {
-            log_activity('Department Updated [Name: ' . $data['name'] . ', ID: ' . $id . ']');
+            logActivity('Department Updated [Name: ' . $data['name'] . ', ID: ' . $id . ']');
 
             return true;
         }
@@ -142,20 +144,18 @@ class Departments_model extends App_Model
      */
     public function delete($id)
     {
+        $id      = do_action('before_delete_department', $id);
         $current = $this->get($id);
-
-        if (is_reference_in_table('department', db_prefix() . 'tickets', $id)) {
+        if (is_reference_in_table('department', 'tbltickets', $id)) {
             return [
                 'referenced' => true,
             ];
         }
-
-        hooks()->do_action('before_delete_department', $id);
-
+        do_action('before_department_deleted', $id);
         $this->db->where('departmentid', $id);
-        $this->db->delete(db_prefix() . 'departments');
+        $this->db->delete('tbldepartments');
         if ($this->db->affected_rows() > 0) {
-            log_activity('Department Deleted [ID: ' . $id . ']');
+            logActivity('Department Deleted [ID: ' . $id . ']');
 
             return true;
         }
@@ -178,10 +178,10 @@ class Departments_model extends App_Model
         if ($onlyids == false) {
             $this->db->select();
         } else {
-            $this->db->select(db_prefix() . 'staff_departments.departmentid');
+            $this->db->select('tblstaffdepartments.departmentid');
         }
-        $this->db->from(db_prefix() . 'staff_departments');
-        $this->db->join(db_prefix() . 'departments', db_prefix() . 'staff_departments.departmentid = ' . db_prefix() . 'departments.departmentid', 'left');
+        $this->db->from('tblstaffdepartments');
+        $this->db->join('tbldepartments', 'tblstaffdepartments.departmentid = tbldepartments.departmentid', 'left');
         $this->db->where('staffid', $userid);
         $departments = $this->db->get()->result_array();
         if ($onlyids == true) {

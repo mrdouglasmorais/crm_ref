@@ -7,7 +7,7 @@
                     <?php echo _l('client_go_to_dashboard'); ?>
                 </a>
             <?php } ?>
-            <h1 class="mbot20"><?php echo hooks()->apply_filters('consent_public_page_heading', get_option('companyname')); ?></h1>
+            <h1 class="mbot20"><?php echo do_action('consent_public_page_heading', get_option('companyname')); ?></h1>
             <div class="tc-content mbot20">
                 <?php echo get_option('gdpr_consent_public_page_top_block'); ?>
             </div>

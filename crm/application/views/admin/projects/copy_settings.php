@@ -86,7 +86,7 @@ function copy_project(id) {
         $('#copy_form').attr('action', $('#copy_form').data('copy-url') + id);
     }
 
-    appValidateForm($('#copy_form'), {
+    _validate_form($('#copy_form'), {
         start_date: 'required',
         clientid_copy_project: 'required',
     });

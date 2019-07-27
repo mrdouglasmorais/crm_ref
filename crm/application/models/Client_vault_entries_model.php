@@ -2,7 +2,7 @@
 
 defined('BASEPATH') or exit('No direct script access allowed');
 
-class Client_vault_entries_model extends App_Model
+class Client_vault_entries_model extends CRM_Model
 {
     public function __construct()
     {
@@ -18,7 +18,7 @@ class Client_vault_entries_model extends App_Model
     {
         $this->db->where('id', $id);
 
-        return $this->db->get(db_prefix().'vault')->row();
+        return $this->db->get('tblvault')->row();
     }
 
     /**
@@ -34,7 +34,7 @@ class Client_vault_entries_model extends App_Model
 
         $this->db->where($where);
 
-        return $this->db->get(db_prefix().'vault')->result_array();
+        return $this->db->get('tblvault')->result_array();
     }
 
     /**
@@ -48,9 +48,9 @@ class Client_vault_entries_model extends App_Model
         $data['date_created']      = date('Y-m-d H:i:s');
         $data['customer_id']       = $customer_id;
         $data['share_in_projects'] = isset($data['share_in_projects']) ? 1 : 0;
-        $this->db->insert(db_prefix().'vault', $data);
+        $this->db->insert('tblvault', $data);
 
-        log_activity('Vault Entry Created [Customer ID: ' . $customer_id . ']');
+        logActivity('Vault Entry Created [Customer ID: ' . $customer_id . ']');
     }
 
     /**
@@ -68,12 +68,12 @@ class Client_vault_entries_model extends App_Model
         $data['share_in_projects'] = isset($data['share_in_projects']) ? 1 : 0;
 
         $this->db->where('id', $id);
-        $this->db->update(db_prefix().'vault', $data);
+        $this->db->update('tblvault', $data);
 
         if ($this->db->affected_rows() > 0) {
             $this->db->where('id', $id);
-            $this->db->update(db_prefix().'vault', ['last_updated' => date('Y-m-d H:i:s'), 'last_updated_from' => $last_updated_from]);
-            log_activity('Vault Entry Updated [Customer ID: ' . $vault->customer_id . ']');
+            $this->db->update('tblvault', ['last_updated' => date('Y-m-d H:i:s'), 'last_updated_from' => $last_updated_from]);
+            logActivity('Vault Entry Updated [Customer ID: ' . $vault->customer_id . ']');
 
             return true;
         }
@@ -91,12 +91,10 @@ class Client_vault_entries_model extends App_Model
         $vault = $this->get($id);
 
         $this->db->where('id', $id);
-        $this->db->delete(db_prefix().'vault');
+        $this->db->delete('tblvault');
 
         if ($this->db->affected_rows() > 0) {
-            log_activity('Vault Entry Deleted [Customer ID: ' . $vault->customer_id . ']');
-
-            hooks()->do_action('customer_vault_entry_deleted', ['vault_id' => $id, 'customer_id' => $vault->customer_id]);
+            logActivity('Vault Entry Deleted [Customer ID: ' . $vault->customer_id . ']');
 
             return true;
         }

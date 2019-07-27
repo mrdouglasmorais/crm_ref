@@ -120,7 +120,7 @@
                }
                $table_row .= form_hidden('' . $items_indicator . '[' . $i . '][itemid]', $item['id']);
                $amount = $item['rate'] * $item['qty'];
-               $amount = app_format_number($amount);
+               $amount = _format_number($amount);
                // order input
                $table_row .= '<input type="hidden" class="order" name="' . $items_indicator . '[' . $i . '][order]">';
                $table_row .= '</td>';

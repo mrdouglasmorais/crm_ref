@@ -58,17 +58,16 @@ class Install
                     $p = trim($_POST['password']);
                     $d = trim($_POST['database']);
 
-                    $link = @new mysqli($h, $u, $p, $d);
-
-                    if ($link->connect_errno) {
-                        $this->error .= 'Error: Unable to connect to MySQL.<br />';
-                        $this->error .= 'Debugging errno: ' . $link->connect_errno . '<br />';
-                        $this->error .= 'Debugging error: ' . $link->connect_error;
+                    $link = @mysqli_connect($h, $u, $p, $d);
+                    if (!$link) {
+                        $this->error .= 'Error: Unable to connect to MySQL.' . PHP_EOL;
+                        $this->error .= 'Debugging errno: ' . mysqli_connect_errno() . PHP_EOL;
+                        $this->error .= 'Debugging error: ' . mysqli_connect_error() . PHP_EOL;
                     } else {
-                        $debug .= 'Success: A proper connection to MySQL was made! The ' . $d . ' database is great.<br />';
-                        $debug .= 'Host information: ' . $link->host_info . '<br />';
+                        $debug .= 'Success: A proper connection to MySQL was made! The ' . $_POST['database'] . ' database is great.' . PHP_EOL;
+                        $debug .= 'Host information: ' . mysqli_get_host_info($link) . PHP_EOL;
                         $step = 4;
-                        $link->close();
+                        mysqli_close($link);
                     }
                 }
             } elseif (isset($_POST['requirements_success'])) {
@@ -109,7 +108,8 @@ class Install
                 $p = trim($_POST['password']);
                 $d = trim($_POST['database']);
 
-                $link = new mysqli($h, $u, $p, $d);
+                $link = mysqli_connect($h, $u, $p, $d);
+                mysqli_set_charset($link, 'utf8');
 
                 foreach ($sqlStatements as $statement) {
                     $distilled = $parser->removeComments($statement);
@@ -134,30 +134,16 @@ class Install
 
                 $datecreated = date('Y-m-d H:i:s');
 
-                // https://stackoverflow.com/questions/20867182/insert-query-executes-successfully-but-data-is-not-inserted-to-the-database
-                // There is a commit in the database.sql
-                $link->autocommit(true);
-
                 $timezone = $_POST['timezone'];
                 $sql      = "UPDATE tbloptions SET value='$timezone' WHERE name='default_timezone'";
-                $link->query($sql);
+                mysqli_query($link, $sql);
 
                 $di  = time();
                 $sql = "UPDATE tbloptions SET value='$di' WHERE name='di'";
-                $link->query($sql);
-
-                $installMsg = '<div class="col-md-12">';
-                $installMsg .= '<div class="alert alert-success">';
-                $installMsg .= '<h4 class="bold">Congratulation on your installation!</h4>';
-                $installMsg .= '<p>Now, you can activate modules that comes with the installation in <b>Setup->Modules<b>.</p>';
-                $installMsg .= '</div>';
-                $installMsg .= '</div>';
-
-                $sql = "UPDATE tbloptions SET value='$installMsg' WHERE name='update_info_message'";
-                $link->query($sql);
+                mysqli_query($link, $sql);
 
                 $sql = "INSERT INTO tblstaff (`firstname`, `lastname`, `password`, `email`, `datecreated`, `admin`, `active`) VALUES('$firstname', '$lastname', '$password', '$email', '$datecreated', 1, 1)";
-                $link->query($sql);
+                mysqli_query($link, $sql);
 
                 $this->passed_steps[1] = true;
                 $this->passed_steps[2] = true;

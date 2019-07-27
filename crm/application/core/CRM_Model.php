@@ -2,15 +2,15 @@
 
 defined('BASEPATH') or exit('No direct script access allowed');
 
-/**
- * @deprecated 2.3.2
- * Use App_Model instead
- */
-class CRM_Model extends App_Model
+class CRM_Model extends CI_Model
 {
     public function __construct()
     {
         parent::__construct();
-        _deprecated_function('CRM_Model', '2.3.2', 'App_Model');
+        $this->db->reconnect();
+        $timezone = get_option('default_timezone');
+        if ($timezone != '') {
+            date_default_timezone_set($timezone);
+        }
     }
 }

@@ -202,12 +202,6 @@ class CustomerGateway
                 ['paypal' => [
                     'payee_email',
                     'payeeEmail',
-                    'order_id',
-                    'orderId',
-                    'custom_field',
-                    'customField',
-                    'description',
-                    'amount',
                     ['shipping' =>
                         [
                             'firstName', 'lastName', 'company', 'countryName',

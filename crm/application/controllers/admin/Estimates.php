@@ -1,8 +1,7 @@
 <?php
 
 defined('BASEPATH') or exit('No direct script access allowed');
-
-class Estimates extends AdminController
+class Estimates extends Admin_controller
 {
     public function __construct()
     {
@@ -125,7 +124,7 @@ class Estimates extends AdminController
         $this->load->model('invoice_items_model');
 
         $data['ajaxItems'] = false;
-        if (total_rows(db_prefix().'items') <= ajax_on_total_items()) {
+        if (total_rows('tblitems') <= ajax_on_total_items()) {
             $data['items'] = $this->invoice_items_model->get_grouped();
         } else {
             $data['items']     = [];
@@ -156,7 +155,7 @@ class Estimates extends AdminController
         ];
         if (has_permission('estimates', '', 'edit')) {
             $this->db->where('id', $id);
-            $this->db->update(db_prefix().'estimates', [
+            $this->db->update('tblestimates', [
                 'prefix' => $this->input->post('prefix'),
             ]);
             if ($this->db->affected_rows() > 0) {
@@ -185,7 +184,7 @@ class Estimates extends AdminController
             }
         }
 
-        if (total_rows(db_prefix().'estimates', [
+        if (total_rows('tblestimates', [
             'YEAR(date)' => date('Y', strtotime(to_sql_date($date))),
             'number' => $number,
         ]) > 0) {
@@ -234,18 +233,37 @@ class Estimates extends AdminController
         }
 
         if ($estimate->sent == 0) {
-            $template_name = 'estimate_send_to_customer';
+            $template_name = 'estimate-send-to-client';
         } else {
-            $template_name = 'estimate_send_to_customer_already_sent';
+            $template_name = 'estimate-already-send';
         }
 
-        $data = prepare_mail_preview_data($template_name, $estimate->clientid);
+        $contact = $this->clients_model->get_contact(get_primary_contact_user_id($estimate->clientid));
+        $email   = '';
+        if ($contact) {
+            $email = $contact->email;
+        }
+
+        $data['template']      = get_email_template_for_sending($template_name, $email);
+        $data['template_name'] = $template_name;
+
+        $this->db->where('slug', $template_name);
+        $this->db->where('language', 'english');
+        $template_result = $this->db->get('tblemailtemplates')->row();
+
+        $data['template_system_name'] = $template_result->name;
+        $data['template_id']          = $template_result->emailtemplateid;
+
+        $data['template_disabled'] = false;
+        if (total_rows('tblemailtemplates', ['slug' => $data['template_name'], 'active' => 0]) > 0) {
+            $data['template_disabled'] = true;
+        }
 
         $data['activity']          = $this->estimates_model->get_estimate_activity($id);
         $data['estimate']          = $estimate;
         $data['members']           = $this->staff_model->get('', ['active' => 1]);
         $data['estimate_statuses'] = $this->estimates_model->get_statuses();
-        $data['totalNotes']        = total_rows(db_prefix().'notes', ['rel_id' => $id, 'rel_type' => 'estimate']);
+        $data['totalNotes']        = total_rows('tblnotes', ['rel_id' => $id, 'rel_type' => 'estimate']);
         if ($to_return == false) {
             $this->load->view('admin/estimates/estimate_preview_template', $data);
         } else {
@@ -261,9 +279,9 @@ class Estimates extends AdminController
             $this->load->model('currencies_model');
 
             if (!$this->input->post('customer_id')) {
-                $multiple_currencies = call_user_func('is_using_multiple_currencies', db_prefix().'estimates');
+                $multiple_currencies = call_user_func('is_using_multiple_currencies', 'tblestimates');
             } else {
-                $multiple_currencies = call_user_func('is_client_using_multiple_currencies', $this->input->post('customer_id'), db_prefix().'estimates');
+                $multiple_currencies = call_user_func('is_client_using_multiple_currencies', $this->input->post('customer_id'), 'tblestimates');
             }
 
             if ($multiple_currencies) {
@@ -455,7 +473,7 @@ class Estimates extends AdminController
     {
         if (is_admin()) {
             $this->db->where('id', $id);
-            $this->db->update(db_prefix().'estimates', get_acceptance_info_array(true));
+            $this->db->update('tblestimates', get_acceptance_info_array(true));
         }
 
         redirect(admin_url('estimates/list_estimates/' . $id));
@@ -499,7 +517,7 @@ class Estimates extends AdminController
             $type = 'I';
         }
 
-        $fileNameHookData = hooks()->apply_filters('estimate_file_name_admin_area', [
+        $fileNameHookData = do_action('estimate_file_name_admin_area', [
                             'file_name' => mb_strtoupper(slug_it($estimate_number)) . '.pdf',
                             'estimate'  => $estimate,
                         ]);

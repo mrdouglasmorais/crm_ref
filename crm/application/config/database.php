@@ -78,11 +78,11 @@ $query_builder = true;
 global $app_db_encrypt;
 $db_encrypt = false;
 if (defined('APP_DB_ENCRYPT')) {
-    // For php 7+
     $db_encrypt = APP_DB_ENCRYPT;
 } elseif (!is_null($app_db_encrypt)) {
     $db_encrypt = $app_db_encrypt;
 }
+
 $db['default'] = [
     'dsn'          => '', // Not Supported
     'hostname'     => APP_DB_HOSTNAME,
@@ -90,13 +90,13 @@ $db['default'] = [
     'password'     => APP_DB_PASSWORD,
     'database'     => APP_DB_NAME,
     'dbdriver'     => defined('APP_DB_DRIVER') ? APP_DB_DRIVER : 'mysqli',
-    'dbprefix'     => db_prefix(),
+    'dbprefix'     => '', // Not Supported
     'pconnect'     => false,
     'db_debug'     => (ENVIRONMENT !== 'production'),
     'cache_on'     => false,
     'cachedir'     => '',
-    'char_set'     => defined('APP_DB_CHARSET') ? APP_DB_CHARSET : 'utf8',
-    'dbcollat'     => defined('APP_DB_COLLATION') ? APP_DB_COLLATION : 'utf8_general_ci',
+    'char_set'     => 'utf8',
+    'dbcollat'     => 'utf8_general_ci',
     'swap_pre'     => '',
     'encrypt'      => $db_encrypt,
     'compress'     => false,

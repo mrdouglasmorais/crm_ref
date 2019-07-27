@@ -19,7 +19,6 @@
 						$table_data = array(
 							_l('staff_dt_name'),
 							_l('staff_dt_email'),
-							_l('role'),
 							_l('staff_dt_last_Login'),
 							_l('staff_dt_active'),
 							);

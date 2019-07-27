@@ -77,11 +77,11 @@
                                  <label for="language" class="control-label"><i class="fa fa-question-circle" data-toggle="tooltip" data-title="<?php echo _l('form_lang_validation_help'); ?>"></i> <?php echo _l('form_lang_validation'); ?></label>
                                  <select name="language" id="language" class="form-control selectpicker" data-none-selected-text="<?php echo _l('dropdown_non_selected_tex'); ?>">
                                     <option value=""></option>
-                                    <?php foreach ($languages as $availableLanguage) {
+                                    <?php foreach ($languages as $language) {
                                      ?>
-                                    <option value="<?php echo $availableLanguage; ?>"<?php if ((isset($form) && $form->language == $availableLanguage) || (!isset($form) && get_option('active_language') == $availableLanguage)) {
+                                    <option value="<?php echo $language; ?>"<?php if ((isset($form) && $form->language == $language) || (!isset($form) && get_option('active_language') == $language)) {
                                          echo ' selected';
-                                     } ?>><?php echo ucfirst($availableLanguage); ?></option>
+                                     } ?>><?php echo ucfirst($language); ?></option>
                                     <?php } ?>
                                  </select>
                               </div>
@@ -158,7 +158,7 @@
 
                                  echo render_leads_source_select($sources, (isset($form) ? $form->lead_source : get_option('leads_default_source')), 'lead_import_source', 'lead_source');
 
-                                  echo render_leads_status_select($statuses, (isset($form) ? $form->lead_status : get_option('leads_default_status')), 'lead_import_status', 'lead_status', [], true);
+                                  echo render_leads_status_select($statuses, (isset($form) ? $form->lead_status : get_option('leads_default_status')), 'lead_import_status', 'lead_status');
 
                                  $selected = '';
                                  foreach ($members as $staff) {
@@ -245,7 +245,7 @@ var formData = <?php echo json_encode($formData); ?>;
 
 if(formData.length){
   // If user paste with styling eq from some editor word and the Codeigniter XSS feature remove and apply xss=remove, may break the json.
-  formData = formData.replace(/=\\/gm, "=''");
+  formData = formData.replace(/=\\>/gm, ">");
 }
 </script>
 <?php $this->load->view('admin/includes/_form_js_formatter'); ?>
@@ -301,7 +301,7 @@ if(formData.length){
        });
      });
 
-     appValidateForm('#form_info',{
+     _validate_form('#form_info',{
        name:'required',
        lead_source: 'required',
        lead_status: 'required',

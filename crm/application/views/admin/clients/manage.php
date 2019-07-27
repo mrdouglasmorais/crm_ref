@@ -55,7 +55,7 @@
                         <ul class="dropdown-menu dropdown-menu-left" style="width:300px;">
                            <li class="active"><a href="#" data-cview="all" onclick="dt_custom_view('','.table-clients',''); return false;"><?php echo _l('customers_sort_all'); ?></a>
                            </li>
-                           <?php if(get_option('customer_requires_registration_confirmation') == '1' || total_rows(db_prefix().'clients','registration_confirmed=0') > 0) { ?>
+                           <?php if(get_option('customer_requires_registration_confirmation') == '1' || total_rows('tblclients','registration_confirmed=0') > 0) { ?>
                            <li class="divider"></li>
                            <li>
                               <a href="#" data-cview="requires_registration_confirmation" onclick="dt_custom_view('requires_registration_confirmation','.table-clients','requires_registration_confirmation'); return false;">
@@ -185,7 +185,7 @@
                   <?php if(has_permission('customers','','view') || have_assigned_customers()) {
                      $where_summary = '';
                      if(!has_permission('customers','','view')){
-                         $where_summary = ' AND userid IN (SELECT customer_id FROM '.db_prefix().'customer_admins WHERE staff_id='.get_staff_user_id().')';
+                         $where_summary = ' AND userid IN (SELECT customer_id FROM tblcustomeradmins WHERE staff_id='.get_staff_user_id().')';
                      }
                      ?>
                   <hr class="hr-panel-heading" />
@@ -194,27 +194,27 @@
                         <h4 class="no-margin"><?php echo _l('customers_summary'); ?></h4>
                      </div>
                      <div class="col-md-2 col-xs-6 border-right">
-                        <h3 class="bold"><?php echo total_rows(db_prefix().'clients',($where_summary != '' ? substr($where_summary,5) : '')); ?></h3>
+                        <h3 class="bold"><?php echo total_rows('tblclients',($where_summary != '' ? substr($where_summary,5) : '')); ?></h3>
                         <span class="text-dark"><?php echo _l('customers_summary_total'); ?></span>
                      </div>
                      <div class="col-md-2 col-xs-6 border-right">
-                        <h3 class="bold"><?php echo total_rows(db_prefix().'clients','active=1'.$where_summary); ?></h3>
+                        <h3 class="bold"><?php echo total_rows('tblclients','active=1'.$where_summary); ?></h3>
                         <span class="text-success"><?php echo _l('active_customers'); ?></span>
                      </div>
                      <div class="col-md-2 col-xs-6 border-right">
-                        <h3 class="bold"><?php echo total_rows(db_prefix().'clients','active=0'.$where_summary); ?></h3>
+                        <h3 class="bold"><?php echo total_rows('tblclients','active=0'.$where_summary); ?></h3>
                         <span class="text-danger"><?php echo _l('inactive_active_customers'); ?></span>
                      </div>
                      <div class="col-md-2 col-xs-6 border-right">
-                        <h3 class="bold"><?php echo total_rows(db_prefix().'contacts','active=1'.$where_summary); ?></h3>
+                        <h3 class="bold"><?php echo total_rows('tblcontacts','active=1'.$where_summary); ?></h3>
                         <span class="text-info"><?php echo _l('customers_summary_active'); ?></span>
                      </div>
                      <div class="col-md-2  col-xs-6 border-right">
-                        <h3 class="bold"><?php echo total_rows(db_prefix().'contacts','active=0'.$where_summary); ?></h3>
+                        <h3 class="bold"><?php echo total_rows('tblcontacts','active=0'.$where_summary); ?></h3>
                         <span class="text-danger"><?php echo _l('customers_summary_inactive'); ?></span>
                      </div>
                      <div class="col-md-2 col-xs-6">
-                        <h3 class="bold"><?php echo total_rows(db_prefix().'contacts','last_login LIKE "'.date('Y-m-d').'%"'.$where_summary); ?></h3>
+                        <h3 class="bold"><?php echo total_rows('tblcontacts','last_login LIKE "'.date('Y-m-d').'%"'.$where_summary); ?></h3>
                         <span class="text-muted">
                         <?php
                            $contactsTemplate = '';
@@ -224,7 +224,7 @@
                                $fullName = $contact['firstname'] . ' ' . $contact['lastname'];
                                $dateLoggedIn = _dt($contact['last_login']);
                                $html = "<a href='$url' target='_blank'>$fullName</a><br /><small>$dateLoggedIn</small><br />";
-                               $contactsTemplate .= html_escape('<p class="mbot5">'.$html.'</p>');
+                               $contactsTemplate .= htmlspecialchars('<p class="mbot5">'.$html.'</p>');
                            }
                            ?>
                         <?php } ?>
@@ -316,7 +316,7 @@
                       array_push($table_data,$field['name']);
                      }
 
-                     $table_data = hooks()->apply_filters('customers_table_columns', $table_data);
+                     $table_data = do_action('customers_table_columns',$table_data);
 
                      render_datatable($table_data,'clients',[],[
                            'data-last-order-identifier' => 'customers',
@@ -338,13 +338,13 @@
       });
        CustomersServerParams['exclude_inactive'] = '[name="exclude_inactive"]:checked';
 
-       var tAPI = initDataTable('.table-clients', admin_url+'clients/table', [0], [0], CustomersServerParams,<?php echo hooks()->apply_filters('customers_table_default_order', json_encode(array(2,'asc'))); ?>);
+       var tAPI = initDataTable('.table-clients', admin_url+'clients/table', [0], [0], CustomersServerParams,<?php echo do_action('customers_table_default_order',json_encode(array(2,'asc'))); ?>);
        $('input[name="exclude_inactive"]').on('change',function(){
            tAPI.ajax.reload();
        });
    });
    function customers_bulk_action(event) {
-       var r = confirm(app.lang.confirm_action_prompt);
+       var r = confirm(appLang.confirm_action_prompt);
        if (r == false) {
            return false;
        } else {

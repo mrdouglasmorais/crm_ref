@@ -435,7 +435,7 @@ if (!function_exists('render_form_builder_field')) {
                 $classNames = explode(' ', $field->className);
                 if (is_array($classNames)) {
                     $classNameColArray = array_filter($classNames, function ($class) {
-                        return startsWith($class, 'form-col');
+                        return _startsWith($class, 'form-col');
                     });
 
                     $classNameCol = implode(' ', $classNameColArray);

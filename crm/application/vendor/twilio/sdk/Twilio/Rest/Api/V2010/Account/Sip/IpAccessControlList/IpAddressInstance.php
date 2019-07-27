@@ -33,12 +33,10 @@ class IpAddressInstance extends InstanceResource {
      * 
      * @param \Twilio\Version $version Version that contains the resource
      * @param mixed[] $payload The response payload
-     * @param string $accountSid The unique id of the Account that is responsible
-     *                           for this resource.
-     * @param string $ipAccessControlListSid The unique id of the
-     *                                       IpAccessControlList resource that
-     *                                       includes this resource.
-     * @param string $sid A string that identifies the IpAddress resource to fetch
+     * @param string $accountSid The unique id of the Account that responsible for
+     *                           this resource.
+     * @param string $ipAccessControlListSid The ip_access_control_list_sid
+     * @param string $sid The sid
      * @return \Twilio\Rest\Api\V2010\Account\Sip\IpAccessControlList\IpAddressInstance 
      */
     public function __construct(Version $version, array $payload, $accountSid, $ipAccessControlListSid, $sid = null) {

@@ -34,13 +34,13 @@ function render_custom_fields($belongs_to, $rel_id = false, $where = [], $items_
     }
 
     $CI->db->order_by('field_order', 'asc');
-    $fields = $CI->db->get(db_prefix() . 'customfields')->result_array();
+    $fields = $CI->db->get('tblcustomfields')->result_array();
 
     $fields_html = '';
 
     if (count($fields)) {
         if (!$items_add_edit_preview && !$items_applied) {
-            $fields_html .= '<div class="row custom-fields-form-row">';
+            $fields_html .= '<div class="row">';
         }
 
         foreach ($fields as $field) {
@@ -63,9 +63,7 @@ function render_custom_fields($belongs_to, $rel_id = false, $where = [], $items_
                 $fields_html .= '<td class="custom_field">';
             }
 
-            if ($is_admin
-                && ($items_add_edit_preview == false && $items_applied == false)
-                && (!defined('CLIENTS_AREA') || hooks()->apply_filters('show_custom_fields_edit_link_on_clients_area', false))) {
+            if ($is_admin && $items_add_edit_preview == false && $items_applied == false) {
                 $fields_html .= '<a href="' . admin_url('custom_fields/field/' . $field['id']) . '" tabindex="-1" target="_blank" class="custom-field-inline-edit-link"><i class="fa fa-pencil-square-o"></i></a>';
             }
 
@@ -84,7 +82,7 @@ function render_custom_fields($belongs_to, $rel_id = false, $where = [], $items_
                         if (isset($tmpSlug[1])) {
                             $CI->db->where('fieldto', $transfer_belongs_to);
                             $CI->db->where('slug LIKE "' . $rel_id['belongs_to'] . '_' . $tmpSlug[1] . '%" AND type="' . $field['type'] . '" AND options="' . $field['options'] . '" AND active=1');
-                            $cfTransfer = $CI->db->get(db_prefix() . 'customfields')->result_array();
+                            $cfTransfer = $CI->db->get('tblcustomfields')->result_array();
 
                             // Don't make mistakes
                             // Only valid if 1 result returned
@@ -160,7 +158,7 @@ function render_custom_fields($belongs_to, $rel_id = false, $where = [], $items_
                 }
 
                 $fields_html .= '<div class="form-group">';
-                $fields_html .= '<label for="' . $cf_name . '" class="control-label" style="margin-bottom:9px;">' . $field_name . '</label>';
+                $fields_html .= '<label for="' . $cf_name . '">' . $field_name . '</label>';
                 $fields_html .= '<select ' . $select_attrs . ' name="' . $select_name . '" class="' . ($items_add_edit_preview == false ? 'select-placeholder ': '') . 'selectpicker form-control' . ($field['type'] == 'multiselect' ? ' custom-field-multi-select' : '') . '" data-width="100%" data-none-selected-text="' . _l('dropdown_non_selected_tex') . '"  data-live-search="true">';
 
                 $fields_html .= '<option value=""' . ($field['type'] == 'multiselect' ? ' class="hidden"' : '') . '></option>';
@@ -241,7 +239,7 @@ function render_custom_fields($belongs_to, $rel_id = false, $where = [], $items_
                 }
                 $fields_html .= '</div>';
             } elseif ($field['type'] == 'link') {
-                $fields_html .= '<div class="form-group cf-hyperlink" data-fieldto="' . $field['fieldto'] . '" data-field-id="' . $field['id'] . '" data-value="' . html_escape($value) . '" data-field-name="' . html_escape($field_name) . '">';
+                $fields_html .= '<div class="form-group cf-hyperlink" data-fieldto="' . $field['fieldto'] . '" data-field-id="' . $field['id'] . '" data-value="' . htmlspecialchars($value) . '" data-field-name="' . htmlspecialchars($field_name) . '">';
                 $fields_html .= '<label class="control-label" for="custom_fields[' . $field['fieldto'] . '][' . $field['id'] . ']">' . $field_name . '</label></br>';
 
                 $fields_html .= '<a id="custom_fields_' . $field['fieldto'] . '_' . $field['id'] . '_popover" type="button" href="javascript:">' . _l('cf_translate_input_link_tip') . '</a>';
@@ -323,7 +321,7 @@ function get_custom_fields($field_to, $where = [], $exclude_only_admin = false)
     $CI->db->where('active', 1);
     $CI->db->order_by('field_order', 'asc');
 
-    $results = $CI->db->get(db_prefix() . 'customfields')->result_array();
+    $results = $CI->db->get('tblcustomfields')->result_array();
 
     foreach ($results as $key => $result) {
         $results[$key]['name'] = _maybe_translate_custom_field_name($result['name'], $result['slug']);
@@ -331,7 +329,6 @@ function get_custom_fields($field_to, $where = [], $exclude_only_admin = false)
 
     return $results;
 }
-
 function _maybe_translate_custom_field_name($name, $slug)
 {
     return _l('cf_translate_' . $slug, '', false) != 'cf_translate_' . $slug ? _l('cf_translate_' . $slug, '', false) : $name;
@@ -348,27 +345,23 @@ function get_table_custom_fields($field_to)
 }
 /**
  * Get custom field value
- * @param  mixed $rel_id              the main ID from the table, e.q. the customer id, invoice id
- * @param  mixed $field_id_or_slug    field id, the custom field ID or custom field slug
- * @param  string $field_to           belongs to e.q leads, customers, staff
- * @param  string $format             format date values
+ * @param  mixed $rel_id   the main ID from the table
+ * @param  mixed $field_id field id
+ * @param  string $field_to belongs to ex.leads,customers,staff
+ * @param  string $format format date values
  * @return string
  */
-function get_custom_field_value($rel_id, $field_id_or_slug, $field_to, $format = true)
+function get_custom_field_value($rel_id, $field_id, $field_to, $format = true)
 {
     $CI = & get_instance();
 
-    $CI->db->select(db_prefix() . 'customfieldsvalues.value,' . db_prefix() . 'customfields.type');
-    $CI->db->join(db_prefix() . 'customfields', db_prefix() . 'customfields.id=' . db_prefix() . 'customfieldsvalues.fieldid');
-    $CI->db->where(db_prefix() . 'customfieldsvalues.relid', $rel_id);
-    if (is_numeric($field_id_or_slug)) {
-        $CI->db->where(db_prefix() . 'customfieldsvalues.fieldid', $field_id_or_slug);
-    } else {
-        $CI->db->where(db_prefix() . 'customfields.slug', $field_id_or_slug);
-    }
-    $CI->db->where(db_prefix() . 'customfieldsvalues.fieldto', $field_to);
+    $CI->db->select('tblcustomfieldsvalues.value,tblcustomfields.type');
+    $CI->db->join('tblcustomfields', 'tblcustomfields.id=tblcustomfieldsvalues.fieldid');
+    $CI->db->where('tblcustomfieldsvalues.relid', $rel_id);
+    $CI->db->where('tblcustomfieldsvalues.fieldid', $field_id);
+    $CI->db->where('tblcustomfieldsvalues.fieldto', $field_to);
 
-    $row = $CI->db->get(db_prefix() . 'customfieldsvalues')->row();
+    $row = $CI->db->get('tblcustomfieldsvalues')->row();
 
     $result = '';
     if ($row) {
@@ -400,14 +393,14 @@ function handle_custom_fields_post($rel_id, $custom_fields, $is_cf_items = false
             $CI->db->where('relid', $rel_id);
             $CI->db->where('fieldid', $field_id);
             $CI->db->where('fieldto', ($is_cf_items ? 'items_pr' : $key));
-            $row = $CI->db->get(db_prefix() . 'customfieldsvalues')->row();
+            $row = $CI->db->get('tblcustomfieldsvalues')->row();
             if (!is_array($field_value)) {
                 $field_value = trim($field_value);
             }
             // Make necessary checkings for fields
             if (!defined('COPY_CUSTOM_FIELDS_LIKE_HANDLE_POST')) {
                 $CI->db->where('id', $field_id);
-                $field_checker = $CI->db->get(db_prefix() . 'customfields')->row();
+                $field_checker = $CI->db->get('tblcustomfields')->row();
                 if ($field_checker->type == 'date_picker') {
                     $field_value = to_sql_date($field_value);
                 } elseif ($field_checker->type == 'date_picker_time') {
@@ -432,7 +425,7 @@ function handle_custom_fields_post($rel_id, $custom_fields, $is_cf_items = false
             }
             if ($row) {
                 $CI->db->where('id', $row->id);
-                $CI->db->update(db_prefix() . 'customfieldsvalues', [
+                $CI->db->update('tblcustomfieldsvalues', [
                     'value' => $field_value,
                 ]);
                 if ($CI->db->affected_rows() > 0) {
@@ -440,7 +433,7 @@ function handle_custom_fields_post($rel_id, $custom_fields, $is_cf_items = false
                 }
             } else {
                 if ($field_value != '') {
-                    $CI->db->insert(db_prefix() . 'customfieldsvalues', [
+                    $CI->db->insert('tblcustomfieldsvalues', [
                         'relid'   => $rel_id,
                         'fieldid' => $field_id,
                         'fieldto' => $is_cf_items ? 'items_pr' : $key,
@@ -469,9 +462,9 @@ function handle_custom_fields_post($rel_id, $custom_fields, $is_cf_items = false
  */
 function get_items_custom_fields_for_table_html($rel_id, $rel_type)
 {
-    $whereSQL = 'id IN (SELECT fieldid FROM ' . db_prefix() . 'customfieldsvalues WHERE value != "" AND value IS NOT NULL AND fieldto="items" AND relid IN (SELECT id FROM ' . db_prefix() . 'itemable WHERE rel_type="' . $rel_type . '" AND rel_id="' . $rel_id . '") GROUP BY id HAVING COUNT(id) > 0)';
+    $whereSQL = 'id IN (SELECT fieldid FROM tblcustomfieldsvalues WHERE value != "" AND value IS NOT NULL AND fieldto="items" AND relid IN (SELECT id FROM tblitems_in WHERE rel_type="' . $rel_type . '" AND rel_id="' . $rel_id . '") GROUP BY id HAVING COUNT(id) > 0)';
 
-    $whereSQL = hooks()->apply_filters('items_custom_fields_for_table_sql', $whereSQL);
+    $whereSQL = do_action('items_custom_fields_for_table_sql', $whereSQL);
 
     return get_custom_fields('items', $whereSQL);
 }
@@ -481,7 +474,7 @@ function get_items_custom_fields_for_table_html($rel_id, $rel_type)
  */
 function render_custom_fields_items_table_add_edit_preview()
 {
-    $where = hooks()->apply_filters('custom_fields_where_items_table_add_edit_preview', []);
+    $where = do_action('custom_fields_where_items_table_add_edit_preview', []);
 
     return render_custom_fields('items', false, $where, [
         'add_edit_preview' => true,
@@ -550,7 +543,12 @@ function is_cf_date($field)
 */
 function is_custom_fields_for_customers_portal()
 {
-    if (is_data_for_customer() || DEFINED('CRON')) {
+    if (is_client_logged_in()
+        || (!is_staff_logged_in() && !is_client_logged_in())
+        || defined('EMAIL_TEMPLATE_SEND')
+        || defined('CLIENTS_AREA')
+        || defined('GDPR_EXPORT')
+        || DEFINED('CRON')) {
         return true;
     }
 
@@ -622,7 +620,6 @@ function get_custom_fields_hyperlink_js_function()
 
     return $contents;
 }
-
 function is_custom_fields_smart_transfer_enabled()
 {
     if (!defined('CUSTOM_FIELDS_SMART_TRANSFER')) {

@@ -14,19 +14,14 @@ use Twilio\Values;
 
 abstract class ConferenceOptions {
     /**
-     * @param string $dateCreatedBefore The `YYYY-MM-DD` value of the resources to
-     *                                  read
-     * @param string $dateCreated The `YYYY-MM-DD` value of the resources to read
-     * @param string $dateCreatedAfter The `YYYY-MM-DD` value of the resources to
-     *                                 read
-     * @param string $dateUpdatedBefore The `YYYY-MM-DD` value of the resources to
-     *                                  read
-     * @param string $dateUpdated The `YYYY-MM-DD` value of the resources to read
-     * @param string $dateUpdatedAfter The `YYYY-MM-DD` value of the resources to
-     *                                 read
-     * @param string $friendlyName The string that identifies the Conference
-     *                             resources to read
-     * @param string $status The status of the resources to read
+     * @param string $dateCreatedBefore Filter by date created
+     * @param string $dateCreated Filter by date created
+     * @param string $dateCreatedAfter Filter by date created
+     * @param string $dateUpdatedBefore Filter by date updated
+     * @param string $dateUpdated Filter by date updated
+     * @param string $dateUpdatedAfter Filter by date updated
+     * @param string $friendlyName Filter by friendly name
+     * @param string $status The status of the conference
      * @return ReadConferenceOptions Options builder
      */
     public static function read($dateCreatedBefore = Values::NONE, $dateCreated = Values::NONE, $dateCreatedAfter = Values::NONE, $dateUpdatedBefore = Values::NONE, $dateUpdated = Values::NONE, $dateUpdatedAfter = Values::NONE, $friendlyName = Values::NONE, $status = Values::NONE) {
@@ -34,10 +29,11 @@ abstract class ConferenceOptions {
     }
 
     /**
-     * @param string $status The new status of the resource
-     * @param string $announceUrl The URL we should call to announce something into
-     *                            the conference
-     * @param string $announceMethod he HTTP method used to call announce_url
+     * @param string $status Specifying completed will end the conference and kick
+     *                       all participants
+     * @param string $announceUrl The 'AnnounceUrl' attribute lets you specify a
+     *                            URL for announcing something into a conference.
+     * @param string $announceMethod Specify GET or POST, defaults to POST
      * @return UpdateConferenceOptions Options builder
      */
     public static function update($status = Values::NONE, $announceUrl = Values::NONE, $announceMethod = Values::NONE) {
@@ -47,19 +43,14 @@ abstract class ConferenceOptions {
 
 class ReadConferenceOptions extends Options {
     /**
-     * @param string $dateCreatedBefore The `YYYY-MM-DD` value of the resources to
-     *                                  read
-     * @param string $dateCreated The `YYYY-MM-DD` value of the resources to read
-     * @param string $dateCreatedAfter The `YYYY-MM-DD` value of the resources to
-     *                                 read
-     * @param string $dateUpdatedBefore The `YYYY-MM-DD` value of the resources to
-     *                                  read
-     * @param string $dateUpdated The `YYYY-MM-DD` value of the resources to read
-     * @param string $dateUpdatedAfter The `YYYY-MM-DD` value of the resources to
-     *                                 read
-     * @param string $friendlyName The string that identifies the Conference
-     *                             resources to read
-     * @param string $status The status of the resources to read
+     * @param string $dateCreatedBefore Filter by date created
+     * @param string $dateCreated Filter by date created
+     * @param string $dateCreatedAfter Filter by date created
+     * @param string $dateUpdatedBefore Filter by date updated
+     * @param string $dateUpdated Filter by date updated
+     * @param string $dateUpdatedAfter Filter by date updated
+     * @param string $friendlyName Filter by friendly name
+     * @param string $status The status of the conference
      */
     public function __construct($dateCreatedBefore = Values::NONE, $dateCreated = Values::NONE, $dateCreatedAfter = Values::NONE, $dateUpdatedBefore = Values::NONE, $dateUpdated = Values::NONE, $dateUpdatedAfter = Values::NONE, $friendlyName = Values::NONE, $status = Values::NONE) {
         $this->options['dateCreatedBefore'] = $dateCreatedBefore;
@@ -73,10 +64,9 @@ class ReadConferenceOptions extends Options {
     }
 
     /**
-     * The `date_created` value, specified as `YYYY-MM-DD`, of the resources to read. To read conferences that started on or before midnight on a date, use `<=YYYY-MM-DD`, and to specify  conferences that started on or after midnight on a date, use `>=YYYY-MM-DD`.
+     * Only show conferences that started on this date, given as `YYYY-MM-DD`. You can also specify inequality – for conferences that started at or before midnight on a date use  `DateCreated<=YYYY-MM-DD`, or specify  conferences that started at or after midnight on a date with `DateCreated>=YYYY-MM-DD`.
      * 
-     * @param string $dateCreatedBefore The `YYYY-MM-DD` value of the resources to
-     *                                  read
+     * @param string $dateCreatedBefore Filter by date created
      * @return $this Fluent Builder
      */
     public function setDateCreatedBefore($dateCreatedBefore) {
@@ -85,9 +75,9 @@ class ReadConferenceOptions extends Options {
     }
 
     /**
-     * The `date_created` value, specified as `YYYY-MM-DD`, of the resources to read. To read conferences that started on or before midnight on a date, use `<=YYYY-MM-DD`, and to specify  conferences that started on or after midnight on a date, use `>=YYYY-MM-DD`.
+     * Only show conferences that started on this date, given as `YYYY-MM-DD`. You can also specify inequality – for conferences that started at or before midnight on a date use  `DateCreated<=YYYY-MM-DD`, or specify  conferences that started at or after midnight on a date with `DateCreated>=YYYY-MM-DD`.
      * 
-     * @param string $dateCreated The `YYYY-MM-DD` value of the resources to read
+     * @param string $dateCreated Filter by date created
      * @return $this Fluent Builder
      */
     public function setDateCreated($dateCreated) {
@@ -96,10 +86,9 @@ class ReadConferenceOptions extends Options {
     }
 
     /**
-     * The `date_created` value, specified as `YYYY-MM-DD`, of the resources to read. To read conferences that started on or before midnight on a date, use `<=YYYY-MM-DD`, and to specify  conferences that started on or after midnight on a date, use `>=YYYY-MM-DD`.
+     * Only show conferences that started on this date, given as `YYYY-MM-DD`. You can also specify inequality – for conferences that started at or before midnight on a date use  `DateCreated<=YYYY-MM-DD`, or specify  conferences that started at or after midnight on a date with `DateCreated>=YYYY-MM-DD`.
      * 
-     * @param string $dateCreatedAfter The `YYYY-MM-DD` value of the resources to
-     *                                 read
+     * @param string $dateCreatedAfter Filter by date created
      * @return $this Fluent Builder
      */
     public function setDateCreatedAfter($dateCreatedAfter) {
@@ -108,10 +97,9 @@ class ReadConferenceOptions extends Options {
     }
 
     /**
-     * The `date_updated` value, specified as `YYYY-MM-DD`, of the resources to read. To read conferences that were last updated on or before midnight on a date, use `<=YYYY-MM-DD`, and to specify conferences that were last updated on or after midnight on a given date, use  `>=YYYY-MM-DD`.
+     * Only show conferences that were last updated on this date, given as `YYYY-MM-DD`. You can also specify inequality – for conferences that were last updated at or before midnight on a date use `DateUpdated<=YYYY-MM-DD`, or specify conferences updated at or after midnight on a given date with   `DateUpdated>=YYYY-MM-DD`.
      * 
-     * @param string $dateUpdatedBefore The `YYYY-MM-DD` value of the resources to
-     *                                  read
+     * @param string $dateUpdatedBefore Filter by date updated
      * @return $this Fluent Builder
      */
     public function setDateUpdatedBefore($dateUpdatedBefore) {
@@ -120,9 +108,9 @@ class ReadConferenceOptions extends Options {
     }
 
     /**
-     * The `date_updated` value, specified as `YYYY-MM-DD`, of the resources to read. To read conferences that were last updated on or before midnight on a date, use `<=YYYY-MM-DD`, and to specify conferences that were last updated on or after midnight on a given date, use  `>=YYYY-MM-DD`.
+     * Only show conferences that were last updated on this date, given as `YYYY-MM-DD`. You can also specify inequality – for conferences that were last updated at or before midnight on a date use `DateUpdated<=YYYY-MM-DD`, or specify conferences updated at or after midnight on a given date with   `DateUpdated>=YYYY-MM-DD`.
      * 
-     * @param string $dateUpdated The `YYYY-MM-DD` value of the resources to read
+     * @param string $dateUpdated Filter by date updated
      * @return $this Fluent Builder
      */
     public function setDateUpdated($dateUpdated) {
@@ -131,10 +119,9 @@ class ReadConferenceOptions extends Options {
     }
 
     /**
-     * The `date_updated` value, specified as `YYYY-MM-DD`, of the resources to read. To read conferences that were last updated on or before midnight on a date, use `<=YYYY-MM-DD`, and to specify conferences that were last updated on or after midnight on a given date, use  `>=YYYY-MM-DD`.
+     * Only show conferences that were last updated on this date, given as `YYYY-MM-DD`. You can also specify inequality – for conferences that were last updated at or before midnight on a date use `DateUpdated<=YYYY-MM-DD`, or specify conferences updated at or after midnight on a given date with   `DateUpdated>=YYYY-MM-DD`.
      * 
-     * @param string $dateUpdatedAfter The `YYYY-MM-DD` value of the resources to
-     *                                 read
+     * @param string $dateUpdatedAfter Filter by date updated
      * @return $this Fluent Builder
      */
     public function setDateUpdatedAfter($dateUpdatedAfter) {
@@ -143,10 +130,9 @@ class ReadConferenceOptions extends Options {
     }
 
     /**
-     * The string that identifies the Conference resources to read.
+     * Only show results who's friendly name exactly matches the string
      * 
-     * @param string $friendlyName The string that identifies the Conference
-     *                             resources to read
+     * @param string $friendlyName Filter by friendly name
      * @return $this Fluent Builder
      */
     public function setFriendlyName($friendlyName) {
@@ -155,9 +141,9 @@ class ReadConferenceOptions extends Options {
     }
 
     /**
-     * The status of the resources to read. Can be: `init`, `in-progress`, or `completed`.
+     * A string representing the status of the conference. May be `init`, `in-progress`, or `completed`.
      * 
-     * @param string $status The status of the resources to read
+     * @param string $status The status of the conference
      * @return $this Fluent Builder
      */
     public function setStatus($status) {
@@ -183,10 +169,11 @@ class ReadConferenceOptions extends Options {
 
 class UpdateConferenceOptions extends Options {
     /**
-     * @param string $status The new status of the resource
-     * @param string $announceUrl The URL we should call to announce something into
-     *                            the conference
-     * @param string $announceMethod he HTTP method used to call announce_url
+     * @param string $status Specifying completed will end the conference and kick
+     *                       all participants
+     * @param string $announceUrl The 'AnnounceUrl' attribute lets you specify a
+     *                            URL for announcing something into a conference.
+     * @param string $announceMethod Specify GET or POST, defaults to POST
      */
     public function __construct($status = Values::NONE, $announceUrl = Values::NONE, $announceMethod = Values::NONE) {
         $this->options['status'] = $status;
@@ -195,9 +182,10 @@ class UpdateConferenceOptions extends Options {
     }
 
     /**
-     * The new status of the resource. Can be:  Can be: `init`, `in-progress`, or `completed`. Specifying `completed` will end the conference and hang up all participants
+     * Specifying `completed` will end the conference and kick all participants
      * 
-     * @param string $status The new status of the resource
+     * @param string $status Specifying completed will end the conference and kick
+     *                       all participants
      * @return $this Fluent Builder
      */
     public function setStatus($status) {
@@ -206,10 +194,10 @@ class UpdateConferenceOptions extends Options {
     }
 
     /**
-     * The URL we should call to announce something into the conference. The URL can return an MP3, a WAV, or a TwiML document with `<Play>` or `<Say>`.
+     * The 'AnnounceUrl' attribute lets you specify a URL for announcing something into a conference. The URL may return an MP3, a WAV or a TwiML document with `<Play>` or `<Say>`.
      * 
-     * @param string $announceUrl The URL we should call to announce something into
-     *                            the conference
+     * @param string $announceUrl The 'AnnounceUrl' attribute lets you specify a
+     *                            URL for announcing something into a conference.
      * @return $this Fluent Builder
      */
     public function setAnnounceUrl($announceUrl) {
@@ -218,9 +206,9 @@ class UpdateConferenceOptions extends Options {
     }
 
     /**
-     * The HTTP method used to call `announce_url`. Can be: `GET` or `POST` and the default is `POST`
+     * Specify GET or POST, defaults to POST
      * 
-     * @param string $announceMethod he HTTP method used to call announce_url
+     * @param string $announceMethod Specify GET or POST, defaults to POST
      * @return $this Fluent Builder
      */
     public function setAnnounceMethod($announceMethod) {

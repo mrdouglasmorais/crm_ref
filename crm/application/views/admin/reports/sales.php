@@ -37,7 +37,7 @@
                         <a href="#" class="font-medium" onclick="init_report(this,'customers-report'); return false;"><i class="fa fa-caret-down" aria-hidden="true"></i> <?php echo _l('report_sales_type_customer'); ?></a>
                       </p>
 
-                      <?php if(total_rows(db_prefix().'invoices',array('status'=>5)) > 0){ ?>
+                      <?php if(total_rows('tblinvoices',array('status'=>5)) > 0){ ?>
                       <hr class="hr-10" />
                       <p class="text-danger">
                         <i class="fa fa-exclamation-circle" aria-hidden="true"></i> <?php echo _l('sales_report_cancelled_invoices_not_included'); ?>

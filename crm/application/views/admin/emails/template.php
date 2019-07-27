@@ -16,15 +16,10 @@
                         <?php echo render_input('name','template_name',$template->name,'text',array('disabled'=>true)); ?>
                         <?php echo render_input('subject['.$template->emailtemplateid.']','template_subject',$template->subject); ?>
                         <?php echo render_input('fromname','template_fromname',$template->fromname); ?>
-                        <div
-                        style="<?php echo (hooks()->apply_filters('show_deprecated_from_email_header_template_field', false) === false
-                        ? 'display:none;'
-                        : ''); ?>">
                         <?php if($template->slug != 'two-factor-authentication'){ ?>
                         <i class="fa fa-question-circle" data-toggle="tooltip" data-title="<?php echo _l('email_template_only_domain_email'); ?>"></i>
                         <?php echo render_input('fromemail','template_fromemail',$template->fromemail,'email'); ?>
                         <?php } ?>
-                      </div>
                         <div class="checkbox checkbox-primary">
                            <input type="checkbox" name="plaintext" id="plaintext" <?php if($template->plaintext == 1){echo 'checked';} ?>>
                            <label for="plaintext"><?php echo _l('send_as_plain_text'); ?></label>
@@ -43,11 +38,11 @@
                         <h4 class="bold font-medium">English</h4>
                         <p class="bold"><?php echo _l('email_template_email_message'); ?></p>
                         <?php echo render_textarea('message['.$template->emailtemplateid.']','',$template->message,array('data-url-converter-callback'=>'myCustomURLConverter'),array(),'','tinymce tinymce-manual'); ?>
-                        <?php foreach($available_languages as $availableLanguage){
-                           $lang_template = $this->emails_model->get(array('slug'=>$template->slug,'language'=>$availableLanguage));
+                        <?php foreach($available_languages as $language){
+                           $lang_template = $this->emails_model->get(array('slug'=>$template->slug,'language'=>$language));
                            if(count($lang_template) > 0){
                              $lang_used = false;
-                             if(get_option('active_language') == $availableLanguage || total_rows(db_prefix().'staff',array('default_language'=>$availableLanguage)) > 0 || total_rows(db_prefix().'clients',array('default_language'=>$availableLanguage)) > 0){
+                             if(get_option('active_language') == $language || total_rows('tblstaff',array('default_language'=>$language)) > 0 || total_rows('tblclients',array('default_language'=>$language)) > 0){
                                $lang_used = true;
                              }
                              $hide_template_class = '';
@@ -56,13 +51,11 @@
                              }
                              ?>
                         <hr />
-                        <h4 class="font-medium pointer bold" onclick='slideToggle("#temp_<?php echo $availableLanguage; ?>");'>
-                           <?php echo ucfirst($availableLanguage); ?>
-                        </h4>
+                        <h4 class="font-medium pointer bold" onclick='slideToggle("#temp_<?php echo $language; ?>");'><?php echo ucfirst($language); ?></h4>
                         <?php
                            $lang_template = $lang_template[0];
                            array_push($editors,'message['.$lang_template['emailtemplateid'].']');
-                           echo '<div id="temp_'.$availableLanguage.'" class="'.$hide_template_class.'">';
+                           echo '<div id="temp_'.$language.'" class="'.$hide_template_class.'">';
                            echo render_input('subject['.$lang_template['emailtemplateid'].']','template_subject',$lang_template['subject']);
                            echo '<p class="bold">'._l('email_template_email_message').'</p>';
                            echo render_textarea('message['.$lang_template['emailtemplateid'].']','',$lang_template['message'],array('data-url-converter-callback'=>'myCustomURLConverter'),array(),'','tinymce tinymce-manual');
@@ -166,7 +159,7 @@
       e.preventDefault();
       tinymce.activeEditor.execCommand('mceInsertContent', false, $(this).text());
     });
-     appValidateForm($('form'), {
+     _validate_form($('form'), {
        name: 'required',
        fromname: 'required',
      });

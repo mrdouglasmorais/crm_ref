@@ -110,13 +110,13 @@
 </div>
 <!-- /.modal -->
 <?php $this->load->view('admin/clients/vault_confirm_password'); ?>
-<?php hooks()->add_action('app_admin_footer','vault_form_validate');
+<?php add_action('after_js_scripts_render','vault_form_validate');
 function vault_form_validate(){ ?>
 <script>
    var $entryModal = $('#entryModal');
    $(function(){
 
-        appValidateForm($entryModal.find('form'),{
+        _validate_form($entryModal.find('form'),{
            server_address:'required',
            username:'required',
            password:'required',

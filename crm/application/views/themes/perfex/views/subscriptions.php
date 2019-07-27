@@ -28,7 +28,7 @@
                        if($subscription['quantity'] > 1) {
                             echo $subscription['quantity'] . ' × ';
                         }
-                        echo '<a href="'.site_url('subscription/'.$subscription['hash']).'">' . $subscription['name'] . '</a>';
+                        echo $subscription['name'];
                       echo '</b>';
                         if(!empty($subscription['stripe_subscription_id']) && !empty($subscription['ends_at']) && $subscription['status'] != 'canceled') {
                           echo '<br /><small class="text-info">' . _l('subscription_will_be_canceled_at_end_of_billing_period');
@@ -64,9 +64,7 @@
                         </a>
                     <?php } ?>
                          <?php
-                     if(!empty($subscription['stripe_subscription_id'])
-                          && $subscription['status'] != 'canceled'
-                          && empty($subscription['ends_at'])){ ?>
+                     if(!empty($subscription['stripe_subscription_id']) && $subscription['status'] != 'canceled' && empty($subscription['ends_at'])){ ?>
                       <div class="btn-group">
                          <a href="#" class="btn btn-default dropdown-toggle btn-xs" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                          <?php echo _l('cancel'); ?> <span class="caret"></span></a>

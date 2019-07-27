@@ -80,7 +80,7 @@
         }
         ?>
 </p>
-<p><?php echo _l('project_discussion_total_comments'); ?>: <?php echo total_rows(db_prefix().'projectdiscussioncomments',array('discussion_id'=>$discussion->id)); ?>
+<p><?php echo _l('project_discussion_total_comments'); ?>: <?php echo total_rows('tblprojectdiscussioncomments',array('discussion_id'=>$discussion->id)); ?>
 <p class="text-muted"><?php echo $discussion->description; ?></p>
 <hr />
 <div id="discussion-comments"></div>

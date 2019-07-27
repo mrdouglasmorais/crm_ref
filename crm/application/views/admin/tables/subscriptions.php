@@ -3,17 +3,17 @@
 defined('BASEPATH') or exit('No direct script access allowed');
 
 $aColumns = [
-    db_prefix() . 'subscriptions.id as id',
-    db_prefix() . 'subscriptions.name as name',
+    'tblsubscriptions.id as id',
+    'tblsubscriptions.name as name',
     get_sql_select_client_company(),
-    db_prefix() . 'projects.name as project_name',
-    db_prefix() . 'subscriptions.status as status',
+    'tblprojects.name as project_name',
+    'tblsubscriptions.status as status',
     'next_billing_cycle',
     'date_subscribed',
 ];
 
 $sIndexColumn = 'id';
-$sTable       = db_prefix() . 'subscriptions';
+$sTable       = 'tblsubscriptions';
 
 $filter = [];
 $where  = [];
@@ -23,11 +23,11 @@ if ($this->ci->input->get('project_id')) {
 }
 
 if ($this->ci->input->get('client_id')) {
-    array_push($where, 'AND ' . db_prefix() . 'subscriptions.clientid=' . $this->ci->input->get('client_id'));
+    array_push($where, 'AND tblsubscriptions.clientid=' . $this->ci->input->get('client_id'));
 }
 
 if (!has_permission('subscriptions', '', 'view')) {
-    array_push($where, 'AND ' . db_prefix() . 'subscriptions.created_from=' . get_staff_user_id());
+    array_push($where, 'AND tblsubscriptions.created_from=' . get_staff_user_id());
 }
 
 $statusIds = [];
@@ -41,7 +41,7 @@ foreach (get_subscriptions_statuses() as $status) {
 if (count($statusIds) > 0) {
     $whereStatus = '';
     foreach ($statusIds as $key => $status) {
-        $whereStatus .= db_prefix() . 'subscriptions.status="' . $status . '" OR ';
+        $whereStatus .= 'tblsubscriptions.status="' . $status . '" OR ';
     }
     $whereStatus = rtrim($whereStatus, ' OR ');
 
@@ -56,13 +56,13 @@ if (count($statusIds) > 0) {
 }
 
 $join = [
-    'LEFT JOIN ' . db_prefix() . 'clients ON ' . db_prefix() . 'clients.userid = ' . db_prefix() . 'subscriptions.clientid',
-    'LEFT JOIN ' . db_prefix() . 'projects ON ' . db_prefix() . 'projects.id = ' . db_prefix() . 'subscriptions.project_id',
+    'LEFT JOIN tblclients ON tblclients.userid = tblsubscriptions.clientid',
+    'LEFT JOIN tblprojects ON tblprojects.id = tblsubscriptions.project_id',
 ];
 
 $result = data_tables_init($aColumns, $sIndexColumn, $sTable, $join, $where, [
-    db_prefix() . 'subscriptions.id',
-    db_prefix() . 'subscriptions.clientid as clientid',
+    'tblsubscriptions.id',
+    'tblsubscriptions.clientid as clientid',
     'stripe_subscription_id',
     'project_id',
     'hash',

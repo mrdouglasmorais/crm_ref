@@ -60,7 +60,6 @@ trait NestedResource
     /**
      * @param string $id
      * @param string $nestedPath
-     * @param string|null $nestedId
      * @param array|null $params
      * @param array|string|null $options
      *
@@ -75,7 +74,6 @@ trait NestedResource
     /**
      * @param string $id
      * @param string $nestedPath
-     * @param string|null $nestedId
      * @param array|null $params
      * @param array|string|null $options
      *
@@ -90,7 +88,6 @@ trait NestedResource
     /**
      * @param string $id
      * @param string $nestedPath
-     * @param string|null $nestedId
      * @param array|null $params
      * @param array|string|null $options
      *

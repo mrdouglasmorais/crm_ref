@@ -11,23 +11,23 @@ if (has_permission('items', '', 'delete')) {
 $aColumns = array_merge($aColumns, [
     'description',
     'long_description',
-    db_prefix() . 'items.rate',
+    'tblitems.rate',
     't1.taxrate as taxrate_1',
     't2.taxrate as taxrate_2',
     'unit',
-    db_prefix() . 'items_groups.name',
+    'tblitems_groups.name',
     ]);
 
 $sIndexColumn = 'id';
-$sTable       = db_prefix() . 'items';
+$sTable       = 'tblitems';
 
 $join = [
-    'LEFT JOIN ' . db_prefix() . 'taxes t1 ON t1.id = ' . db_prefix() . 'items.tax',
-    'LEFT JOIN ' . db_prefix() . 'taxes t2 ON t2.id = ' . db_prefix() . 'items.tax2',
-    'LEFT JOIN ' . db_prefix() . 'items_groups ON ' . db_prefix() . 'items_groups.id = ' . db_prefix() . 'items.group_id',
+    'LEFT JOIN tbltaxes t1 ON t1.id = tblitems.tax',
+    'LEFT JOIN tbltaxes t2 ON t2.id = tblitems.tax2',
+    'LEFT JOIN tblitems_groups ON tblitems_groups.id = tblitems.group_id',
     ];
 $additionalSelect = [
-    db_prefix() . 'items.id',
+    'tblitems.id',
     't1.name as taxname_1',
     't2.name as taxname_2',
     't1.id as tax_id_1',
@@ -42,7 +42,7 @@ foreach ($custom_fields as $key => $field) {
 
     array_push($customFieldsColumns, $selectAs);
     array_push($aColumns, 'ctable_' . $key . '.value as ' . $selectAs);
-    array_push($join, 'LEFT JOIN ' . db_prefix() . 'customfieldsvalues as ctable_' . $key . ' ON ' . db_prefix() . 'items.id = ctable_' . $key . '.relid AND ctable_' . $key . '.fieldto="items_pr" AND ctable_' . $key . '.fieldid=' . $field['id']);
+    array_push($join, 'LEFT JOIN tblcustomfieldsvalues as ctable_' . $key . ' ON tblitems.id = ctable_' . $key . '.relid AND ctable_' . $key . '.fieldto="items_pr" AND ctable_' . $key . '.fieldid=' . $field['id']);
 }
 
 // Fix for big queries. Some hosting have max_join_limit
@@ -88,7 +88,7 @@ foreach ($rResult as $aRow) {
             }
             $_data .= '</div>';
         } else {
-            if (startsWith($aColumns[$i], 'ctable_') && is_date($_data)) {
+            if (_startsWith($aColumns[$i], 'ctable_') && is_date($_data)) {
                 $_data = _d($_data);
             }
         }

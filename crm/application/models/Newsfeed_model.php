@@ -2,7 +2,7 @@
 
 defined('BASEPATH') or exit('No direct script access allowed');
 
-class Newsfeed_model extends App_Model
+class Newsfeed_model extends CRM_Model
 {
     public $post_likes_limit = 6;
 
@@ -25,7 +25,7 @@ class Newsfeed_model extends App_Model
     public function pin_post($id)
     {
         $this->db->where('postid', $id);
-        $this->db->update(db_prefix() . 'newsfeed_posts', [
+        $this->db->update('tblposts', [
             'pinned'     => 1,
             'datepinned' => date('Y-m-d H:i:s'),
         ]);
@@ -44,7 +44,7 @@ class Newsfeed_model extends App_Model
     public function unpin_post($id)
     {
         $this->db->where('postid', $id);
-        $this->db->update(db_prefix() . 'newsfeed_posts', [
+        $this->db->update('tblposts', [
             'pinned'     => 0,
             'datepinned' => null,
         ]);
@@ -70,7 +70,7 @@ class Newsfeed_model extends App_Model
             $this->db->not_like('filetype', 'image');
         }
 
-        return $this->db->get(db_prefix() . 'files')->result_array();
+        return $this->db->get('tblfiles')->result_array();
     }
 
     /**
@@ -81,8 +81,8 @@ class Newsfeed_model extends App_Model
     public function get_post_likes($id)
     {
         $this->db->select();
-        $this->db->from(db_prefix() . 'newsfeed_post_likes');
-        $this->db->join(db_prefix() . 'staff', db_prefix() . 'staff.staffid = ' . db_prefix() . 'newsfeed_post_likes.userid', 'left');
+        $this->db->from('tblpostlikes');
+        $this->db->join('tblstaff', 'tblstaff.staffid = tblpostlikes.userid', 'left');
         $this->db->where('userid !=', get_staff_user_id());
         $this->db->where('postid', $id);
         $this->db->order_by('dateliked', 'asc');
@@ -103,7 +103,7 @@ class Newsfeed_model extends App_Model
         $this->db->order_by('dateliked', 'desc');
         $this->db->limit($this->post_likes_limit, $offset);
 
-        return $this->db->get(db_prefix() . 'newsfeed_post_likes')->result_array();
+        return $this->db->get('tblpostlikes')->result_array();
     }
 
     /**
@@ -119,7 +119,7 @@ class Newsfeed_model extends App_Model
         $this->db->order_by('dateliked', 'desc');
         $this->db->limit($this->post_comment_likes_limit, $offset);
 
-        return $this->db->get(db_prefix() . 'newsfeed_comment_likes')->result_array();
+        return $this->db->get('tblcommentlikes')->result_array();
     }
 
     /**
@@ -139,7 +139,7 @@ class Newsfeed_model extends App_Model
             $this->db->limit($this->newsfeed_posts_limit, $offset);
         }
 
-        return $this->db->get(db_prefix() . 'newsfeed_posts')->result_array();
+        return $this->db->get('tblposts')->result_array();
     }
 
     /**
@@ -151,7 +151,7 @@ class Newsfeed_model extends App_Model
         $this->db->where('pinned', 1);
         $this->db->order_by('datepinned', 'asc');
 
-        return $this->db->get(db_prefix() . 'newsfeed_posts')->result_array();
+        return $this->db->get('tblposts')->result_array();
     }
 
     /**
@@ -163,7 +163,7 @@ class Newsfeed_model extends App_Model
     {
         $this->db->where('postid', $id);
 
-        return $this->db->get(db_prefix() . 'newsfeed_posts')->row();
+        return $this->db->get('tblposts')->row();
     }
 
     /**
@@ -175,10 +175,10 @@ class Newsfeed_model extends App_Model
     {
         $this->db->where('id', $id);
         if ($return_as_array == false) {
-            return $this->db->get(db_prefix() . 'newsfeed_post_comments')->row();
+            return $this->db->get('tblpostcomments')->row();
         }
 
-        return $this->db->get(db_prefix() . 'newsfeed_post_comments')->row_array();
+        return $this->db->get('tblpostcomments')->row_array();
     }
 
     /**
@@ -198,7 +198,7 @@ class Newsfeed_model extends App_Model
         } else {
             $data['visibility'] = implode(':', $data['visibility']);
         }
-        $this->db->insert(db_prefix() . 'newsfeed_posts', $data);
+        $this->db->insert('tblposts', $data);
         $postid = $this->db->insert_id();
 
 
@@ -206,7 +206,7 @@ class Newsfeed_model extends App_Model
         $this->load->model('staff_model');
 
         $staff = $this->staff_model->get('', [
-            'active'       => 1,
+            'active' => 1,
             'is_not_staff' => 0,
         ]);
         $notifiedUsers = [];
@@ -252,7 +252,7 @@ class Newsfeed_model extends App_Model
         if ($this->user_liked_post($id)) {
             return true;
         }
-        $this->db->insert(db_prefix() . 'newsfeed_post_likes', [
+        $this->db->insert('tblpostlikes', [
             'postid'    => $id,
             'userid'    => get_staff_user_id(),
             'dateliked' => date('Y-m-d H:i:s'),
@@ -290,7 +290,7 @@ class Newsfeed_model extends App_Model
     {
         $this->db->where('userid', get_staff_user_id());
         $this->db->where('postid', $id);
-        $this->db->delete(db_prefix() . 'newsfeed_post_likes');
+        $this->db->delete('tblpostlikes');
         if ($this->db->affected_rows() > 0) {
             return true;
         }
@@ -309,7 +309,7 @@ class Newsfeed_model extends App_Model
         $this->db->where('userid', get_staff_user_id());
         $this->db->where('commentid', $id);
         $this->db->where('postid', $postid);
-        $this->db->delete(db_prefix() . 'newsfeed_comment_likes');
+        $this->db->delete('tblcommentlikes');
         if ($this->db->affected_rows() > 0) {
             return true;
         }
@@ -327,7 +327,7 @@ class Newsfeed_model extends App_Model
         $this->db->where('userid', get_staff_user_id());
         $this->db->where('postid', $id);
 
-        return $this->db->get(db_prefix() . 'newsfeed_post_likes')->row();
+        return $this->db->get('tblpostlikes')->row();
     }
 
     /**
@@ -340,7 +340,7 @@ class Newsfeed_model extends App_Model
         $this->db->where('userid', get_staff_user_id());
         $this->db->where('commentid', $id);
 
-        return $this->db->get(db_prefix() . 'newsfeed_comment_likes')->row();
+        return $this->db->get('tblcommentlikes')->row();
     }
 
     /**
@@ -352,7 +352,7 @@ class Newsfeed_model extends App_Model
         $data['dateadded'] = date('Y-m-d H:i:s');
         $data['userid']    = get_staff_user_id();
         $data['content']   = nl2br($data['content']);
-        $this->db->insert(db_prefix() . 'newsfeed_post_comments', $data);
+        $this->db->insert('tblpostcomments', $data);
         $insert_id = $this->db->insert_id();
         if ($insert_id) {
             $post = $this->get_post($data['postid']);
@@ -392,7 +392,7 @@ class Newsfeed_model extends App_Model
         $data['userid']    = get_staff_user_id();
         $data['commentid'] = $id;
         $data['postid']    = $postid;
-        $this->db->insert(db_prefix() . 'newsfeed_comment_likes', $data);
+        $this->db->insert('tblcommentlikes', $data);
         if ($this->db->affected_rows() > 0) {
             $comment = $this->get_comment($id);
             if ($comment->userid != get_staff_user_id()) {
@@ -425,7 +425,7 @@ class Newsfeed_model extends App_Model
     public function remove_post_comment($id, $postid)
     {
         // First check if this user created the comment
-        if (total_rows(db_prefix() . 'newsfeed_post_comments', [
+        if (total_rows('tblpostcomments', [
             'postid' => $postid,
             'userid' => get_staff_user_id(),
             'id' => $id,
@@ -433,7 +433,7 @@ class Newsfeed_model extends App_Model
             $this->db->where('id', $id);
             $this->db->where('postid', $postid);
             $this->db->where('userid', get_staff_user_id());
-            $this->db->delete(db_prefix() . 'newsfeed_post_comments');
+            $this->db->delete('tblpostcomments');
             if ($this->db->affected_rows() > 0) {
                 return true;
             }
@@ -452,25 +452,25 @@ class Newsfeed_model extends App_Model
     public function delete_post($postid)
     {
         // First check if this user creator of the post
-        if (total_rows(db_prefix() . 'newsfeed_posts', [
+        if (total_rows('tblposts', [
             'postid' => $postid,
             'creator' => get_staff_user_id(),
         ]) > 0 || is_admin()) {
             $this->db->where('postid', $postid);
-            $this->db->delete(db_prefix() . 'newsfeed_posts');
+            $this->db->delete('tblposts');
             if ($this->db->affected_rows() > 0) {
                 $this->db->where('postid', $postid);
-                $this->db->delete(db_prefix() . 'newsfeed_post_likes');
+                $this->db->delete('tblpostlikes');
 
                 $this->db->where('postid', $postid);
-                $this->db->delete(db_prefix() . 'newsfeed_post_comments');
+                $this->db->delete('tblpostcomments');
 
                 $this->db->where('postid', $postid);
-                $this->db->delete(db_prefix() . 'newsfeed_comment_likes');
+                $this->db->delete('tblcommentlikes');
 
                 $this->db->where('rel_id', $postid);
                 $this->db->where('rel_type', 'newsfeed_post');
-                $this->db->delete(db_prefix() . 'files');
+                $this->db->delete('tblfiles');
 
                 if (is_dir(get_upload_path_by_type('newsfeed') . $postid)) {
                     delete_dir(get_upload_path_by_type('newsfeed') . $postid);
@@ -496,6 +496,6 @@ class Newsfeed_model extends App_Model
         $offset = ($offset * $this->post_comments_limit);
         $this->db->limit($this->post_comments_limit, $offset);
 
-        return $this->db->get(db_prefix() . 'newsfeed_post_comments')->result_array();
+        return $this->db->get('tblpostcomments')->result_array();
     }
 }

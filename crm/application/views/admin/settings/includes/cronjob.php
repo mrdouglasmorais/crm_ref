@@ -27,9 +27,9 @@
   <li role="presentation">
     <a href="#tickets" aria-controls="tickets" role="tab" data-toggle="tab"><?php echo _l('tickets'); ?></a>
   </li>
-
-  <?php hooks()->do_action('after_cron_settings_last_tab'); ?>
-
+  <li role="presentation">
+    <a href="#surveys" aria-controls="surveys" role="tab" data-toggle="tab"><?php echo _l('settings_cron_surveys'); ?></a>
+  </li>
 </ul>
 
 <div class="tab-content">
@@ -103,11 +103,13 @@
 
  <?php echo render_input('settings[send_proposal_expiry_reminder_before]','send_expiry_reminder_before',get_option('send_proposal_expiry_reminder_before'),'number'); ?>
 </div>
+<div role="tabpanel" class="tab-pane" id="surveys">
+ <i class="fa fa-question-circle pull-left" data-toggle="tooltip" data-title="<?php echo _l('settings_survey_send_emails_per_cron_run_tooltip'); ?>"></i>
+  <?php echo render_input('settings[survey_send_emails_per_cron_run]','settings_survey_send_emails_per_cron_run',get_option('survey_send_emails_per_cron_run'),'number'); ?>
+</div>
 
 <div role="tablpanel" class="tab-pane" id="expenses">
  <i class="fa fa-question-circle pull-left" data-toggle="tooltip" data-title="<?php echo _l('hour_of_day_perform_auto_operations_format'); ?>"></i>
    <?php echo render_input('settings[expenses_auto_operations_hour]','hour_of_day_perform_auto_operations',get_option('expenses_auto_operations_hour'),'number',array('max'=>23)); ?>
 </div>
-
-<?php hooks()->do_action('after_cron_settings_last_tab_content'); ?>
 </div>

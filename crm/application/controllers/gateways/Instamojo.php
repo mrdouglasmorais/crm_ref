@@ -2,8 +2,13 @@
 
 defined('BASEPATH') or exit('No direct script access allowed');
 
-class Instamojo extends App_Controller
+class Instamojo extends CRM_Controller
 {
+    public function __construct()
+    {
+        parent::__construct();
+    }
+
     public function redirect($invoice_id, $invoice_hash)
     {
         check_invoice_restrictions($invoice_id, $invoice_hash);

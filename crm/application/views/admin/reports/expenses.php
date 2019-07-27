@@ -25,7 +25,7 @@
                         <?php } ?>
                         <?php
                         $_currency = $base_currency;
-                        if(is_using_multiple_currencies(db_prefix().'expenses')){ ?>
+                        if(is_using_multiple_currencies('tblexpenses')){ ?>
                         <div data-toggle="tooltip" class="pull-left mright5" title="<?php echo _l('report_expenses_base_currency_select_explanation'); ?>">
                             <select class="selectpicker" name="currencies" onchange="filter_expenses();"  data-none-selected-text="<?php echo _l('dropdown_non_selected_tex'); ?>" >
                                 <?php foreach($currencies as $c) {
@@ -38,7 +38,7 @@
                                     } else {
                                         if($this->input->get('currency') == $c['id']){
                                             $selected = 'selected';
-                                            $_currency = get_currency($c['id']);
+                                            $_currency = $this->currencies_model->get($c['id']);
                                         }
                                     }
                                     ?>
@@ -87,7 +87,7 @@
 
                                                 // Get the expenses
                                                 $this->db->select('id')
-                                                ->from(db_prefix().'expenses')
+                                                ->from('tblexpenses')
                                                 ->where('MONTH(date)',$m)
                                                 ->where('YEAR(date)',$current_year)
                                                 ->where('category',$category['id'])
@@ -127,16 +127,16 @@
                                                 array_push($totalNetByExpenseCategory[$category['id']],$total_expenses);
                                                 // Output the total for this category
                                                 if(count($categories) <= 8){
-                                                    echo app_format_money($total_expenses, $_currency);
+                                                    echo format_money($total_expenses,$_currency->symbol);
                                                 } else {
                                                    // show tooltip for the month if more the 8 categories found. becuase when listing down you wont be able to see the month
-                                                    echo '<span data-toggle="tooltip" title="'._l(date('F', mktime(0,0,0,$m,1))).'">'.app_format_money($total_expenses, $_currency) .'</span>';
+                                                    echo '<span data-toggle="tooltip" title="'._l(date('F', mktime(0,0,0,$m,1))).'">'.format_money($total_expenses,$_currency->symbol) .'</span>';
                                                 }
                                                 echo '</td>';
                                                 ?>
                                                 <?php } ?>
                                                 <td class="bg-odd">
-                                                    <?php echo app_format_money(array_sum($totalNetByExpenseCategory[$category['id']]), $_currency); ?>
+                                                    <?php echo format_money(array_sum($totalNetByExpenseCategory[$category['id']]),$_currency->symbol); ?>
                                                 </td>
                                             </tr>
                                             <?php } ?>
@@ -152,7 +152,7 @@
                                                     $current_year_total[] = $total;
                                                     ?>
                                                     <td class="bold">
-                                                        <?php echo app_format_money($total, $_currency); ?>
+                                                        <?php echo format_money($total,$_currency->symbol); ?>
                                                     </td>
                                                     <?php } ?>
                                                     <?php } ?>
@@ -162,7 +162,7 @@
                                                         foreach($totalNetByExpenseCategory as $totalCat) {
                                                             $totalNetByExpenseCategorySum += array_sum($totalCat);
                                                         }
-                                                        echo app_format_money($totalNetByExpenseCategorySum, $_currency);
+                                                        echo format_money($totalNetByExpenseCategorySum,$_currency->symbol);
                                                         ?>
                                                     </td>
                                                 </tr>
@@ -176,11 +176,11 @@
                                                         $t = array_sum($taxMonth);
                                                         $taxTotal[$m] = $t;
                                                         $taxYearlyTotal += $t;
-                                                        echo app_format_money($t, $_currency);
+                                                        echo format_money($t,$_currency->symbol);
                                                         echo '</td>';
                                                     }
                                                     echo '<td class="bold bg-odd">';
-                                                    echo app_format_money($taxYearlyTotal, $_currency);
+                                                    echo format_money($taxYearlyTotal,$_currency->symbol);
                                                     echo '</td>';
                                                     ?>
                                                 </tr>
@@ -192,11 +192,11 @@
                                                     if(isset($netMonthlyTotal)) {
                                                         for ($m=1; $m<=12; $m++) {
                                                             echo '<td class="bold">';
-                                                            echo app_format_money($netMonthlyTotal[$m] + $taxTotal[$m], $_currency);
+                                                            echo format_money($netMonthlyTotal[$m] + $taxTotal[$m],$_currency->symbol);
                                                             echo '</td>';
                                                         }
                                                         echo '<td class="bold bg-odd">';
-                                                        echo app_format_money($totalNetByExpenseCategorySum + $taxYearlyTotal, $_currency);
+                                                        echo format_money($totalNetByExpenseCategorySum + $taxYearlyTotal,$_currency->symbol);
                                                         echo '</td>';
                                                     }
                                                     ?>

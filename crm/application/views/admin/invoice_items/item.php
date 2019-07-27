@@ -26,7 +26,7 @@
                         </div>
                         <?php
                             foreach($currencies as $currency){
-                                if($currency['isdefault'] == 0 && total_rows(db_prefix().'clients',array('default_currency'=>$currency['id'])) > 0){ ?>
+                                if($currency['isdefault'] == 0 && total_rows('tblclients',array('default_currency'=>$currency['id'])) > 0){ ?>
                                 <div class="form-group">
                                     <label for="rate_currency_<?php echo $currency['id']; ?>" class="control-label">
                                         <?php echo _l('invoice_item_add_edit_rate_currency', $currency['name']); ?></label>
@@ -207,7 +207,7 @@ function init_item_js() {
 }
 function validate_item_form(){
     // Set validation for invoice item form
-    appValidateForm($('#invoice_item_form'), {
+    _validate_form($('#invoice_item_form'), {
         description: 'required',
         rate: {
             required: true,

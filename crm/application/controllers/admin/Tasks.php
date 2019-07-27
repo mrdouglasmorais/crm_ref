@@ -2,7 +2,7 @@
 
 defined('BASEPATH') or exit('No direct script access allowed');
 
-class Tasks extends AdminController
+class Tasks extends Admin_controller
 {
     public function __construct()
     {
@@ -56,9 +56,9 @@ class Tasks extends AdminController
             $q = $this->input->post('q');
             $q = trim($q);
             $this->db->select('name, id,' . tasks_rel_name_select_query() . ' as subtext');
-            $this->db->from(db_prefix() . 'tasks');
-            $this->db->where('' . db_prefix() . 'tasks.id IN (SELECT taskid FROM ' . db_prefix() . 'task_assigned WHERE staffid = ' . get_staff_user_id() . ')');
-            //   $this->db->where('id NOT IN (SELECT task_id FROM '.db_prefix().'taskstimers WHERE staff_id = ' . get_staff_user_id() . ' AND end_time IS NULL)');
+            $this->db->from('tblstafftasks');
+            $this->db->where('tblstafftasks.id IN (SELECT taskid FROM tblstafftaskassignees WHERE staffid = ' . get_staff_user_id() . ')');
+            //   $this->db->where('id NOT IN (SELECT task_id FROM tbltaskstimers WHERE staff_id = ' . get_staff_user_id() . ' AND end_time IS NULL)');
             $this->db->where('status != ', 5);
             $this->db->where('billed', 0);
             $this->db->where('(name LIKE "%' . $q . '%" OR ' . tasks_rel_name_select_query() . ' LIKE "%' . $q . '%")');
@@ -134,7 +134,7 @@ class Tasks extends AdminController
     {
         if (has_permission('tasks', '', 'edit')) {
             $this->db->where('id', $id);
-            $this->db->update(db_prefix() . 'tasks', [
+            $this->db->update('tblstafftasks', [
                 'description' => $this->input->post('description', false),
             ]);
         }
@@ -177,8 +177,8 @@ class Tasks extends AdminController
 
             // Task logged time
             $selectLoggedTime = get_sql_calc_task_logged_time('tmp-task-id');
-            // Replace tmp-task-id to be the same like tasks.id
-            $selectLoggedTime = str_replace('tmp-task-id', db_prefix() . 'tasks.id', $selectLoggedTime);
+            // Replace tmp-task-id to be the same like tblstafftasks.id
+            $selectLoggedTime = str_replace('tmp-task-id', 'tblstafftasks.id', $selectLoggedTime);
 
             if (is_numeric($staff_id)) {
                 $selectLoggedTime .= ' AND staff_id=' . $staff_id;
@@ -193,14 +193,14 @@ class Tasks extends AdminController
             $sqlTasksSelect .= ',' . get_sql_select_task_total_checklist_items();
 
             if (is_numeric($staff_id)) {
-                $sqlTasksSelect .= ',(SELECT COUNT(id) FROM ' . db_prefix() . 'task_checklist_items WHERE taskid=' . db_prefix() . 'tasks.id AND finished=1 AND finished_from=' . $staff_id . ') as total_finished_checklist_items';
+                $sqlTasksSelect .= ',(SELECT COUNT(id) FROM tbltaskchecklists WHERE taskid=tblstafftasks.id AND finished=1 AND finished_from=' . $staff_id . ') as total_finished_checklist_items';
             } else {
                 $sqlTasksSelect .= ',' . get_sql_select_task_total_finished_checklist_items();
             }
 
             // Task total comment and total files
-            $selectTotalComments = ',(SELECT COUNT(id) FROM ' . db_prefix() . 'task_comments WHERE taskid=' . db_prefix() . 'tasks.id';
-            $selectTotalFiles    = ',(SELECT COUNT(id) FROM ' . db_prefix() . 'files WHERE rel_id=' . db_prefix() . 'tasks.id AND rel_type="task"';
+            $selectTotalComments = ',(SELECT COUNT(id) FROM tblstafftaskcomments WHERE taskid=tblstafftasks.id';
+            $selectTotalFiles    = ',(SELECT COUNT(id) FROM tblfiles WHERE rel_id=tblstafftasks.id AND rel_type="task"';
 
             if (is_numeric($staff_id)) {
                 $sqlTasksSelect .= $selectTotalComments . ' AND staffid=' . $staff_id . ') as total_comments_staff';
@@ -224,7 +224,7 @@ class Tasks extends AdminController
             }
 
             if (!$has_permission_view) {
-                $sqlWhereStaff = '(id IN (SELECT taskid FROM ' . db_prefix() . 'task_assigned WHERE staffid=' . $staff_id . ')';
+                $sqlWhereStaff = '(id IN (SELECT taskid FROM tblstafftaskassignees WHERE staffid=' . $staff_id . ')';
 
                 // User dont have permission for view but have for create
                 // Only show tasks createad by this user.
@@ -236,7 +236,7 @@ class Tasks extends AdminController
                 $this->db->where($sqlWhereStaff);
             } elseif ($has_permission_view) {
                 if (is_numeric($staff_id)) {
-                    $this->db->where('(id IN (SELECT taskid FROM ' . db_prefix() . 'task_assigned WHERE staffid=' . $staff_id . '))');
+                    $this->db->where('(id IN (SELECT taskid FROM tblstafftaskassignees WHERE staffid=' . $staff_id . '))');
                 }
             }
 
@@ -246,7 +246,7 @@ class Tasks extends AdminController
 
             $this->db->order_by($fetch_month_from, 'ASC');
             array_push($overview, $m);
-            $overview[$m] = $this->db->get(db_prefix() . 'tasks')->result_array();
+            $overview[$m] = $this->db->get('tblstafftasks')->result_array();
         }
 
         unset($overview[0]);
@@ -278,14 +278,14 @@ class Tasks extends AdminController
     public function task($id = '')
     {
         if (!has_permission('tasks', '', 'edit') && !has_permission('tasks', '', 'create')) {
-            ajax_access_denied();
+            access_denied('Tasks');
         }
 
         $data = [];
         // FOr new task add directly from the projects milestones
         if ($this->input->get('milestone_id')) {
             $this->db->where('id', $this->input->get('milestone_id'));
-            $milestone = $this->db->get(db_prefix() . 'milestones')->row();
+            $milestone = $this->db->get('tblmilestones')->row();
             if ($milestone) {
                 $data['_milestone_selected_data'] = [
                     'id'       => $milestone->id,
@@ -432,11 +432,6 @@ class Tasks extends AdminController
 
         $data['staff_reminders'] = $this->tasks_model->get_staff_members_that_can_access_task($taskid);
 
-        $data['project_deadline'] = null;
-        if ($task->rel_type == 'project') {
-            $data['project_deadline'] = get_project_deadline($task->rel_id);
-        }
-
         if ($return == false) {
             $this->load->view('admin/tasks/view_task_template', $data);
         } else {
@@ -542,17 +537,17 @@ class Tasks extends AdminController
     public function checkbox_action($listid, $value)
     {
         $this->db->where('id', $listid);
-        $this->db->update(db_prefix() . 'task_checklist_items', [
+        $this->db->update('tbltaskchecklists', [
             'finished' => $value,
         ]);
 
         if ($this->db->affected_rows() > 0) {
             if ($value == 1) {
                 $this->db->where('id', $listid);
-                $this->db->update(db_prefix() . 'task_checklist_items', [
+                $this->db->update('tbltaskchecklists', [
                     'finished_from' => get_staff_user_id(),
                 ]);
-                hooks()->do_action('task_checklist_item_finished', $listid);
+                do_action('task_checklist_item_finished', $listid);
             }
         }
     }
@@ -596,7 +591,7 @@ class Tasks extends AdminController
                 $desc = $this->input->post('description');
                 $desc = trim($desc);
                 $this->tasks_model->update_checklist_item($this->input->post('listid'), $desc);
-                echo json_encode(['can_be_template' => (total_rows(db_prefix() . 'tasks_checklist_templates', ['description' => $desc]) == 0)]);
+                echo json_encode(['can_be_template' => (total_rows('tblcheckliststemplates', ['description' => $desc]) == 0)]);
             }
         }
     }
@@ -643,7 +638,7 @@ class Tasks extends AdminController
                     }
 
                     if (count($commentAttachments) > 0) {
-                        $this->db->query('UPDATE ' . db_prefix() . "task_comments SET content = CONCAT(content, '[task_attachment]')
+                        $this->db->query("UPDATE tblstafftaskcomments SET content = CONCAT(content, '[task_attachment]')
                             WHERE id = " . $comment_id);
                     }
                 }
@@ -660,7 +655,7 @@ class Tasks extends AdminController
         $taskWhere = 'external IS NULL';
 
         if ($comment_id) {
-            $taskWhere .= ' AND task_comment_id=' . $comment_id;
+            $taskWhere = ' AND task_comment_id=' . $comment_id;
         }
 
         if (!has_permission('tasks', '', 'view')) {
@@ -833,7 +828,7 @@ class Tasks extends AdminController
     {
         if (has_permission('tasks', '', 'edit')) {
             $this->db->where('id', $id);
-            $this->db->update(db_prefix() . 'tasks', ['priority' => $priority_id]);
+            $this->db->update('tblstafftasks', ['priority' => $priority_id]);
 
             $success = $this->db->affected_rows() > 0 ? true : false;
 
@@ -855,7 +850,7 @@ class Tasks extends AdminController
     {
         if (has_permission('tasks', '', 'edit')) {
             $this->db->where('id', $id);
-            $this->db->update(db_prefix() . 'tasks', ['milestone' => $milestone_id]);
+            $this->db->update('tblstafftasks', ['milestone' => $milestone_id]);
 
             $success = $this->db->affected_rows() > 0 ? true : false;
             // Don't do this query if the action is not performed via task single
@@ -878,7 +873,7 @@ class Tasks extends AdminController
             $post_data = $this->input->post();
             foreach ($post_data as $key => $val) {
                 $this->db->where('id', $task_id);
-                $this->db->update(db_prefix() . 'tasks', [$key => to_sql_date($val)]);
+                $this->db->update('tblstafftasks', [$key => to_sql_date($val)]);
             }
         }
     }
@@ -972,17 +967,17 @@ class Tasks extends AdminController
     public function delete_user_unfinished_timesheet($id)
     {
         $this->db->where('id', $id);
-        $timesheet = $this->db->get(db_prefix() . 'taskstimers')->row();
+        $timesheet = $this->db->get('tbltaskstimers')->row();
         if ($timesheet && $timesheet->end_time == null && $timesheet->staff_id == get_staff_user_id()) {
             $this->db->where('id', $id);
-            $this->db->delete(db_prefix() . 'taskstimers');
+            $this->db->delete('tbltaskstimers');
         }
         echo json_encode(['timers' => $this->get_staff_started_timers(true)]);
     }
 
     public function delete_timesheet($id)
     {
-        if (has_permission('tasks', '', 'delete') || has_permission('projects', '', 'delete') || total_rows(db_prefix() . 'taskstimers', ['staff_id' => get_staff_user_id(), 'id' => $id]) > 0) {
+        if (has_permission('tasks', '', 'delete') || has_permission('projects', '', 'delete') || total_rows('tbltaskstimers', ['staff_id' => get_staff_user_id(), 'id' => $id]) > 0) {
             $alert_type = 'warning';
             $success    = $this->tasks_model->delete_timesheet($id);
             if ($success) {
@@ -1024,7 +1019,7 @@ class Tasks extends AdminController
 
     public function bulk_action()
     {
-        hooks()->do_action('before_do_bulk_action_for_tasks');
+        do_action('before_do_bulk_action_for_tasks');
         $total_deleted = 0;
         if ($this->input->post()) {
             $status    = $this->input->post('status');
@@ -1059,7 +1054,7 @@ class Tasks extends AdminController
                                 $update['milestone'] = $milestone;
                             }
                             $this->db->where('id', $id);
-                            $this->db->update(db_prefix() . 'tasks', $update);
+                            $this->db->update('tblstafftasks', $update);
                         }
                         if ($tags) {
                             handle_tags_save($tags, $id, 'task');
@@ -1070,14 +1065,14 @@ class Tasks extends AdminController
                                 if (!$this->tasks_model->is_task_assignee($user_id, $id)) {
                                     $this->db->select('rel_type,rel_id');
                                     $this->db->where('id', $id);
-                                    $task = $this->db->get(db_prefix() . 'tasks')->row();
+                                    $task = $this->db->get('tblstafftasks')->row();
                                     if ($task->rel_type == 'project') {
                                         // User is we are trying to assign the task is not project member
-                                        if (total_rows(db_prefix() . 'project_members', ['project_id' => $task->rel_id, 'staff_id' => $user_id]) == 0) {
-                                            $this->db->insert(db_prefix() . 'project_members', ['project_id' => $task->rel_id, 'staff_id' => $user_id]);
+                                        if (total_rows('tblprojectmembers', ['project_id' => $task->rel_id, 'staff_id' => $user_id]) == 0) {
+                                            $this->db->insert('tblprojectmembers', ['project_id' => $task->rel_id, 'staff_id' => $user_id]);
                                         }
                                     }
-                                    $this->db->insert(db_prefix() . 'task_assigned', [
+                                    $this->db->insert('tblstafftaskassignees', [
                                         'staffid'       => $user_id,
                                         'taskid'        => $id,
                                         'assigned_from' => get_staff_user_id(),

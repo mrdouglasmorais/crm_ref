@@ -29,7 +29,7 @@
 
 <script>
   window.addEventListener('load',function(){
-      appValidateForm($('#contract-type-form'),{name:'required'},manage_contract_types);
+      _validate_form($('#contract-type-form'),{name:'required'},manage_contract_types);
       $('#type').on('hidden.bs.modal', function(event) {
         $('#additional').html('');
         $('#type input[name="name"]').val('');

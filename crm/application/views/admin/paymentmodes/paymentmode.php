@@ -52,7 +52,7 @@
 <script>
     window.addEventListener('load',function(){
 
-        appValidateForm($('#payment_modes_form'), {
+        _validate_form($('#payment_modes_form'), {
             name: 'required'
         }, manage_payment_modes);
 

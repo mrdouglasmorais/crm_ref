@@ -119,7 +119,7 @@
                        <?php foreach($child_invoices as $invoice){ ?>
                          <li class="list-group-item">
                           <a href="<?php echo admin_url('invoices/list_invoices/'.$invoice->id); ?>" target="_blank"><?php echo format_invoice_number($invoice->id); ?>
-                          <span class="pull-right bold"><?php echo app_format_money($invoice->total, $invoice->currency_name); ?></span>
+                          <span class="pull-right bold"><?php echo format_money($invoice->total, $invoice->symbol); ?></span>
                         </a>
                         <br />
                         <span class="inline-block mtop10">
@@ -159,7 +159,7 @@
      $(function(){
         // Project ajax search
         init_ajax_project_search_by_customer_id();
-          appValidateForm('#subscriptionForm',{
+          _validate_form('#subscriptionForm',{
            name:'required',
            clientid:'required',
            stripe_plan_id:'required',

@@ -7,24 +7,36 @@ namespace Stripe;
  *
  * @property string $id
  * @property string $object
- * @property mixed $business_profile
- * @property string $business_type
+ * @property string $business_logo
+ * @property string $business_name
+ * @property string $business_primary_color
+ * @property string $business_url
  * @property mixed $capabilities
  * @property bool $charges_enabled
- * @property mixed $company
  * @property string $country
  * @property int $created
+ * @property bool $debit_negative_balances
+ * @property mixed $decline_charge_on
  * @property string $default_currency
  * @property bool $details_submitted
+ * @property string $display_name
  * @property string $email
  * @property Collection $external_accounts
- * @property mixed $individual
+ * @property mixed $legal_entity
  * @property StripeObject $metadata
+ * @property mixed $payout_schedule
+ * @property string $payout_statement_descriptor
  * @property bool $payouts_enabled
- * @property mixed $requirements
- * @property mixed $settings
+ * @property string $product_description
+ * @property string $statement_descriptor
+ * @property mixed $support_address
+ * @property string $support_email
+ * @property string $support_phone
+ * @property string $support_url
+ * @property string $timezone
  * @property mixed $tos_acceptance
  * @property string $type
+ * @property mixed $verification
  *
  * @package Stripe
  */
@@ -128,7 +140,7 @@ class Account extends ApiResource
     }
 
     /**
-     * @param string|null $id The ID of the account on which to create the external account.
+     * @param array|null $id The ID of the account on which to create the external account.
      * @param array|null $params
      * @param array|string|null $opts
      *
@@ -140,7 +152,7 @@ class Account extends ApiResource
     }
 
     /**
-     * @param string|null $id The ID of the account to which the external account belongs.
+     * @param array|null $id The ID of the account to which the external account belongs.
      * @param array|null $externalAccountId The ID of the external account to retrieve.
      * @param array|null $params
      * @param array|string|null $opts
@@ -153,7 +165,7 @@ class Account extends ApiResource
     }
 
     /**
-     * @param string|null $id The ID of the account to which the external account belongs.
+     * @param array|null $id The ID of the account to which the external account belongs.
      * @param array|null $externalAccountId The ID of the external account to update.
      * @param array|null $params
      * @param array|string|null $opts
@@ -166,7 +178,7 @@ class Account extends ApiResource
     }
 
     /**
-     * @param string|null $id The ID of the account to which the external account belongs.
+     * @param array|null $id The ID of the account to which the external account belongs.
      * @param array|null $externalAccountId The ID of the external account to delete.
      * @param array|null $params
      * @param array|string|null $opts
@@ -179,7 +191,7 @@ class Account extends ApiResource
     }
 
     /**
-     * @param string|null $id The ID of the account on which to retrieve the external accounts.
+     * @param array|null $id The ID of the account on which to retrieve the external accounts.
      * @param array|null $params
      * @param array|string|null $opts
      *
@@ -191,7 +203,7 @@ class Account extends ApiResource
     }
 
     /**
-     * @param string|null $id The ID of the account on which to create the login link.
+     * @param array|null $id The ID of the account on which to create the login link.
      * @param array|null $params
      * @param array|string|null $opts
      *
@@ -203,7 +215,7 @@ class Account extends ApiResource
     }
 
     /**
-     * @param string|null $id The ID of the account on which to create the person.
+     * @param array|null $id The ID of the account on which to create the person.
      * @param array|null $params
      * @param array|string|null $opts
      *
@@ -215,7 +227,7 @@ class Account extends ApiResource
     }
 
     /**
-     * @param string|null $id The ID of the account to which the person belongs.
+     * @param array|null $id The ID of the account to which the person belongs.
      * @param array|null $personId The ID of the person to retrieve.
      * @param array|null $params
      * @param array|string|null $opts
@@ -228,7 +240,7 @@ class Account extends ApiResource
     }
 
     /**
-     * @param string|null $id The ID of the account to which the person belongs.
+     * @param array|null $id The ID of the account to which the person belongs.
      * @param array|null $personId The ID of the person to update.
      * @param array|null $params
      * @param array|string|null $opts
@@ -241,7 +253,7 @@ class Account extends ApiResource
     }
 
     /**
-     * @param string|null $id The ID of the account to which the person belongs.
+     * @param array|null $id The ID of the account to which the person belongs.
      * @param array|null $personId The ID of the person to delete.
      * @param array|null $params
      * @param array|string|null $opts
@@ -254,7 +266,7 @@ class Account extends ApiResource
     }
 
     /**
-     * @param string|null $id The ID of the account on which to retrieve the persons.
+     * @param array|null $id The ID of the account on which to retrieve the persons.
      * @param array|null $params
      * @param array|string|null $opts
      *
@@ -275,12 +287,6 @@ class Account extends ApiResource
                 $entityUpdate = isset($update['legal_entity']) ? $update['legal_entity'] : [];
                 $entityUpdate['additional_owners'] = $this->serializeAdditionalOwners($entity, $owners);
                 $update['legal_entity'] = $entityUpdate;
-            }
-        }
-        if (isset($this->_values['individual'])) {
-            $individual = $this['individual'];
-            if (($individual instanceof Person) && !isset($update['individual'])) {
-                $update['individual'] = $individual->serializeParameters($force);
             }
         }
         return $update;

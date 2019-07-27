@@ -2,7 +2,7 @@
 
 defined('BASEPATH') or exit('No direct script access allowed');
 
-class Misc extends AdminController
+class Misc extends Admin_controller
 {
     public function __construct()
     {
@@ -42,11 +42,6 @@ class Misc extends AdminController
         echo json_encode($georequest);
     }
 
-    public function get_currency($id)
-    {
-        echo json_encode(get_currency($id));
-    }
-
     public function get_taxes_dropdown_template()
     {
         $name    = $this->input->post('name');
@@ -81,7 +76,6 @@ class Misc extends AdminController
     {
         $data['connector']   = admin_url() . '/utilities/media_connector';
         $data['mediaLocale'] = get_media_locale();
-        $this->app_css->add('app-css', base_url($this->app_css->core_file('assets/css', 'style.css')) . '?v=' . $this->app_css->core_version(), 'editor-media');
         $this->load->view('admin/includes/elfinder_tinymce', $data);
     }
 
@@ -106,7 +100,7 @@ class Misc extends AdminController
     {
         if (is_admin()) {
             $this->db->where('id', $id);
-            $this->db->delete(db_prefix() . 'sales_activity');
+            $this->db->delete('tblsalesactivity');
         }
     }
 
@@ -126,7 +120,7 @@ class Misc extends AdminController
     public function toggle_file_visibility($id)
     {
         $this->db->where('id', $id);
-        $row = $this->db->get(db_prefix() . 'files')->row();
+        $row = $this->db->get('tblfiles')->row();
         if ($row->visible_to_customer == 1) {
             $v = 0;
         } else {
@@ -134,7 +128,7 @@ class Misc extends AdminController
         }
 
         $this->db->where('id', $id);
-        $this->db->update(db_prefix() . 'files', [
+        $this->db->update('tblfiles', [
             'visible_to_customer' => $v,
         ]);
         echo $v;
@@ -178,7 +172,7 @@ class Misc extends AdminController
         $data = $this->input->post();
         foreach ($data['data'] as $order) {
             $this->db->where('id', $order[0]);
-            $this->db->update(db_prefix() . 'itemable', [
+            $this->db->update('tblitems_in', [
                 'item_order' => $order[1],
             ]);
         }
@@ -428,14 +422,14 @@ class Misc extends AdminController
                 $member_id = $this->input->post('memberid');
                 if ($member_id != '') {
                     $this->db->where('staffid', $member_id);
-                    $_current_email = $this->db->get(db_prefix() . 'staff')->row();
+                    $_current_email = $this->db->get('tblstaff')->row();
                     if ($_current_email->email == $this->input->post('email')) {
                         echo json_encode(true);
                         die();
                     }
                 }
                 $this->db->where('email', $this->input->post('email'));
-                $total_rows = $this->db->count_all_results(db_prefix() . 'staff');
+                $total_rows = $this->db->count_all_results('tblstaff');
                 if ($total_rows > 0) {
                     echo json_encode(false);
                 } else {
@@ -455,14 +449,14 @@ class Misc extends AdminController
                 $userid = $this->input->post('userid');
                 if ($userid != '') {
                     $this->db->where('id', $userid);
-                    $_current_email = $this->db->get(db_prefix() . 'contacts')->row();
+                    $_current_email = $this->db->get('tblcontacts')->row();
                     if ($_current_email->email == $this->input->post('email')) {
                         echo json_encode(true);
                         die();
                     }
                 }
                 $this->db->where('email', $this->input->post('email'));
-                $total_rows = $this->db->count_all_results(db_prefix() . 'contacts');
+                $total_rows = $this->db->count_all_results('tblcontacts');
                 if ($total_rows > 0) {
                     echo json_encode(false);
                 } else {
@@ -485,10 +479,19 @@ class Misc extends AdminController
         $this->load->view('admin/blank_page');
     }
 
+    /* Get role permission for specific role id / Function relocated here becuase the Roles Model have statement on top if has role permission */
+    public function get_role_permissions_ajax($id)
+    {
+        if ($this->input->is_ajax_request()) {
+            echo json_encode($this->roles_model->get_role_permissions($id));
+            die();
+        }
+    }
+
     public function change_maximum_number_of_digits_to_decimal_fields($digits)
     {
         if (is_admin()) {
-            hooks()->do_action('before_change_maximum_number_of_digits_to_decimal_fields');
+            do_action('before_change_maximum_number_of_digits_to_decimal_fields');
             $tables = $this->db->query("SELECT *
                 FROM INFORMATION_SCHEMA.TABLES
                 WHERE TABLE_TYPE = 'BASE TABLE' AND TABLE_SCHEMA='" . APP_DB_NAME . "'")->result_array();
@@ -530,7 +533,7 @@ class Misc extends AdminController
         $notChangableFields = ['estimated_hours'];
 
         if (is_admin()) {
-            hooks()->do_action('before_change_decimal_places');
+            do_action('before_change_decimal_places');
 
             $tables = $this->db->query("SELECT *
                 FROM INFORMATION_SCHEMA.TABLES
@@ -566,99 +569,5 @@ class Misc extends AdminController
         } else {
             echo 'You need to be logged in as administrator to perform this action.';
         }
-    }
-
-    public function convert_tables_to_innodb_engine()
-    {
-        if (is_admin()) {
-            $databaseName = APP_DB_NAME;
-            $tables       = $this->db->query("SELECT TABLE_NAME,
-                             ENGINE
-                            FROM information_schema.TABLES
-                            WHERE TABLE_SCHEMA = '$databaseName' and ENGINE = 'myISAM'")->result_array();
-
-            foreach ($tables as $table) {
-                $tableName = $table['TABLE_NAME'];
-                $this->db->query("ALTER TABLE $tableName ENGINE=InnoDB;");
-            }
-            echo 'Table engines successfully changed to InnoDB';
-        } else {
-            echo 'You need to be logged in as administrator to perform this action.';
-        }
-    }
-
-    /**
-     * The upgrade script for 232 does not perform the queries below for backward compatibility
-     * Mostly it changes the varchar maximum length because of InnoDB index
-     */
-    public function upgrade_232_database()
-    {
-        $charset = $this->db->char_set;
-        $collat  = $this->db->dbcollat;
-
-        if (!is_admin()) {
-            die('You must be logged in as administrator to perform this action');
-        }
-
-        if (get_option('_232_upgrade_db_queries_performed') === '1') {
-            die('This action is already processed');
-        }
-
-        $this->db->query('ALTER TABLE `' . db_prefix() . 'contacts` CHANGE `lastname` `lastname` VARCHAR(191) CHARACTER SET ' . $charset . ' COLLATE ' . $collat . ' NOT NULL;');
-        $this->db->query('ALTER TABLE `' . db_prefix() . 'contacts` CHANGE `firstname` `firstname` VARCHAR(191) CHARACTER SET ' . $charset . ' COLLATE ' . $collat . ' NOT NULL;');
-        $this->db->query('ALTER TABLE `' . db_prefix() . 'clients` CHANGE `company` `company` VARCHAR(191) CHARACTER SET ' . $charset . ' COLLATE ' . $collat . ' NULL DEFAULT NULL;');
-        $this->db->query('ALTER TABLE `' . db_prefix() . 'customers_groups` CHANGE `name` `name` VARCHAR(191) CHARACTER SET ' . $charset . ' COLLATE ' . $collat . ' NOT NULL;');
-        $this->db->query('ALTER TABLE `' . db_prefix() . 'options` CHANGE `name` `name` VARCHAR(191) CHARACTER SET ' . $charset . ' COLLATE ' . $collat . ' NOT NULL;');
-        $this->db->query('ALTER TABLE `' . db_prefix() . 'invoicepaymentrecords` CHANGE `paymentmethod` `paymentmethod` VARCHAR(191) CHARACTER SET ' . $charset . ' COLLATE ' . $collat . ' NULL DEFAULT NULL;');
-        $this->db->query('ALTER TABLE `' . db_prefix() . 'leads` CHANGE `name` `name` VARCHAR(191) CHARACTER SET ' . $charset . ' COLLATE ' . $collat . ' NOT NULL;');
-        $this->db->query('ALTER TABLE `' . db_prefix() . 'leads` CHANGE `company` `company` VARCHAR(191) CHARACTER SET ' . $charset . ' COLLATE ' . $collat . ' NULL DEFAULT NULL;');
-        $this->db->query('ALTER TABLE `' . db_prefix() . 'projects` CHANGE `name` `name` VARCHAR(191) CHARACTER SET ' . $charset . ' COLLATE ' . $collat . ' NOT NULL;');
-
-        $this->db->query('ALTER TABLE `' . db_prefix() . 'contacts` CHANGE `title` `title` VARCHAR(100) CHARACTER SET ' . $charset . ' COLLATE ' . $collat . ' NULL DEFAULT NULL;');
-
-        $this->db->query('ALTER TABLE `' . db_prefix() . 'web_to_lead` CHANGE `name` `name` VARCHAR(191) CHARACTER SET ' . $charset . ' COLLATE ' . $collat . ' NOT NULL;');
-        $this->db->query('ALTER TABLE `' . db_prefix() . 'vault` CHANGE `username` `username` VARCHAR(191) CHARACTER SET ' . $charset . ' COLLATE ' . $collat . ' NOT NULL;');
-        $this->db->query('ALTER TABLE `' . db_prefix() . 'vault` CHANGE `server_address` `server_address` VARCHAR(191) CHARACTER SET ' . $charset . ' COLLATE ' . $collat . ' NOT NULL;');
-        $this->db->query('ALTER TABLE `' . db_prefix() . 'tracked_mails` CHANGE `subject` `subject` MEDIUMTEXT CHARACTER SET ' . $charset . ' COLLATE ' . $collat . ' NULL DEFAULT NULL;');
-        $this->db->query('ALTER TABLE `' . db_prefix() . 'tickets_predefined_replies` CHANGE `name` `name` VARCHAR(191) CHARACTER SET ' . $charset . ' COLLATE ' . $collat . ' NOT NULL;');
-        $this->db->query('ALTER TABLE `' . db_prefix() . 'tickets_pipe_log` CHANGE `email_to` `email_to` VARCHAR(100) CHARACTER SET ' . $charset . ' COLLATE ' . $collat . ' NOT NULL;');
-        $this->db->query('ALTER TABLE `' . db_prefix() . 'tickets_pipe_log` CHANGE `email` `email` VARCHAR(100) CHARACTER SET ' . $charset . ' COLLATE ' . $collat . ' NOT NULL;');
-        $this->db->query('ALTER TABLE `' . db_prefix() . 'tickets_pipe_log` CHANGE `subject` `subject` VARCHAR(191) CHARACTER SET ' . $charset . ' COLLATE ' . $collat . ' NOT NULL;');
-        $this->db->query('ALTER TABLE `' . db_prefix() . 'tickets` CHANGE `subject` `subject` VARCHAR(191) CHARACTER SET ' . $charset . ' COLLATE ' . $collat . ' NOT NULL;');
-        $this->db->query('ALTER TABLE `' . db_prefix() . 'subscriptions` CHANGE `name` `name` VARCHAR(191) CHARACTER SET ' . $charset . ' COLLATE ' . $collat . ' NOT NULL;');
-        $this->db->query('ALTER TABLE `' . db_prefix() . 'staff` CHANGE `media_path_slug` `media_path_slug` VARCHAR(191) CHARACTER SET ' . $charset . ' COLLATE ' . $collat . ' NULL DEFAULT NULL');
-        $this->db->query('ALTER TABLE `' . db_prefix() . 'proposals` CHANGE `subject` `subject` VARCHAR(191) CHARACTER SET ' . $charset . ' COLLATE ' . $collat . ' NULL DEFAULT NULL;');
-        $this->db->query('ALTER TABLE `' . db_prefix() . 'proposals` CHANGE `proposal_to` `proposal_to` VARCHAR(191) CHARACTER SET ' . $charset . ' COLLATE ' . $collat . ' NULL DEFAULT NULL;');
-        $this->db->query('ALTER TABLE `' . db_prefix() . 'projectdiscussions` CHANGE `subject` `subject` VARCHAR(191) CHARACTER SET ' . $charset . ' COLLATE ' . $collat . ' NOT NULL;');
-        $this->db->query('ALTER TABLE `' . db_prefix() . 'projectdiscussioncomments` CHANGE `fullname` `fullname` VARCHAR(191) CHARACTER SET ' . $charset . ' COLLATE ' . $collat . ' NULL DEFAULT NULL;');
-        $this->db->query('ALTER TABLE `' . db_prefix() . 'project_files` CHANGE `subject` `subject` VARCHAR(191) CHARACTER SET ' . $charset . ' COLLATE ' . $collat . ' NULL DEFAULT NULL;');
-        $this->db->query('ALTER TABLE `' . db_prefix() . 'project_activity` CHANGE `description_key` `description_key` VARCHAR(191) CHARACTER SET ' . $charset . ' COLLATE ' . $collat . " NOT NULL COMMENT 'Language file key';");
-        $this->db->query('ALTER TABLE `' . db_prefix() . 'notifications` CHANGE `additional_data` `additional_data` TEXT CHARACTER SET ' . $charset . ' COLLATE ' . $collat . ' NULL DEFAULT NULL;');
-        $this->db->query('ALTER TABLE `' . db_prefix() . 'lead_activity_log` CHANGE `additional_data` `additional_data` TEXT CHARACTER SET ' . $charset . ' COLLATE ' . $collat . ' NULL DEFAULT NULL;');
-        $this->db->query('ALTER TABLE `' . db_prefix() . 'knowledge_base_groups` CHANGE `group_slug` `group_slug` TEXT CHARACTER SET ' . $charset . ' COLLATE ' . $collat . ' NULL DEFAULT NULL;');
-        $this->db->query('ALTER TABLE `' . db_prefix() . 'knowledge_base_groups` CHANGE `name` `name` VARCHAR(191) CHARACTER SET ' . $charset . ' COLLATE ' . $collat . ' NOT NULL;');
-
-        $this->db->query('ALTER TABLE `' . db_prefix() . 'files` CHANGE `file_name` `file_name` VARCHAR(191) CHARACTER SET ' . $charset . ' COLLATE ' . $collat . ' NOT NULL;');
-        $this->db->query('ALTER TABLE `' . db_prefix() . 'expenses_categories` CHANGE `name` `name` VARCHAR(191) CHARACTER SET ' . $charset . ' COLLATE ' . $collat . ' NOT NULL;');
-        $this->db->query('ALTER TABLE `' . db_prefix() . 'expenses` CHANGE `expense_name` `expense_name` VARCHAR(191) CHARACTER SET ' . $charset . ' COLLATE ' . $collat . ' NULL DEFAULT NULL');
-        $this->db->query('ALTER TABLE `' . db_prefix() . 'contracts` CHANGE `subject` `subject` VARCHAR(191) CHARACTER SET ' . $charset . ' COLLATE ' . $collat . ' NULL DEFAULT NULL;');
-        $this->db->query('ALTER TABLE `' . db_prefix() . 'contacts` CHANGE `profile_image` `profile_image` VARCHAR(191) CHARACTER SET ' . $charset . ' COLLATE ' . $collat . ' NULL DEFAULT NULL;');
-        $this->db->query('ALTER TABLE `' . db_prefix() . 'staff` CHANGE `profile_image` `profile_image` VARCHAR(191) CHARACTER SET ' . $charset . ' COLLATE ' . $collat . ' NULL DEFAULT NULL;');
-
-        $this->db->query('ALTER TABLE `' . db_prefix() . 'clients` CHANGE `longitude` `longitude` VARCHAR(191) CHARACTER SET ' . $charset . ' COLLATE ' . $collat . ' NULL DEFAULT NULL;');
-        $this->db->query('ALTER TABLE `' . db_prefix() . 'clients` CHANGE `latitude` `latitude` VARCHAR(191) CHARACTER SET ' . $charset . ' COLLATE ' . $collat . ' NULL DEFAULT NULL;');
-        $this->db->query('ALTER TABLE `' . db_prefix() . 'announcements` CHANGE `name` `name` VARCHAR(191) CHARACTER SET ' . $charset . ' COLLATE ' . $collat . ' NOT NULL;');
-        $this->db->query('ALTER TABLE `' . db_prefix() . 'projectdiscussioncomments` CHANGE `file_name` `file_name` VARCHAR(191) CHARACTER SET ' . $charset . ' COLLATE ' . $collat . ' NULL DEFAULT NULL;');
-        $this->db->query('ALTER TABLE `' . db_prefix() . 'gdpr_requests` CHANGE `request_type` `request_type` VARCHAR(191) CHARACTER SET ' . $charset . ' COLLATE ' . $collat . ' NULL DEFAULT NULL;');
-        $this->db->query('ALTER TABLE `' . db_prefix() . 'user_meta` CHANGE `meta_key` `meta_key` VARCHAR(191) CHARACTER SET ' . $charset . ' COLLATE ' . $collat . ' NULL DEFAULT NULL;');
-        $this->db->query('ALTER TABLE `' . db_prefix() . 'tickets_pipe_log` CHANGE `name` `name` VARCHAR(191) CHARACTER SET ' . $charset . ' COLLATE ' . $collat . ' NOT NULL;');
-        $this->db->query('ALTER TABLE `' . db_prefix() . 'mail_queue` CHANGE `email` `email` VARCHAR(191) CHARACTER SET ' . $charset . ' COLLATE ' . $collat . ' NOT NULL;');
-        $this->db->query('ALTER TABLE `' . db_prefix() . 'mail_queue` CHANGE `cc` `cc` TEXT CHARACTER SET ' . $charset . ' COLLATE ' . $collat . ' NULL DEFAULT NULL;');
-        $this->db->query('ALTER TABLE `' . db_prefix() . 'mail_queue` CHANGE `bcc` `bcc` TEXT CHARACTER SET ' . $charset . ' COLLATE ' . $collat . ' NULL DEFAULT NULL;');
-        $this->db->query('ALTER TABLE `' . db_prefix() . 'project_files` CHANGE `file_name` `file_name` VARCHAR(191) CHARACTER SET ' . $charset . ' COLLATE ' . $collat . ' NOT NULL;');
-        $this->db->query('ALTER TABLE `' . db_prefix() . 'ticket_attachments` CHANGE `file_name` `file_name` VARCHAR(191) CHARACTER SET ' . $charset . ' COLLATE ' . $collat . ' NOT NULL;');
-        $this->db->query('ALTER TABLE `' . db_prefix() . 'milestones` CHANGE `name` `name` VARCHAR(191) CHARACTER SET ' . $charset . ' COLLATE ' . $collat . ' NOT NULL;');
-        $this->db->query('ALTER TABLE `' . db_prefix() . 'leads` CHANGE `email` `email` VARCHAR(100) CHARACTER SET ' . $charset . ' COLLATE ' . $collat . ' NULL DEFAULT NULL;');
-        add_option('_232_upgrade_db_queries_performed', '1', 0);
     }
 }

@@ -96,7 +96,7 @@
             }
             ?>
           </td>
-          <?php $total_file_comments = total_rows(db_prefix().'projectdiscussioncomments',array('discussion_id'=>$file['id'],'discussion_type'=>'file')); ?>
+          <?php $total_file_comments = total_rows('tblprojectdiscussioncomments',array('discussion_id'=>$file['id'],'discussion_type'=>'file')); ?>
           <td data-order="<?php echo $total_file_comments; ?>">
             <?php echo $total_file_comments; ?>
           </td>

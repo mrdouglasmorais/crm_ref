@@ -10,13 +10,12 @@ $custom_fields = get_custom_fields('staff', [
 $aColumns = [
     'firstname',
     'email',
-    db_prefix().'roles.name',
     'last_login',
     'active',
     ];
 $sIndexColumn = 'staffid';
-$sTable       = db_prefix().'staff';
-$join         = ['LEFT JOIN '.db_prefix().'roles ON '.db_prefix().'roles.roleid = '.db_prefix().'staff.role'];
+$sTable       = 'tblstaff';
+$join         = [];
 $i            = 0;
 foreach ($custom_fields as $field) {
     $select_as = 'cvalue_' . $i;
@@ -24,7 +23,7 @@ foreach ($custom_fields as $field) {
         $select_as = 'date_picker_cvalue_' . $i;
     }
     array_push($aColumns, 'ctable_' . $i . '.value as ' . $select_as);
-    array_push($join, 'LEFT JOIN '.db_prefix().'customfieldsvalues as ctable_' . $i . ' ON '.db_prefix().'staff.staffid = ctable_' . $i . '.relid AND ctable_' . $i . '.fieldto="' . $field['fieldto'] . '" AND ctable_' . $i . '.fieldid=' . $field['id']);
+    array_push($join, 'LEFT JOIN tblcustomfieldsvalues as ctable_' . $i . ' ON tblstaff.staffid = ctable_' . $i . '.relid AND ctable_' . $i . '.fieldto="' . $field['fieldto'] . '" AND ctable_' . $i . '.fieldid=' . $field['id']);
     $i++;
 }
             // Fix for big queries. Some hosting have max_join_limit
@@ -32,7 +31,7 @@ if (count($custom_fields) > 4) {
     @$this->ci->db->query('SET SQL_BIG_SELECTS=1');
 }
 
-$where = hooks()->apply_filters('staff_table_sql_where', []);
+$where = do_action('staff_table_sql_where', []);
 
 $result = data_tables_init($aColumns, $sIndexColumn, $sTable, $join, $where, [
     'profile_image',
@@ -53,7 +52,7 @@ foreach ($rResult as $aRow) {
         }
         if ($aColumns[$i] == 'last_login') {
             if ($_data != null) {
-                $_data = '<span class="text-has-action is-date" data-toggle="tooltip" data-title="' . _dt($_data) . '">' . time_ago($_data) . '</span>';
+                $_data = '<span class="text-has-action" data-toggle="tooltip" data-title="' . _dt($_data) . '">' . time_ago($_data) . '</span>';
             } else {
                 $_data = 'Never';
             }
@@ -64,7 +63,7 @@ foreach ($rResult as $aRow) {
             }
 
             $_data = '<div class="onoffswitch">
-                <input type="checkbox" ' . (($aRow['staffid'] == get_staff_user_id() || (is_admin($aRow['staffid']) || !has_permission('staff', '', 'edit')) && !is_admin()) ? 'disabled' : '') . ' data-switch-url="' . admin_url() . 'staff/change_staff_status" name="onoffswitch" class="onoffswitch-checkbox" id="c_' . $aRow['staffid'] . '" data-id="' . $aRow['staffid'] . '" ' . $checked . '>
+                <input type="checkbox" ' . ($aRow['staffid'] == get_staff_user_id() ? 'disabled' : '') . ' data-switch-url="' . admin_url() . 'staff/change_staff_status" name="onoffswitch" class="onoffswitch-checkbox" id="c_' . $aRow['staffid'] . '" data-id="' . $aRow['staffid'] . '" ' . $checked . '>
                 <label class="onoffswitch-label" for="c_' . $aRow['staffid'] . '"></label>
             </div>';
 

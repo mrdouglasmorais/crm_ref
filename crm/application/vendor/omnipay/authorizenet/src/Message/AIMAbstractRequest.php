@@ -36,20 +36,6 @@ abstract class AIMAbstractRequest extends AbstractRequest
         return $this->setParameter('transactionKey', $value);
     }
 
-    // AIM does not use signatureKey, but it is included here just
-    // to get the tests to run. Some structural refactoring will be
-    // needed to work around this.
-
-    public function getSignatureKey()
-    {
-        return $this->getParameter('signatureKey');
-    }
-
-    public function setSignatureKey($value)
-    {
-        return $this->setParameter('signatureKey', $value);
-    }
-
     public function getDeveloperMode()
     {
         return $this->getParameter('developerMode');
@@ -276,8 +262,8 @@ abstract class AIMAbstractRequest extends AbstractRequest
 
     protected function addTransactionType(\SimpleXMLElement $data)
     {
-        if (! $this->action) {
-            // The extending class probably hasn't specified an "action".
+        if (!$this->action) {
+            // The extending class probably hasn't specified an "action"
             throw new InvalidRequestException();
         }
 

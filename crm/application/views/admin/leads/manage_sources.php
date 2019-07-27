@@ -24,7 +24,7 @@
                                 <td><?php echo $source['id']; ?></td>
                                 <td><a href="#" onclick="edit_source(this,<?php echo $source['id']; ?>); return false" data-name="<?php echo $source['name']; ?>"><?php echo $source['name']; ?></a><br />
                                     <span class="text-muted">
-                                        <?php echo _l('leads_table_total',total_rows(db_prefix().'leads',array('source'=>$source['id']))); ?>
+                                        <?php echo _l('leads_table_total',total_rows('tblleads',array('source'=>$source['id']))); ?>
                                     </span>
                                 </td>
                                 <td>
@@ -77,7 +77,7 @@
 <?php init_tail(); ?>
 <script>
     $(function(){
-    	appValidateForm($('form'),{name:'required'},manage_leads_sources);
+    	_validate_form($('form'),{name:'required'},manage_leads_sources);
     	$('#source').on('hidden.bs.modal', function(event) {
     		$('#additional').html('');
     		$('#source input[name="name"]').val('');

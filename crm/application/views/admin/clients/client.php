@@ -66,7 +66,7 @@
                      <?php if(isset($client) && $client->leadid != NULL){ ?>
                         <br />
                         <small>
-                           <b><?php echo _l('customer_from_lead',_l('lead')); ?></b>
+                           <?php echo _l('customer_from_lead',_l('lead')); ?>
                            <a href="<?php echo admin_url('leads/index/'.$client->leadid); ?>" onclick="init_lead(<?php echo $client->leadid; ?>); return false;">
                              - <?php echo _l('view'); ?>
                           </a>
@@ -82,13 +82,13 @@
             <div class="panel_s">
                <div class="panel-body">
                   <?php if(isset($client)){ ?>
-                  <?php echo form_hidden('isedit'); ?>
-                  <?php echo form_hidden('userid', $client->userid); ?>
+                  <?php echo form_hidden( 'isedit'); ?>
+                  <?php echo form_hidden( 'userid',$client->userid); ?>
                   <div class="clearfix"></div>
                   <?php } ?>
                   <div>
                      <div class="tab-content">
-                           <?php $this->load->view((isset($tab) ? $tab['view'] : 'admin/clients/groups/profile')); ?>
+                        <?php $this->load->view('admin/clients/groups/'.$group); ?>
                      </div>
                   </div>
                </div>
@@ -96,7 +96,7 @@
          </div>
       </div>
       <?php if($group == 'profile'){ ?>
-         <div class="btn-bottom-pusher"></div>
+      <div class="btn-bottom-pusher"></div>
       <?php } ?>
    </div>
 </div>
@@ -107,6 +107,15 @@
       init_rel_tasks_table(<?php echo $client->userid; ?>,'customer');
    });
 </script>
+<?php } ?>
+<?php if(get_option('google_api_key') != '' && !empty($client->latitude) && !empty($client->longitude)){ ?>
+<script>
+   var latitude = '<?php echo $client->latitude; ?>';
+   var longitude = '<?php echo $client->longitude; ?>';
+   var mapMarkerTitle = '<?php echo $client->company; ?>';
+</script>
+<?php echo app_script('assets/js','map.js'); ?>
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=<?php echo get_option('google_api_key'); ?>&callback=initMap"></script>
 <?php } ?>
 <?php $this->load->view('admin/clients/client_js'); ?>
 </body>

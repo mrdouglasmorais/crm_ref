@@ -1,14 +1,14 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
-<div class="panel_s section-heading section-projects">
+<div class="panel_s">
    <div class="panel-body">
-      <h4 class="no-margin section-text"><?php echo _l('clients_my_projects'); ?></h4>
+      <h4 class="no-margin"><?php echo _l('clients_my_projects'); ?></h4>
    </div>
 </div>
 <div class="panel_s">
    <div class="panel-body">
       <div class="row mbot15">
          <div class="col-md-12">
-            <h3 class="text-success projects-summary-heading no-mtop mbot15"><?php echo _l('projects_summary'); ?></h3>
+            <h3 class="text-success no-mtop mbot15"><?php echo _l('projects_summary'); ?></h3>
          </div>
          <?php get_template_part('projects/project_summary'); ?>
       </div>
@@ -16,10 +16,10 @@
          <table class="table dt-table table-projects" data-order-col="2" data-order-type="desc">
             <thead>
                <tr>
-                  <th class="th-project-name"><?php echo _l('project_name'); ?></th>
-                  <th class="th-project-start-date"><?php echo _l('project_start_date'); ?></th>
-                  <th class="th-project-deadline"><?php echo _l('project_deadline'); ?></th>
-                  <th class="th-project-billing-type"><?php echo _l('project_billing_type'); ?></th>
+                  <th><?php echo _l('project_name'); ?></th>
+                  <th><?php echo _l('project_start_date'); ?></th>
+                  <th><?php echo _l('project_deadline'); ?></th>
+                  <th><?php echo _l('project_billing_type'); ?></th>
                   <?php
                      $custom_fields = get_custom_fields('projects',array('show_on_client_portal'=>1));
                      foreach($custom_fields as $field){ ?>

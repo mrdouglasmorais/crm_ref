@@ -35,9 +35,8 @@ class DomainContext extends InstanceContext {
      * Initialize the DomainContext
      * 
      * @param \Twilio\Version $version Version that contains the resource
-     * @param string $accountSid The SID of the Account that created the resource
-     *                           to fetch
-     * @param string $sid The unique string that identifies the resource
+     * @param string $accountSid The account_sid
+     * @param string $sid Fetch by unique Domain Sid
      * @return \Twilio\Rest\Api\V2010\Account\Sip\DomainContext 
      */
     public function __construct(Version $version, $accountSid, $sid) {
@@ -83,6 +82,7 @@ class DomainContext extends InstanceContext {
         $options = new Values($options);
 
         $data = Values::of(array(
+            'AuthType' => $options['authType'],
             'FriendlyName' => $options['friendlyName'],
             'VoiceFallbackMethod' => $options['voiceFallbackMethod'],
             'VoiceFallbackUrl' => $options['voiceFallbackUrl'],
@@ -91,7 +91,6 @@ class DomainContext extends InstanceContext {
             'VoiceStatusCallbackUrl' => $options['voiceStatusCallbackUrl'],
             'VoiceUrl' => $options['voiceUrl'],
             'SipRegistration' => Serialize::booleanToString($options['sipRegistration']),
-            'DomainName' => $options['domainName'],
         ));
 
         $payload = $this->version->update(

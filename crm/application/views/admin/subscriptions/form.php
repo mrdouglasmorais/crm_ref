@@ -18,7 +18,7 @@
                if(isset($subscription) && $subscription->stripe_plan_id == $plan->id) {
                  $selected = ' selected';
                }
-               $subtext = app_format_money(strcasecmp($plan->currency, 'JPY') == 0 ? $plan->amount : $plan->amount / 100, strtoupper($plan->currency));
+               $subtext = format_money(strcasecmp($plan->currency, 'JPY') == 0 ? $plan->amount : $plan->amount / 100, strtoupper($plan->currency));
                if($plan->interval_count == 1) {
                   $subtext .= ' / ' . $plan->interval;
                } else {

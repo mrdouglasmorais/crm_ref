@@ -7,15 +7,15 @@
   <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1, maximum-scale=1">
   <title><?php echo $form->name; ?></title>
   <?php app_external_form_header($form); ?>
-  <?php hooks()->do_action('app_web_to_lead_form_head'); ?>
+  <?php do_action('app_web_to_lead_form_head'); ?>
 </head>
-<body class="web-to-lead <?php echo $form->form_key; ?>"<?php if(is_rtl(true)){ echo ' dir="rtl"';} ?>>
+<body class="web-to-lead"<?php if(is_rtl(true)){ echo ' dir="rtl"';} ?>>
   <div class="container-fluid">
     <div class="row">
       <div class="<?php if($this->input->get('col')){echo $this->input->get('col');} else {echo 'col-md-12';} ?>">
         <div id="response"></div>
-        <?php echo form_open_multipart($this->uri->uri_string(),array('id'=>$form->form_key,'class'=>'disable-on-submit')); ?>
-        <?php hooks()->do_action('web_to_lead_form_start'); ?>
+        <?php echo form_open_multipart($this->uri->uri_string(),array('id'=>$form->form_key)); ?>
+        <?php do_action('web_to_lead_form_start'); ?>
         <?php echo form_hidden('key',$form->form_key); ?>
         <div class="row">
           <?php foreach($form_fields as $field){
@@ -43,7 +43,7 @@
         </div>
       </div>
 
-      <?php hooks()->do_action('web_to_lead_form_end'); ?>
+      <?php do_action('web_to_lead_form_end'); ?>
       <?php echo form_close(); ?>
     </div>
   </div>
@@ -52,9 +52,9 @@
 <script>
  var form_id = '#<?php echo $form->form_key; ?>';
  $(function() {
-   $(form_id).appFormValidator({
+   $(form_id).validate({
 
-    onSubmit: function(form) {
+    submitHandler: function(form) {
 
      $("input[type=file]").each(function() {
           if($(this).val() === "") {
@@ -65,6 +65,8 @@
      var formURL = $(form).attr("action");
      var formData = new FormData($(form)[0]);
 
+     $('#form_submit').prop('disabled', true);
+
      $.ajax({
        type: $(form).attr('method'),
        data: formData,
@@ -73,9 +75,8 @@
        cache: false,
        processData: false,
        url: formURL
-     }).always(function(){
-      $('#form_submit').prop('disabled', false);
      }).done(function(response){
+      $('#form_submit').prop('disabled', false);
       response = JSON.parse(response);
                  // In case action hook is used to redirect
                  if (response.redirect_url) {
@@ -111,6 +112,6 @@
              });
  });
 </script>
-<?php hooks()->do_action('app_web_to_lead_form_footer'); ?>
+<?php do_action('app_web_to_lead_form_footer'); ?>
 </body>
 </html>

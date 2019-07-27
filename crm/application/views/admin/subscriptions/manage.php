@@ -68,7 +68,7 @@
                 <?php } ?>
               </div>
               <hr class="hr-panel-heading" />
-              <?php hooks()->do_action('before_subscriptions_table'); ?>
+              <?php do_action('before_subscriptions_table'); ?>
               <?php $this->load->view('admin/subscriptions/table_html',array('url'=>admin_url('subscriptions/table'))); ?>
             </div>
           </div>

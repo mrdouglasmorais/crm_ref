@@ -14,14 +14,14 @@ use Twilio\Values;
 
 abstract class ShortCodeOptions {
     /**
-     * @param string $friendlyName A string to describe this resource
-     * @param string $apiVersion The API version to use to start a new TwiML session
+     * @param string $friendlyName A human readable description of this resource
+     * @param string $apiVersion The API version to use
      * @param string $smsUrl URL Twilio will request when receiving an SMS
      * @param string $smsMethod HTTP method to use when requesting the sms url
      * @param string $smsFallbackUrl URL Twilio will request if an error occurs in
      *                               executing TwiML
-     * @param string $smsFallbackMethod HTTP method Twilio will use with
-     *                                  sms_fallback_url
+     * @param string $smsFallbackMethod HTTP method Twilio will use with sms
+     *                                  fallback url
      * @return UpdateShortCodeOptions Options builder
      */
     public static function update($friendlyName = Values::NONE, $apiVersion = Values::NONE, $smsUrl = Values::NONE, $smsMethod = Values::NONE, $smsFallbackUrl = Values::NONE, $smsFallbackMethod = Values::NONE) {
@@ -29,8 +29,7 @@ abstract class ShortCodeOptions {
     }
 
     /**
-     * @param string $friendlyName The string that identifies the ShortCode
-     *                             resources to read
+     * @param string $friendlyName Filter by friendly name
      * @param string $shortCode Filter by ShortCode
      * @return ReadShortCodeOptions Options builder
      */
@@ -41,14 +40,14 @@ abstract class ShortCodeOptions {
 
 class UpdateShortCodeOptions extends Options {
     /**
-     * @param string $friendlyName A string to describe this resource
-     * @param string $apiVersion The API version to use to start a new TwiML session
+     * @param string $friendlyName A human readable description of this resource
+     * @param string $apiVersion The API version to use
      * @param string $smsUrl URL Twilio will request when receiving an SMS
      * @param string $smsMethod HTTP method to use when requesting the sms url
      * @param string $smsFallbackUrl URL Twilio will request if an error occurs in
      *                               executing TwiML
-     * @param string $smsFallbackMethod HTTP method Twilio will use with
-     *                                  sms_fallback_url
+     * @param string $smsFallbackMethod HTTP method Twilio will use with sms
+     *                                  fallback url
      */
     public function __construct($friendlyName = Values::NONE, $apiVersion = Values::NONE, $smsUrl = Values::NONE, $smsMethod = Values::NONE, $smsFallbackUrl = Values::NONE, $smsFallbackMethod = Values::NONE) {
         $this->options['friendlyName'] = $friendlyName;
@@ -60,9 +59,9 @@ class UpdateShortCodeOptions extends Options {
     }
 
     /**
-     * A descriptive string that you created to describe this resource. It can be up to 64 characters long. By default, the `FriendlyName` is the short code.
+     * A human readable descriptive text for this resource, up to 64 characters long. By default, the `FriendlyName` is just the short code.
      * 
-     * @param string $friendlyName A string to describe this resource
+     * @param string $friendlyName A human readable description of this resource
      * @return $this Fluent Builder
      */
     public function setFriendlyName($friendlyName) {
@@ -71,9 +70,9 @@ class UpdateShortCodeOptions extends Options {
     }
 
     /**
-     * The API version to use to start a new TwiML session. Can be: `2010-04-01` or `2008-08-01`.
+     * SMSs to this short code will start a new TwiML session with this API version. Either `2010-04-01` or `2008-08-01`.
      * 
-     * @param string $apiVersion The API version to use to start a new TwiML session
+     * @param string $apiVersion The API version to use
      * @return $this Fluent Builder
      */
     public function setApiVersion($apiVersion) {
@@ -82,7 +81,7 @@ class UpdateShortCodeOptions extends Options {
     }
 
     /**
-     * The URL we should call when receiving an incoming SMS message to this short code.
+     * The URL Twilio will request when receiving an incoming SMS message to this short code.
      * 
      * @param string $smsUrl URL Twilio will request when receiving an SMS
      * @return $this Fluent Builder
@@ -93,7 +92,7 @@ class UpdateShortCodeOptions extends Options {
     }
 
     /**
-     * The HTTP method we should use when calling the `sms_url`. Can be: `GET` or `POST`.
+     * The HTTP method Twilio will use when making requests to the `SmsUrl`. Either `GET` or `POST`.
      * 
      * @param string $smsMethod HTTP method to use when requesting the sms url
      * @return $this Fluent Builder
@@ -104,7 +103,7 @@ class UpdateShortCodeOptions extends Options {
     }
 
     /**
-     * The URL that we should call if an error occurs while retrieving or executing the TwiML from `sms_url`.
+     * The URL that Twilio will request if an error occurs retrieving or executing the TwiML from `SmsUrl`.
      * 
      * @param string $smsFallbackUrl URL Twilio will request if an error occurs in
      *                               executing TwiML
@@ -116,10 +115,10 @@ class UpdateShortCodeOptions extends Options {
     }
 
     /**
-     * The HTTP method that we should use to call the `sms_fallback_url`. Can be: `GET` or `POST`.
+     * The HTTP method that should be used to request the `SmsFallbackUrl`. Either `GET` or `POST`.
      * 
-     * @param string $smsFallbackMethod HTTP method Twilio will use with
-     *                                  sms_fallback_url
+     * @param string $smsFallbackMethod HTTP method Twilio will use with sms
+     *                                  fallback url
      * @return $this Fluent Builder
      */
     public function setSmsFallbackMethod($smsFallbackMethod) {
@@ -145,8 +144,7 @@ class UpdateShortCodeOptions extends Options {
 
 class ReadShortCodeOptions extends Options {
     /**
-     * @param string $friendlyName The string that identifies the ShortCode
-     *                             resources to read
+     * @param string $friendlyName Filter by friendly name
      * @param string $shortCode Filter by ShortCode
      */
     public function __construct($friendlyName = Values::NONE, $shortCode = Values::NONE) {
@@ -155,10 +153,9 @@ class ReadShortCodeOptions extends Options {
     }
 
     /**
-     * The string that identifies the ShortCode resources to read.
+     * Only show the ShortCode resources with friendly names that exactly match this name.
      * 
-     * @param string $friendlyName The string that identifies the ShortCode
-     *                             resources to read
+     * @param string $friendlyName Filter by friendly name
      * @return $this Fluent Builder
      */
     public function setFriendlyName($friendlyName) {

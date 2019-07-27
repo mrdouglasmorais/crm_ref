@@ -5,7 +5,7 @@
 <a href="#" data-toggle="modal" data-target="#new_project_expense" class="btn btn-info mbot25"><?php echo _l('new_expense'); ?></a>
 <?php } ?>
 <?php
-   $data_expenses_filter['total_unbilled'] = $this->db->query('SELECT count(*) as num_rows FROM '.db_prefix().'expenses WHERE (SELECT 1 from '.db_prefix().'invoices WHERE '.db_prefix().'invoices.id = '.db_prefix().'expenses.invoiceid AND status != 2)')->row()->num_rows;
+   $data_expenses_filter['total_unbilled'] = $this->db->query('SELECT count(*) as num_rows FROM tblexpenses WHERE (SELECT 1 from tblinvoices WHERE tblinvoices.id = tblexpenses.invoiceid AND status != 2)')->row()->num_rows;
    $data_expenses_filter['categories'] = $expense_categories;
    $data_expenses_filter['filter_table_name'] = '.table-project-expenses';
    $data_expenses_filter['years'] = $this->expenses_model->get_expenses_years();

@@ -17,75 +17,30 @@ use Twilio\Values;
  */
 abstract class VerificationCheckOptions {
     /**
-     * @param string $to To phone number
-     * @param string $verificationSid A SID that uniquely identifies this
-     *                                Verification Check
-     * @param string $amount Amount of the associated PSD2 compliant transaction.
-     * @param string $payee Payee of the associated PSD2 compliant transaction.
+     * @param string $to To phonenumber
      * @return CreateVerificationCheckOptions Options builder
      */
-    public static function create($to = Values::NONE, $verificationSid = Values::NONE, $amount = Values::NONE, $payee = Values::NONE) {
-        return new CreateVerificationCheckOptions($to, $verificationSid, $amount, $payee);
+    public static function create($to = Values::NONE) {
+        return new CreateVerificationCheckOptions($to);
     }
 }
 
 class CreateVerificationCheckOptions extends Options {
     /**
-     * @param string $to To phone number
-     * @param string $verificationSid A SID that uniquely identifies this
-     *                                Verification Check
-     * @param string $amount Amount of the associated PSD2 compliant transaction.
-     * @param string $payee Payee of the associated PSD2 compliant transaction.
+     * @param string $to To phonenumber
      */
-    public function __construct($to = Values::NONE, $verificationSid = Values::NONE, $amount = Values::NONE, $payee = Values::NONE) {
+    public function __construct($to = Values::NONE) {
         $this->options['to'] = $to;
-        $this->options['verificationSid'] = $verificationSid;
-        $this->options['amount'] = $amount;
-        $this->options['payee'] = $payee;
     }
 
     /**
-     * The To phone number of the phone being verified
+     * The To phonenumber of the phone being verified
      * 
-     * @param string $to To phone number
+     * @param string $to To phonenumber
      * @return $this Fluent Builder
      */
     public function setTo($to) {
         $this->options['to'] = $to;
-        return $this;
-    }
-
-    /**
-     * A SID that uniquely identifies this Verification Check, either this parameter or the To phone number must be specified
-     * 
-     * @param string $verificationSid A SID that uniquely identifies this
-     *                                Verification Check
-     * @return $this Fluent Builder
-     */
-    public function setVerificationSid($verificationSid) {
-        $this->options['verificationSid'] = $verificationSid;
-        return $this;
-    }
-
-    /**
-     * Amount of the associated PSD2 compliant transaction. Requires the PSD2 Service flag enabled.
-     * 
-     * @param string $amount Amount of the associated PSD2 compliant transaction.
-     * @return $this Fluent Builder
-     */
-    public function setAmount($amount) {
-        $this->options['amount'] = $amount;
-        return $this;
-    }
-
-    /**
-     * Payee of the associated PSD2 compliant transaction. Requires the PSD2 Service flag enabled.
-     * 
-     * @param string $payee Payee of the associated PSD2 compliant transaction.
-     * @return $this Fluent Builder
-     */
-    public function setPayee($payee) {
-        $this->options['payee'] = $payee;
         return $this;
     }
 

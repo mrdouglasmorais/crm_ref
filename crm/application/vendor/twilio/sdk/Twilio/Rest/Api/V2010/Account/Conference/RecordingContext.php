@@ -19,10 +19,9 @@ class RecordingContext extends InstanceContext {
      * Initialize the RecordingContext
      * 
      * @param \Twilio\Version $version Version that contains the resource
-     * @param string $accountSid The SID of the Account that created the
-     *                           resource(s) to fetch
-     * @param string $conferenceSid Fetch by unique Conference SID for the recording
-     * @param string $sid The unique string that identifies this resource
+     * @param string $accountSid The account_sid
+     * @param string $conferenceSid Fetch by unique conference Sid for the recording
+     * @param string $sid Fetch by unique recording Sid
      * @return \Twilio\Rest\Api\V2010\Account\Conference\RecordingContext 
      */
     public function __construct(Version $version, $accountSid, $conferenceSid, $sid) {
@@ -41,7 +40,7 @@ class RecordingContext extends InstanceContext {
     /**
      * Update the RecordingInstance
      * 
-     * @param string $status The new status of the resource
+     * @param string $status The status to change the recording to.
      * @param array|Options $options Optional Arguments
      * @return RecordingInstance Updated RecordingInstance
      * @throws TwilioException When an HTTP error occurs.

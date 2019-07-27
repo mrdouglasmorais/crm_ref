@@ -14,7 +14,7 @@ use Twilio\Values;
 
 abstract class FeedbackOptions {
     /**
-     * @param string $outcome Whether the feedback has arrived
+     * @param string $outcome The outcome
      * @return CreateFeedbackOptions Options builder
      */
     public static function create($outcome = Values::NONE) {
@@ -24,16 +24,16 @@ abstract class FeedbackOptions {
 
 class CreateFeedbackOptions extends Options {
     /**
-     * @param string $outcome Whether the feedback has arrived
+     * @param string $outcome The outcome
      */
     public function __construct($outcome = Values::NONE) {
         $this->options['outcome'] = $outcome;
     }
 
     /**
-     * Whether the feedback has arrived. Can be: `unconfirmed` or `confirmed`. If `provide_feedback`=`true` in [the initial HTTP POST](https://www.twilio.com/docs/sms/api/message#create-a-message-resource), the initial value of this property is `unconfirmed`. After the message arrives, update the value to `confirmed`.
+     * The outcome
      * 
-     * @param string $outcome Whether the feedback has arrived
+     * @param string $outcome The outcome
      * @return $this Fluent Builder
      */
     public function setOutcome($outcome) {

@@ -31,7 +31,7 @@ function data_tables_init($aColumns, $sIndexColumn, $sTable, $join = [], $where 
         if (substr_count($column, '.') == 1 && strpos($column, ' as ') === false) {
             $_column = explode('.', $column);
             if (isset($_column[1])) {
-                if (startsWith($_column[0], db_prefix())) {
+                if (_startsWith($_column[0], 'tbl')) {
                     $_prefix = prefixed_table_fields_wildcard($_column[0], $_column[0], $_column[1]);
                     array_push($_aColumns, $_prefix);
                 } else {
@@ -48,9 +48,8 @@ function data_tables_init($aColumns, $sIndexColumn, $sTable, $join = [], $where 
     /*
      * Ordering
      */
-    $nullColumnsAsLast = get_null_columns_that_should_be_sorted_as_last();
-
-    $sOrder = '';
+    $dueDateColumns = get_null_columns_that_should_be_sorted_as_last();
+    $sOrder         = '';
     if ($CI->input->post('order')) {
         $sOrder = 'ORDER BY ';
         foreach ($CI->input->post('order') as $key => $val) {
@@ -65,12 +64,12 @@ function data_tables_init($aColumns, $sIndexColumn, $sTable, $join = [], $where 
             // second checking there is already prefixed table name in the column name
             // this will work on the first table sorting - checked by the draw parameters
             // in future sorting user must sort like he want and the duedates won't be always last
-            if ((in_array($sTable . '.' . $columnName, $nullColumnsAsLast)
-                || in_array($columnName, $nullColumnsAsLast))
+            if ((in_array($sTable . '.' . $columnName, $dueDateColumns)
+                || in_array($columnName, $dueDateColumns))
                 ) {
                 $sOrder .= $columnName . ' IS NULL ' . $dir . ', ' . $columnName;
             } else {
-                $sOrder .= hooks()->apply_filters('datatables_query_order_column', $columnName);
+                $sOrder .= do_action('datatables_query_order_column', $columnName);
             }
             $sOrder .= ' ' . $dir . ', ';
         }
@@ -83,14 +82,11 @@ function data_tables_init($aColumns, $sIndexColumn, $sTable, $join = [], $where 
             && $CI->input->post('last_order_identifier')
             && $CI->input->post('order')) {
             // https://stackoverflow.com/questions/11195692/json-encode-sparse-php-array-as-json-array-not-json-object
-
             $indexedOnly = [];
             foreach ($CI->input->post('order') as $row) {
                 $indexedOnly[] = array_values($row);
             }
-
             $meta_name = $CI->input->post('last_order_identifier') . '-table-last-order';
-
             update_staff_meta(get_staff_user_id(), $meta_name, json_encode($indexedOnly, JSON_NUMERIC_CHECK));
         }
     }
@@ -104,41 +100,22 @@ function data_tables_init($aColumns, $sIndexColumn, $sTable, $join = [], $where 
     if ((isset($__post['search'])) && $__post['search']['value'] != '') {
         $search_value = $__post['search']['value'];
         $search_value = trim($search_value);
-
-        $sWhere                             = 'WHERE (';
-        $sMatchCustomFields                 = [];
-        // Not working, do not use it
-        $useMatchForCustomFieldsTableSearch = hooks()->apply_filters('use_match_for_custom_fields_table_search', 'false');
-
+        $sWhere       = 'WHERE (';
         for ($i = 0; $i < count($aColumns); $i++) {
             $columnName = $aColumns[$i];
             if (strpos($columnName, ' as ') !== false) {
                 $columnName = strbefore($columnName, ' as');
             }
-
             if (stripos($columnName, 'AVG(') !== false || stripos($columnName, 'SUM(') !== false) {
             } else {
                 if (($__post['columns'][$i]) && $__post['columns'][$i]['searchable'] == 'true') {
                     if (isset($searchAs[$i])) {
                         $columnName = $searchAs[$i];
                     }
-                    // Custom fields values are FULLTEXT and should be searched with MATCH
-                    // Not working ATM
-                    if ($useMatchForCustomFieldsTableSearch === 'true' && startsWith($columnName, 'ctable_')) {
-                        $sMatchCustomFields[] = $columnName;
-                    } else {
-                        $sWhere .= 'convert(' . $columnName . ' USING utf8)' . " LIKE '%" . $search_value . "%' OR ";
-                    }
+                    $sWhere .= 'convert(' . $columnName . ' USING utf8)' . " LIKE '%" . $search_value . "%' OR ";
                 }
             }
         }
-
-        if (count($sMatchCustomFields) > 0) {
-            foreach ($sMatchCustomFields as $matchCustomField) {
-                $sWhere .= "MATCH ({$matchCustomField}) AGAINST (CONVERT(BINARY('{$search_value}') USING utf8)) OR ";
-            }
-        }
-
         if (count($additionalSelect) > 0) {
             foreach ($additionalSelect as $searchAdditionalField) {
                 if (strpos($searchAdditionalField, ' as ') !== false) {
@@ -147,7 +124,7 @@ function data_tables_init($aColumns, $sIndexColumn, $sTable, $join = [], $where 
                 if (stripos($columnName, 'AVG(') !== false || stripos($columnName, 'SUM(') !== false) {
                 } else {
                     // Use index
-                    $sWhere .= 'convert(' . $searchAdditionalField . ' USING utf8)' . " LIKE '%" . $search_value . "%' OR ";
+                    $sWhere .= 'convert(' . $searchAdditionalField . ' USING utf8)' . " LIKE '" . $search_value . "%' OR ";
                 }
             }
         }
@@ -195,8 +172,8 @@ function data_tables_init($aColumns, $sIndexColumn, $sTable, $join = [], $where 
     $where = implode(' ', $where);
     if ($sWhere == '') {
         $where = trim($where);
-        if (startsWith($where, 'AND') || startsWith($where, 'OR')) {
-            if (startsWith($where, 'OR')) {
+        if (_startsWith($where, 'AND') || _startsWith($where, 'OR')) {
+            if (_startsWith($where, 'OR')) {
                 $where = substr($where, 2);
             } else {
                 $where = substr($where, 3);
@@ -220,11 +197,14 @@ function data_tables_init($aColumns, $sIndexColumn, $sTable, $join = [], $where 
 
     $rResult = $CI->db->query($sQuery)->result_array();
 
-    $rResult = hooks()->apply_filters('datatables_sql_query_results', $rResult, [
-        'table' => $sTable,
-        'limit' => $sLimit,
-        'order' => $sOrder,
-    ]);
+    $hookData = do_action('datatables_sql_query_results', [
+        'results' => $rResult,
+        'table'   => $sTable,
+        'limit'   => $sLimit,
+        'order'   => $sOrder,
+        ]);
+
+    $rResult = $hookData['results'];
 
     /* Data set length after filtering */
     $sQuery = '
@@ -232,7 +212,7 @@ function data_tables_init($aColumns, $sIndexColumn, $sTable, $join = [], $where 
     ';
     $_query         = $CI->db->query($sQuery)->result_array();
     $iFilteredTotal = $_query[0]['FOUND_ROWS()'];
-    if (startsWith($where, 'AND')) {
+    if (_startsWith($where, 'AND')) {
         $where = 'WHERE ' . substr($where, 3);
     }
     /* Total data set length */
@@ -265,14 +245,14 @@ function data_tables_init($aColumns, $sIndexColumn, $sTable, $join = [], $where 
  */
 function get_null_columns_that_should_be_sorted_as_last()
 {
-    $columns = [
-        db_prefix().'projects.deadline',
-        db_prefix().'tasks.duedate',
-        db_prefix().'contracts.dateend',
-        db_prefix().'subscriptions.date_subscribed',
+    $dueDateColumns = [
+        'tblprojects.deadline',
+        'tblstafftasks.duedate',
+        'tblcontracts.dateend',
+        'tblsubscriptions.date_subscribed',
     ];
 
-    return hooks()->apply_filters('null_columns_sort_as_last', $columns);
+    return do_action('sorting_due_date_columns', $dueDateColumns);
 }
 /**
  * Render table used for datatables
@@ -362,7 +342,7 @@ function get_datatables_language_array()
         ],
     ];
 
-    return hooks()->apply_filters('datatables_language_array', $lang);
+    return do_action('datatables_language_array', $lang);
 }
 
 /**
@@ -374,9 +354,9 @@ function get_datatables_language_array()
 function prepare_dt_filter($filter)
 {
     $filter = implode(' ', $filter);
-    if (startsWith($filter, 'AND')) {
+    if (_startsWith($filter, 'AND')) {
         $filter = substr($filter, 3);
-    } elseif (startsWith($filter, 'OR')) {
+    } elseif (_startsWith($filter, 'OR')) {
         $filter = substr($filter, 2);
     }
 

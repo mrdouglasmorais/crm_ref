@@ -32,9 +32,9 @@
                      </div>
                      <div class="panel-body">
                         <?php foreach($group['articles'] as $article) {
-                           $total_answers = total_rows(db_prefix().'knowedge_base_article_feedback',array('articleid'=>$article['articleid']));
-                           $total_yes_answers = total_rows(db_prefix().'knowedge_base_article_feedback',array('articleid'=>$article['articleid'],'answer'=>1));
-                           $total_no_answers = total_rows(db_prefix().'knowedge_base_article_feedback',array('articleid'=>$article['articleid'],'answer'=>0));
+                           $total_answers = total_rows('tblknowledgebasearticleanswers',array('articleid'=>$article['articleid']));
+                           $total_yes_answers = total_rows('tblknowledgebasearticleanswers',array('articleid'=>$article['articleid'],'answer'=>1));
+                           $total_no_answers = total_rows('tblknowledgebasearticleanswers',array('articleid'=>$article['articleid'],'answer'=>0));
                            $percent_yes = 0;
                            $percent_no = 0;
                            if($total_yes_answers > 0){

@@ -5,11 +5,11 @@ defined('BASEPATH') or exit('No direct script access allowed');
 $aColumns = [
     'subject',
     'last_activity',
-    '(SELECT COUNT(*) FROM '.db_prefix().'projectdiscussioncomments WHERE discussion_id = '.db_prefix().'projectdiscussions.id AND discussion_type="regular")',
+    '(SELECT COUNT(*) FROM tblprojectdiscussioncomments WHERE discussion_id = tblprojectdiscussions.id AND discussion_type="regular")',
     'show_to_customer',
     ];
 $sIndexColumn = 'id';
-$sTable       = db_prefix().'projectdiscussions';
+$sTable       = 'tblprojectdiscussions';
 $result       = data_tables_init($aColumns, $sIndexColumn, $sTable, [], ['AND project_id=' . $project_id], [
     'id',
     'description',
@@ -40,7 +40,7 @@ foreach ($rResult as $aRow) {
             }
         } elseif ($aColumns[$i] == 'last_activity') {
             if (!is_null($_data)) {
-                $_data = '<span class="text-has-action is-date" data-toggle="tooltip" data-title="' . _dt($_data) . '">' . time_ago($_data) . '</span>';
+                $_data = '<span class="text-has-action" data-toggle="tooltip" data-title="' . _dt($_data) . '">' . time_ago($_data) . '</span>';
             } else {
                 $_data = _l('project_discussion_no_activity');
             }

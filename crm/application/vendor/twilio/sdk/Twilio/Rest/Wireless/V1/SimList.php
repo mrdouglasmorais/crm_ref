@@ -128,8 +128,7 @@ class SimList extends ListResource {
     /**
      * Constructs a SimContext
      * 
-     * @param string $sid A 34 character string that uniquely identifies this
-     *                    resource.
+     * @param string $sid The sid
      * @return \Twilio\Rest\Wireless\V1\SimContext 
      */
     public function getContext($sid) {

@@ -2,7 +2,7 @@
 
 defined('BASEPATH') or exit('No direct script access allowed');
 
-$total_client_contacts = total_rows(db_prefix() . 'contacts', ['userid' => $client_id]);
+$total_client_contacts = total_rows('tblcontacts', ['userid' => $client_id]);
 $this->ci->load->model('gdpr_model');
 
 $consentContacts = get_option('gdpr_enable_consent_for_contacts');
@@ -19,7 +19,7 @@ $aColumns = array_merge($aColumns, [
 ]);
 
 $sIndexColumn = 'id';
-$sTable       = db_prefix() . 'contacts';
+$sTable       = 'tblcontacts';
 $join         = [];
 
 $custom_fields = get_table_custom_fields('contacts');
@@ -28,7 +28,7 @@ foreach ($custom_fields as $key => $field) {
     $selectAs = (is_cf_date($field) ? 'date_picker_cvalue_' . $key : 'cvalue_' . $key);
     array_push($customFieldsColumns, $selectAs);
     array_push($aColumns, 'ctable_' . $key . '.value as ' . $selectAs);
-    array_push($join, 'LEFT JOIN ' . db_prefix() . 'customfieldsvalues as ctable_' . $key . ' ON ' . db_prefix() . 'contacts.id = ctable_' . $key . '.relid AND ctable_' . $key . '.fieldto="' . $field['fieldto'] . '" AND ctable_' . $key . '.fieldid=' . $field['id']);
+    array_push($join, 'LEFT JOIN tblcustomfieldsvalues as ctable_' . $key . ' ON tblcontacts.id = ctable_' . $key . '.relid AND ctable_' . $key . '.fieldto="' . $field['fieldto'] . '" AND ctable_' . $key . '.fieldid=' . $field['id']);
 }
 
 $where = ['AND userid=' . $client_id];
@@ -38,7 +38,7 @@ if (count($custom_fields) > 4) {
     @$this->ci->db->query('SET SQL_BIG_SELECTS=1');
 }
 
-$result = data_tables_init($aColumns, $sIndexColumn, $sTable, $join, $where, [db_prefix() . 'contacts.id as id', 'userid', 'is_primary']);
+$result = data_tables_init($aColumns, $sIndexColumn, $sTable, $join, $where, ['tblcontacts.id as id', 'userid', 'is_primary']);
 
 $output  = $result['output'];
 $rResult = $result['rResult'];
@@ -54,7 +54,7 @@ foreach ($rResult as $aRow) {
 
     if (is_gdpr() && get_option('gdpr_data_portability_contacts') == '1' && is_admin()) {
         $rowName .= ' | <a href="' . admin_url('clients/export/' . $aRow['id']) . '">
-             ' . _l('dt_button_export') . ' (' . _l('gdpr_short') . ')
+             ' . _l('dt_button_export') . ' ('._l('gdpr_short').')
           </a>';
     }
 
@@ -85,14 +85,14 @@ foreach ($rResult as $aRow) {
     $row[] = '<a href="tel:' . $aRow['phonenumber'] . '">' . $aRow['phonenumber'] . '</a>';
 
     $outputActive = '<div class="onoffswitch">
-                <input type="checkbox"' . (total_rows(db_prefix() . 'clients', 'registration_confirmed=0 AND userid=' . $aRow['userid']) > 0 ? ' disabled' : '') . ' data-switch-url="' . admin_url() . 'clients/change_contact_status" name="onoffswitch" class="onoffswitch-checkbox" id="c_' . $aRow['id'] . '" data-id="' . $aRow['id'] . '"' . ($aRow['active'] == 1 ? ' checked': '') . '>
+                <input type="checkbox"'.(total_rows('tblclients','registration_confirmed=0 AND userid='.$aRow['userid']) > 0 ? ' disabled' : '').' data-switch-url="' . admin_url() . 'clients/change_contact_status" name="onoffswitch" class="onoffswitch-checkbox" id="c_' . $aRow['id'] . '" data-id="' . $aRow['id'] . '"' . ($aRow['active'] == 1 ? ' checked': '') . '>
                 <label class="onoffswitch-label" for="c_' . $aRow['id'] . '"></label>
             </div>';
     // For exporting
     $outputActive .= '<span class="hide">' . ($aRow['active'] == 1 ? _l('is_active_export') : _l('is_not_active_export')) . '</span>';
     $row[] = $outputActive;
 
-    $row[] = (!empty($aRow['last_login']) ? '<span class="text-has-action is-date" data-toggle="tooltip" data-title="' . _dt($aRow['last_login']) . '">' . time_ago($aRow['last_login']) . '</span>' : '');
+    $row[] = (!empty($aRow['last_login']) ? '<span class="text-has-action" data-toggle="tooltip" data-title="' . _dt($aRow['last_login']) . '">' . time_ago($aRow['last_login']) . '</span>' : '');
 
     // Custom fields add values
     foreach ($customFieldsColumns as $customFieldColumn) {

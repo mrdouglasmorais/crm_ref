@@ -23,7 +23,7 @@
                         <hr />
                         <a href="#" class="pull-right" id="get_shipping_from_customer_profile" data-placement="left" data-toggle="tooltip" title="<?php echo _l('get_shipping_from_customer_profile'); ?>"><i class="fa fa-user"></i></a>
                         <div class="clearfix"></div>
-                      <div class="form-group no-mbot">
+                      <div class="form-group">
                             <div class="checkbox checkbox-primary checkbox-inline">
                             <input type="checkbox" id="include_shipping" name="include_shipping" <?php if(isset($invoice) && $invoice->include_shipping == 1){echo 'checked';} ?>>
                             <label for="include_shipping"><?php echo _l('shipping_address'); ?></label>

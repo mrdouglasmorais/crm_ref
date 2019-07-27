@@ -1,7 +1,7 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <div class="col-md-12 no-padding animated fadeIn">
     <div class="panel_s">
-        <?php echo form_open(admin_url('invoices/record_payment'),array('id'=>'record_payment_form')); ?>
+        <?php echo form_open('admin/invoices/record_payment',array('id'=>'record_payment_form')); ?>
         <?php echo form_hidden('invoiceid',$invoice->id); ?>
         <div class="panel-body">
             <h4 class="no-margin"><?php echo _l('record_payment_for_invoice'); ?> <?php echo format_invoice_number($invoice->id); ?></h4>
@@ -36,7 +36,7 @@
                         </div>
                         <?php
                     }
-                    $pr_template = total_rows(db_prefix().'emailtemplates',array('slug'=>'invoice-payment-recorded','active'=>0)) == 0;
+                    $pr_template = total_rows('tblemailtemplates',array('slug'=>'invoice-payment-recorded','active'=>0)) == 0;
                     $sms_trigger = is_sms_trigger_active(SMS_TRIGGER_PAYMENT_RECORDED);
                     if($pr_template || $sms_trigger){ ?>
                     <div class="checkbox checkbox-primary mtop15 inline-block">
@@ -89,7 +89,7 @@
    $(function(){
      init_selectpicker();
      init_datepicker();
-     appValidateForm($('#record_payment_form'),{amount:'required',date:'required',paymentmode:'required'});
+     _validate_form($('#record_payment_form'),{amount:'required',date:'required',paymentmode:'required'});
      var $sMode = $('select[name="paymentmode"]');
      var total_available_payment_modes = $sMode.find('option').length - 1;
      if(total_available_payment_modes == 1) {

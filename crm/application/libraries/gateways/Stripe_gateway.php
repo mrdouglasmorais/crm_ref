@@ -68,6 +68,12 @@ class Stripe_gateway extends App_gateway
                 'label'         => 'settings_paymentmethod_testing_mode',
             ],
         ]);
+
+        /**
+         * REQUIRED
+         * Hook gateway with other online payment modes
+         */
+        add_action('before_add_online_payment_modes', [ $this, 'initMode' ]);
     }
 
     public function process_payment($data)
@@ -115,7 +121,7 @@ class Stripe_gateway extends App_gateway
             ]);
 
             $this->ci->db->where('userid', $client->userid);
-            $this->ci->db->update(db_prefix().'clients', ['stripe_id' => $stripeCustomer->id]);
+            $this->ci->db->update('tblclients', ['stripe_id' => $stripeCustomer->id]);
             $charge['customer'] = $stripeCustomer->id;
         } elseif (isset($data['stripeToken']) && !empty($stripeCustomerId)) {
             $stripeCustomer = $this->ci->stripe_core->get_customer($stripeCustomerId);
@@ -144,7 +150,7 @@ class Stripe_gateway extends App_gateway
             }
         }
 
-        $result = $this->ci->stripe_core->create_charge($charge);
+        $result = $this->ci->stripe_core->charge($charge);
 
         return $result;
     }

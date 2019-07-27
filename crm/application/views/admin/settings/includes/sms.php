@@ -1,8 +1,8 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed');
-hooks()->do_action('before_sms_gateways_settings');
+do_action('before_sms_gateways_settings');
 
-$gateways = $this->app_sms->get_gateways();
-$triggers = $this->app_sms->get_available_triggers();
+$gateways = $this->sms->get_gateways();
+$triggers = $this->sms->get_available_triggers();
 $total_gateways = count($gateways);
 
 if($total_gateways > 1) { ?>
@@ -21,7 +21,7 @@ if($total_gateways > 1) { ?>
             </a>
         </h4>
     </div>
-    <div id="sms_<?php echo $gateway['id']; ?>" class="panel-collapse collapse<?php if($this->app_sms->get_option($gateway['id'],'active') == 1 || $total_gateways == 1){echo ' in';} ?>" role="tabpanel" aria-labelledby="<?php echo 'heading'.$gateway['id']; ?>">
+    <div id="sms_<?php echo $gateway['id']; ?>" class="panel-collapse collapse<?php if($this->sms->get_option($gateway['id'],'active') == 1 || $total_gateways == 1){echo ' in';} ?>" role="tabpanel" aria-labelledby="<?php echo 'heading'.$gateway['id']; ?>">
       <div class="panel-body no-br-tlr no-border-color">
 
         <?php
@@ -30,16 +30,16 @@ if($total_gateways > 1) { ?>
         }
 
         foreach($gateway['options'] as $g_option){
-            echo render_input('settings['.$this->app_sms->option_name($gateway['id'],$g_option['name']).']',$g_option['label'],$this->app_sms->get_option($gateway['id'],$g_option['name']));
+            echo render_input('settings['.$this->sms->option_name($gateway['id'],$g_option['name']).']',$g_option['label'],$this->sms->get_option($gateway['id'],$g_option['name']));
             if(isset($g_option['info'])) {
                 echo $g_option['info'];
             }
         }
         echo '<div class="sms_gateway_active">';
 
-        echo render_yes_no_option($this->app_sms->option_name($gateway['id'],'active'),'Active');
+        echo render_yes_no_option($this->sms->option_name($gateway['id'],'active'),'Active');
         echo '</div>';
-            if(get_option($this->app_sms->option_name($gateway['id'],'active')) == '1') {
+            if(get_option($this->sms->option_name($gateway['id'],'active')) == '1') {
                 echo '<hr />';
                 echo '<h4 class="mbot15">'._l('test_sms_config').'</h4>';
                 echo '<div class="form-group"><input type="text" placeholder="'._l('staff_add_edit_phonenumber').'" class="form-control test-phone" data-id="'.$gateway['id'].'"></div>';
@@ -66,7 +66,7 @@ foreach($triggers as $trigger_name => $trigger_opts) {
     if(isset($trigger_opts['info']) && $trigger_opts['info'] != ''){
      $label .= '<p>'.$trigger_opts['info'].'</p>';
     }
-    echo render_textarea('settings[' .$this->app_sms->trigger_option_name($trigger_name).']',$label,$trigger_opts['value']);
+    echo render_textarea('settings[' .$this->sms->trigger_option_name($trigger_name).']',$label,$trigger_opts['value']);
 
     $merge_fields = '';
 

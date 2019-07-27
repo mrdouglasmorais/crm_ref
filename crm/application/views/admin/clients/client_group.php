@@ -28,7 +28,7 @@
 </div>
 <script>
     window.addEventListener('load',function(){
-       appValidateForm($('#customer-group-modal'), {
+       _validate_form($('#customer-group-modal'), {
         name: 'required'
     }, manage_customer_groups);
 

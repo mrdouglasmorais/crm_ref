@@ -8,7 +8,7 @@ defined('BASEPATH') or exit('No direct script access allowed');
  */
 function _perfex_upload_error($error)
 {
-    $uploadErrors = [
+    $phpFileUploadErrors = [
         0 => _l('file_uploaded_success'),
         1 => _l('file_exceeds_max_filesize'),
         2 => _l('file_exceeds_maxfile_size_in_form'),
@@ -19,8 +19,8 @@ function _perfex_upload_error($error)
         8 => _l('file_php_extension_blocked'),
     ];
 
-    if (isset($uploadErrors[$error]) && $error != 0) {
-        return $uploadErrors[$error];
+    if (isset($phpFileUploadErrors[$error]) && $error != 0) {
+        return $phpFileUploadErrors[$error];
     }
 
     return false;
@@ -40,7 +40,7 @@ function handle_newsfeed_post_attachments($postid)
     $path = get_upload_path_by_type('newsfeed') . $postid . '/';
     $CI   = & get_instance();
     if (isset($_FILES['file']['name'])) {
-        hooks()->do_action('before_upload_newsfeed_attachment', $postid);
+        do_action('before_upload_newsfeed_attachment', $postid);
         $uploaded_files = false;
         // Get the temp file path
         $tmpFilePath = $_FILES['file']['tmp_name'];
@@ -88,7 +88,7 @@ function handle_project_file_uploads($project_id)
 
     if (isset($_FILES['file']['name'])
         && ($_FILES['file']['name'] != '' || is_array($_FILES['file']['name']) && count($_FILES['file']['name']) > 0)) {
-        hooks()->do_action('before_upload_project_attachment', $project_id);
+        do_action('before_upload_project_attachment', $project_id);
 
         if (!is_array($_FILES['file']['name'])) {
             $_FILES['file']['name']     = [$_FILES['file']['name']];
@@ -144,7 +144,7 @@ function handle_project_file_uploads($project_id)
                     } else {
                         $data['visible_to_customer'] = ($CI->input->post('visible_to_customer') == 'true' ? 1 : 0);
                     }
-                    $CI->db->insert(db_prefix().'project_files', $data);
+                    $CI->db->insert('tblprojectfiles', $data);
 
                     $insert_id = $CI->db->insert_id();
                     if ($insert_id) {
@@ -198,7 +198,7 @@ function handle_contract_attachment($id)
         die;
     }
     if (isset($_FILES['file']['name']) && $_FILES['file']['name'] != '') {
-        hooks()->do_action('before_upload_contract_attachment', $id);
+        do_action('before_upload_contract_attachment', $id);
         $path = get_upload_path_by_type('contract') . $id . '/';
         // Get the temp file path
         $tmpFilePath = $_FILES['file']['tmp_name'];
@@ -243,7 +243,7 @@ function handle_lead_attachments($leadid, $index_name = 'file', $form_activity =
 
     $CI = & get_instance();
     if (isset($_FILES[$index_name]['name']) && $_FILES[$index_name]['name'] != '') {
-        hooks()->do_action('before_upload_lead_attachment', $leadid);
+        do_action('before_upload_lead_attachment', $leadid);
         $path = get_upload_path_by_type('lead') . $leadid . '/';
         // Get the temp file path
         $tmpFilePath = $_FILES[$index_name]['tmp_name'];
@@ -354,7 +354,6 @@ function handle_sales_attachments($rel_id, $rel_type)
     $CI = & get_instance();
     if (isset($_FILES['file']['name'])) {
         $uploaded_files = false;
-        $file_uploaded = false;
         // Get the temp file path
         $tmpFilePath = $_FILES['file']['tmp_name'];
         // Make sure we have a filepath
@@ -375,7 +374,7 @@ function handle_sales_attachments($rel_id, $rel_type)
                 $insert_id = $CI->misc_model->add_attachment_to_database($rel_id, $rel_type, $attachment);
                 // Get the key so we can return to ajax request and show download link
                 $CI->db->where('id', $insert_id);
-                $_attachment = $CI->db->get(db_prefix().'files')->row();
+                $_attachment = $CI->db->get('tblfiles')->row();
                 $key         = $_attachment->attachment_key;
 
                 if ($rel_type == 'invoice') {
@@ -387,7 +386,6 @@ function handle_sales_attachments($rel_id, $rel_type)
                 }
             }
         }
-
         if ($file_uploaded == true) {
             echo json_encode([
                 'success'       => true,
@@ -413,8 +411,8 @@ function handle_sales_attachments($rel_id, $rel_type)
  */
 function handle_client_attachments_upload($id, $customer_upload = false)
 {
-    $path          = get_upload_path_by_type('customer') . $id . '/';
-    $CI            = & get_instance();
+    $path = get_upload_path_by_type('customer') . $id . '/';
+    $CI   = & get_instance();
     $totalUploaded = 0;
 
     if (isset($_FILES['file']['name'])
@@ -429,7 +427,7 @@ function handle_client_attachments_upload($id, $customer_upload = false)
 
         _file_attachments_index_fix('file');
         for ($i = 0; $i < count($_FILES['file']['name']); $i++) {
-            hooks()->do_action('before_upload_client_attachment', $id);
+            do_action('before_upload_client_attachment', $id);
             // Get the temp file path
             $tmpFilePath = $_FILES['file']['tmp_name'][$i];
             // Make sure we have a filepath
@@ -485,7 +483,7 @@ function handle_expense_attachments($id)
     $CI   = & get_instance();
 
     if (isset($_FILES['file']['name'])) {
-        hooks()->do_action('before_upload_expense_attachment', $id);
+        do_action('before_upload_expense_attachment', $id);
         // Get the temp file path
         $tmpFilePath = $_FILES['file']['tmp_name'];
         // Make sure we have a filepath
@@ -520,15 +518,17 @@ function handle_ticket_attachments($ticketid, $index_name = 'attachments')
         _file_attachments_index_fix($index_name);
 
         for ($i = 0; $i < count($_FILES[$index_name]['name']); $i++) {
-            hooks()->do_action('before_upload_ticket_attachment', $ticketid);
+            do_action('before_upload_ticket_attachment', $ticketid);
             if ($i <= get_option('maximum_allowed_ticket_attachments')) {
                 // Get the temp file path
                 $tmpFilePath = $_FILES[$index_name]['tmp_name'][$i];
                 // Make sure we have a filepath
                 if (!empty($tmpFilePath) && $tmpFilePath != '') {
                     // Getting file extension
-                    $extension = strtolower(pathinfo($_FILES[$index_name]['name'][$i], PATHINFO_EXTENSION));
+                    $path_parts = pathinfo($_FILES[$index_name]['name'][$i]);
+                    $extension  = $path_parts['extension'];
 
+                    $extension          = strtolower($extension);
                     $allowed_extensions = explode(',', get_option('ticket_attachments_file_extensions'));
                     $allowed_extensions = array_map('trim', $allowed_extensions);
                     // Check for all cases if this extension is allowed
@@ -572,22 +572,22 @@ function handle_company_logo_upload()
             return false;
         }
         if (isset($_FILES[$index]['name']) && $_FILES[$index]['name'] != '') {
-            hooks()->do_action('before_upload_company_logo_attachment');
+            do_action('before_upload_company_logo_attachment');
             $path = get_upload_path_by_type('company');
             // Get the temp file path
             $tmpFilePath = $_FILES[$index]['tmp_name'];
             // Make sure we have a filepath
             if (!empty($tmpFilePath) && $tmpFilePath != '') {
                 // Getting file extension
-                $extension          = strtolower(pathinfo($_FILES[$index]['name'], PATHINFO_EXTENSION));
+                $path_parts         = pathinfo($_FILES[$index]['name']);
+                $extension          = $path_parts['extension'];
+                $extension          = strtolower($extension);
                 $allowed_extensions = [
-                    'jpg',
-                    'jpeg',
-                    'png',
-                    'gif',
-                ];
-
-                $allowed_extensions = hooks()->apply_filters('company_logo_upload_allowed_extensions', $allowed_extensions);
+                'jpg',
+                'jpeg',
+                'png',
+                'gif',
+            ];
 
                 if (!in_array($extension, $allowed_extensions)) {
                     set_alert('warning', 'Image extension not allowed.');
@@ -623,7 +623,7 @@ function handle_company_signature_upload()
         return false;
     }
     if (isset($_FILES['signature_image']['name']) && $_FILES['signature_image']['name'] != '') {
-        hooks()->do_action('before_upload_signature_image_attachment');
+        do_action('before_upload_signature_image_attachment');
         $path = get_upload_path_by_type('company');
         // Get the temp file path
         $tmpFilePath = $_FILES['signature_image']['tmp_name'];
@@ -666,7 +666,7 @@ function handle_company_signature_upload()
 function handle_favicon_upload()
 {
     if (isset($_FILES['favicon']['name']) && $_FILES['favicon']['name'] != '') {
-        hooks()->do_action('before_upload_favicon_attachment');
+        do_action('before_upload_favicon_attachment');
         $path = get_upload_path_by_type('company');
         // Get the temp file path
         $tmpFilePath = $_FILES['favicon']['tmp_name'];
@@ -703,22 +703,21 @@ function handle_staff_profile_image_upload($staff_id = '')
         $staff_id = get_staff_user_id();
     }
     if (isset($_FILES['profile_image']['name']) && $_FILES['profile_image']['name'] != '') {
-        hooks()->do_action('before_upload_staff_profile_image');
+        do_action('before_upload_staff_profile_image');
         $path = get_upload_path_by_type('staff') . $staff_id . '/';
         // Get the temp file path
         $tmpFilePath = $_FILES['profile_image']['tmp_name'];
         // Make sure we have a filepath
         if (!empty($tmpFilePath) && $tmpFilePath != '') {
             // Getting file extension
-            $extension          = strtolower(pathinfo($_FILES['profile_image']['name'], PATHINFO_EXTENSION));
+            $path_parts         = pathinfo($_FILES['profile_image']['name']);
+            $extension          = $path_parts['extension'];
+            $extension          = strtolower($extension);
             $allowed_extensions = [
                 'jpg',
                 'jpeg',
                 'png',
             ];
-
-            $allowed_extensions = hooks()->apply_filters('staff_profile_image_upload_allowed_extensions', $allowed_extensions);
-
             if (!in_array($extension, $allowed_extensions)) {
                 set_alert('warning', _l('file_php_extension_blocked'));
 
@@ -735,8 +734,8 @@ function handle_staff_profile_image_upload($staff_id = '')
                 $config['source_image']   = $newFilePath;
                 $config['new_image']      = 'thumb_' . $filename;
                 $config['maintain_ratio'] = true;
-                $config['width']          = hooks()->apply_filters('staff_profile_image_thumb_width', 320);
-                $config['height']         = hooks()->apply_filters('staff_profile_image_thumb_height', 320);
+                $config['width']          = 160;
+                $config['height']         = 160;
                 $CI->image_lib->initialize($config);
                 $CI->image_lib->resize();
                 $CI->image_lib->clear();
@@ -744,12 +743,12 @@ function handle_staff_profile_image_upload($staff_id = '')
                 $config['source_image']   = $newFilePath;
                 $config['new_image']      = 'small_' . $filename;
                 $config['maintain_ratio'] = true;
-                $config['width']          = hooks()->apply_filters('staff_profile_image_small_width', 32);
-                $config['height']         = hooks()->apply_filters('staff_profile_image_small_height', 32);
+                $config['width']          = 32;
+                $config['height']         = 32;
                 $CI->image_lib->initialize($config);
                 $CI->image_lib->resize();
                 $CI->db->where('staffid', $staff_id);
-                $CI->db->update(db_prefix().'staff', [
+                $CI->db->update('tblstaff', [
                     'profile_image' => $filename,
                 ]);
                 // Remove original image
@@ -771,7 +770,7 @@ function handle_staff_profile_image_upload($staff_id = '')
 function handle_contact_profile_image_upload($contact_id = '')
 {
     if (isset($_FILES['profile_image']['name']) && $_FILES['profile_image']['name'] != '') {
-        hooks()->do_action('before_upload_contact_profile_image');
+        do_action('before_upload_contact_profile_image');
         if ($contact_id == '') {
             $contact_id = get_contact_user_id();
         }
@@ -781,16 +780,14 @@ function handle_contact_profile_image_upload($contact_id = '')
         // Make sure we have a filepath
         if (!empty($tmpFilePath) && $tmpFilePath != '') {
             // Getting file extension
-            $extension = strtolower(pathinfo($_FILES['profile_image']['name'], PATHINFO_EXTENSION));
-
+            $path_parts         = pathinfo($_FILES['profile_image']['name']);
+            $extension          = $path_parts['extension'];
+            $extension          = strtolower($extension);
             $allowed_extensions = [
                 'jpg',
                 'jpeg',
                 'png',
             ];
-
-            $allowed_extensions = hooks()->apply_filters('contact_profile_image_upload_allowed_extensions', $allowed_extensions);
-
             if (!in_array($extension, $allowed_extensions)) {
                 set_alert('warning', _l('file_php_extension_blocked'));
 
@@ -807,8 +804,8 @@ function handle_contact_profile_image_upload($contact_id = '')
                 $config['source_image']   = $newFilePath;
                 $config['new_image']      = 'thumb_' . $filename;
                 $config['maintain_ratio'] = true;
-                $config['width']          = hooks()->apply_filters('contact_profile_image_thumb_width', 320);
-                $config['height']         = hooks()->apply_filters('contact_profile_image_thumb_height', 320);
+                $config['width']          = 160;
+                $config['height']         = 160;
                 $CI->image_lib->initialize($config);
                 $CI->image_lib->resize();
                 $CI->image_lib->clear();
@@ -816,13 +813,13 @@ function handle_contact_profile_image_upload($contact_id = '')
                 $config['source_image']   = $newFilePath;
                 $config['new_image']      = 'small_' . $filename;
                 $config['maintain_ratio'] = true;
-                $config['width']          = hooks()->apply_filters('contact_profile_image_small_width', 32);
-                $config['height']         = hooks()->apply_filters('contact_profile_image_small_height', 32);
+                $config['width']          = 32;
+                $config['height']         = 32;
                 $CI->image_lib->initialize($config);
                 $CI->image_lib->resize();
 
                 $CI->db->where('id', $contact_id);
-                $CI->db->update(db_prefix().'contacts', [
+                $CI->db->update('tblcontacts', [
                     'profile_image' => $filename,
                 ]);
                 // Remove original image
@@ -852,7 +849,7 @@ function handle_project_discussion_comment_attachments($discussion_id, $post_dat
     }
 
     if (isset($_FILES['file']['name'])) {
-        hooks()->do_action('before_upload_project_discussion_comment_attachment');
+        do_action('before_upload_project_discussion_comment_attachment');
         $path = PROJECT_DISCUSSION_ATTACHMENT_FOLDER . $discussion_id . '/';
 
         // Check for all cases if this extension is allowed
@@ -922,21 +919,11 @@ function create_img_thumb($path, $filename, $width = 300, $height = 300)
  */
 function _upload_extension_allowed($filename)
 {
-    $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
-
-    $browser = get_instance()->agent->browser();
-
+    $path_parts         = pathinfo($filename);
+    $extension          = $path_parts['extension'];
+    $extension          = strtolower($extension);
     $allowed_extensions = explode(',', get_option('allowed_files'));
     $allowed_extensions = array_map('trim', $allowed_extensions);
-
-    //  https://discussions.apple.com/thread/7229860
-    //  Used in main.js too for Dropzone
-    if(strtolower($browser) === 'safari'
-        && in_array('.jpg', $allowed_extensions)
-        && !in_array('.jpeg', $allowed_extensions)
-    ) {
-        $allowed_extensions[] = '.jpeg';
-    }
     // Check for all cases if this extension is allowed
     if (!in_array('.' . $extension, $allowed_extensions)) {
         return false;
@@ -984,7 +971,7 @@ function _file_attachments_index_fix($index_name)
 function _maybe_create_upload_path($path)
 {
     if (!file_exists($path)) {
-        mkdir($path, 0755);
+        mkdir($path);
         fopen(rtrim($path, '/') . '/' . 'index.html', 'w');
     }
 }
@@ -1060,5 +1047,7 @@ function get_upload_path_by_type($type)
         break;
     }
 
-    return hooks()->apply_filters('get_upload_path_by_type', $path, $type);
+    $hookData = do_action('get_upload_path_by_type', ['path' => $path, 'type' => $type]);
+
+    return $hookData['path'];
 }

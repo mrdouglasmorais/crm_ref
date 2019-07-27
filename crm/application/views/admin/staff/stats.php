@@ -3,7 +3,7 @@
   $column = 'col-md-5ths';
 }
 ?>
-<div class="staff_logged_time" data-toggle="tooltip" data-title="<?php echo _l('task_timesheets'); ?>" data-placement="left">
+<div class="staff_logged_time">
  <div class="<?php echo $column; ?> col-sm-6 col-xs-12 total-column">
    <div class="panel_s">
     <div class="panel-body">

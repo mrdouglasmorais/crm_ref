@@ -23,11 +23,8 @@
          <div class="col-md-12">
             <div class="row">
                <div class="col-md-8">
-                  <?php if($proposal['total'] != 0){
-                     ?>
-                  <span class="bold"><?php echo _l('proposal_total'); ?>:
-                     <?php echo app_format_money($proposal['total'], get_currency($proposal['currency'])); ?>
-                  </span>
+                  <?php if($proposal['total'] != 0){ ?>
+                  <span class="bold"><?php echo _l('proposal_total'); ?>: <?php echo format_money($proposal['total'],$this->currencies_model->get($proposal['currency'])->symbol); ?></span>
                   <br />
                   <?php } ?>
                   <?php echo _l('proposal_date'); ?>: <?php echo _d($proposal['date']); ?>
@@ -38,7 +35,7 @@
                   <br />
                </div>
                <div class="col-md-4 text-right">
-                  <small><i class="fa fa-comments" aria-hidden="true"></i> <?php echo _l('proposal_comments'); ?>: <?php echo total_rows(db_prefix().'proposal_comments', array(
+                  <small><i class="fa fa-comments" aria-hidden="true"></i> <?php echo _l('proposal_comments'); ?>: <?php echo total_rows('tblproposalcomments', array(
                      'proposalid' => $proposal['id']
                      )); ?></small>
                </div>

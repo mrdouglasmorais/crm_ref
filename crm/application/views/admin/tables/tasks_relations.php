@@ -8,18 +8,18 @@ $tasksPriorities     = get_tasks_priorities();
 
 $aColumns = [
     '1', // bulk actions
-    db_prefix() . 'tasks.id as id',
-    db_prefix() . 'tasks.name as task_name',
+    'tblstafftasks.id as id',
+    'name',
     'status',
     'startdate',
     'duedate',
      get_sql_select_task_asignees_full_names() . ' as assignees',
-    '(SELECT GROUP_CONCAT(name SEPARATOR ",") FROM ' . db_prefix() . 'taggables JOIN ' . db_prefix() . 'tags ON ' . db_prefix() . 'taggables.tag_id = ' . db_prefix() . 'tags.id WHERE rel_id = ' . db_prefix() . 'tasks.id and rel_type="task" ORDER by tag_order ASC) as tags',
+    '(SELECT GROUP_CONCAT(name SEPARATOR ",") FROM tbltags_in JOIN tbltags ON tbltags_in.tag_id = tbltags.id WHERE rel_id = tblstafftasks.id and rel_type="task" ORDER by tag_order ASC) as tags',
     'priority',
 ];
 
 $sIndexColumn = 'id';
-$sTable       = db_prefix() . 'tasks';
+$sTable       = 'tblstafftasks';
 
 $where = [];
 include_once(APPPATH . 'views/admin/tables/includes/tasks_filter.php');
@@ -34,21 +34,21 @@ if (!$this->ci->input->post('tasks_related_to')) {
     $lastElement = end($tasks_related_to);
     foreach ($tasks_related_to as $rel_to) {
         if ($rel_to == 'invoice') {
-            $rel_to_query .= '(rel_id IN (SELECT id FROM ' . db_prefix() . 'invoices WHERE clientid=' . $rel_id . ')';
+            $rel_to_query .= '(rel_id IN (SELECT id FROM tblinvoices WHERE clientid=' . $rel_id . ')';
         } elseif ($rel_to == 'estimate') {
-            $rel_to_query .= '(rel_id IN (SELECT id FROM ' . db_prefix() . 'estimates WHERE clientid=' . $rel_id . ')';
+            $rel_to_query .= '(rel_id IN (SELECT id FROM tblestimates WHERE clientid=' . $rel_id . ')';
         } elseif ($rel_to == 'contract') {
-            $rel_to_query .= '(rel_id IN (SELECT id FROM ' . db_prefix() . 'contracts WHERE client=' . $rel_id . ')';
+            $rel_to_query .= '(rel_id IN (SELECT id FROM tblcontracts WHERE client=' . $rel_id . ')';
         } elseif ($rel_to == 'ticket') {
-            $rel_to_query .= '(rel_id IN (SELECT ticketid FROM ' . db_prefix() . 'tickets WHERE userid=' . $rel_id . ')';
+            $rel_to_query .= '(rel_id IN (SELECT ticketid FROM tbltickets WHERE userid=' . $rel_id . ')';
         } elseif ($rel_to == 'expense') {
-            $rel_to_query .= '(rel_id IN (SELECT id FROM ' . db_prefix() . 'expenses WHERE clientid=' . $rel_id . ')';
+            $rel_to_query .= '(rel_id IN (SELECT id FROM tblexpenses WHERE clientid=' . $rel_id . ')';
         } elseif ($rel_to == 'proposal') {
-            $rel_to_query .= '(rel_id IN (SELECT id FROM ' . db_prefix() . 'proposals WHERE rel_type=' . $rel_id . ' AND rel_type="customer")';
+            $rel_to_query .= '(rel_id IN (SELECT id FROM tblproposals WHERE rel_type=' . $rel_id . ' AND rel_type="customer")';
         } elseif ($rel_to == 'customer') {
-            $rel_to_query .= '(rel_id IN (SELECT userid FROM ' . db_prefix() . 'clients WHERE userid=' . $rel_id . ')';
+            $rel_to_query .= '(rel_id IN (SELECT userid FROM tblclients WHERE userid=' . $rel_id . ')';
         } elseif ($rel_to == 'project') {
-            $rel_to_query .= '(rel_id IN (SELECT id FROM ' . db_prefix() . 'projects WHERE clientid=' . $rel_id . ')';
+            $rel_to_query .= '(rel_id IN (SELECT id FROM tblprojects WHERE clientid=' . $rel_id . ')';
         }
 
         $rel_to_query .= ' AND rel_type="' . $rel_to . '")';
@@ -68,10 +68,10 @@ $custom_fields = get_table_custom_fields('tasks');
 foreach ($custom_fields as $key => $field) {
     $selectAs = (is_cf_date($field) ? 'date_picker_cvalue_' . $key : 'cvalue_' . $key);
     array_push($customFieldsColumns, $selectAs);
-    array_push($aColumns, '(SELECT value FROM ' . db_prefix() . 'customfieldsvalues WHERE ' . db_prefix() . 'customfieldsvalues.relid=' . db_prefix() . 'tasks.id AND ' . db_prefix() . 'customfieldsvalues.fieldid=' . $field['id'] . ' AND ' . db_prefix() . 'customfieldsvalues.fieldto="' . $field['fieldto'] . '" LIMIT 1) as ' . $selectAs);
+    array_push($aColumns, '(SELECT value FROM tblcustomfieldsvalues WHERE tblcustomfieldsvalues.relid=tblstafftasks.id AND tblcustomfieldsvalues.fieldid=' . $field['id'] . ' AND tblcustomfieldsvalues.fieldto="' . $field['fieldto'] . '" LIMIT 1) as ' . $selectAs);
 }
 
-$aColumns = hooks()->apply_filters('tasks_related_table_sql_columns', $aColumns);
+$aColumns = do_action('tasks_related_table_sql_columns', $aColumns);
 
 // Fix for big queries. Some hosting have max_join_limit
 if (count($custom_fields) > 4) {
@@ -81,10 +81,10 @@ if (count($custom_fields) > 4) {
 $result = data_tables_init($aColumns, $sIndexColumn, $sTable, $join, $where, [
     'billed',
     'recurring',
-    '(SELECT staffid FROM ' . db_prefix() . 'task_assigned WHERE taskid=' . db_prefix() . 'tasks.id AND staffid=' . get_staff_user_id() . ') as is_assigned',
+    '(SELECT staffid FROM tblstafftaskassignees WHERE taskid=tblstafftasks.id AND staffid=' . get_staff_user_id() . ') as is_assigned',
      get_sql_select_task_assignees_ids() . ' as assignees_ids',
-     '(SELECT MAX(id) FROM ' . db_prefix() . 'taskstimers WHERE task_id=' . db_prefix() . 'tasks.id and staff_id=' . get_staff_user_id() . ' and end_time IS NULL) as not_finished_timer_by_current_staff',
-       '(SELECT staffid FROM ' . db_prefix() . 'task_assigned WHERE taskid=' . db_prefix() . 'tasks.id AND staffid=' . get_staff_user_id() . ') as current_user_is_assigned',
+     '(SELECT MAX(id) FROM tbltaskstimers WHERE task_id=tblstafftasks.id and staff_id=' . get_staff_user_id() . ' and end_time IS NULL) as not_finished_timer_by_current_staff',
+       '(SELECT staffid FROM tblstafftaskassignees WHERE taskid=tblstafftasks.id AND staffid=' . get_staff_user_id() . ') as current_user_is_assigned',
         '(SELECT CASE WHEN addedfrom=' . get_staff_user_id() . ' AND is_added_from_contact=0 THEN 1 ELSE 0 END) as current_user_is_creator',
 ]);
 
@@ -104,7 +104,7 @@ foreach ($rResult as $aRow) {
         $outputName .= '<span class="pull-left text-danger"><i class="fa fa-clock-o fa-fw"></i></span>';
     }
 
-    $outputName .= '<a href="' . admin_url('tasks/view/' . $aRow['id']) . '" class="display-block main-tasks-table-href-name" onclick="init_task_modal(' . $aRow['id'] . '); return false;">' . $aRow['task_name'] . '</a>';
+    $outputName .= '<a href="' . admin_url('tasks/view/' . $aRow['id']) . '" class="display-block main-tasks-table-href-name" onclick="init_task_modal(' . $aRow['id'] . '); return false;">' . $aRow['name'] . '</a>';
 
     if ($aRow['recurring'] == 1) {
         $outputName .= '<span class="label label-primary inline-block mtop4"> ' . _l('recurring_task') . '</span>';
@@ -116,10 +116,10 @@ foreach ($rResult as $aRow) {
     $style = '';
 
     $tooltip = '';
-    if ($aRow['billed'] == 1 || !$aRow['is_assigned'] || $aRow['status'] == Tasks_model::STATUS_COMPLETE) {
+    if ($aRow['billed'] == 1 || !$aRow['is_assigned'] || $aRow['status'] == 5) {
         $class = 'text-dark disabled';
         $style = 'style="opacity:0.6;cursor: not-allowed;"';
-        if ($aRow['status'] == Tasks_model::STATUS_COMPLETE) {
+        if ($aRow['status'] == 5) {
             $tooltip = ' data-toggle="tooltip" data-title="' . format_task_status($aRow['status'], false, true) . '"';
         } elseif ($aRow['billed'] == 1) {
             $tooltip = ' data-toggle="tooltip" data-title="' . _l('task_billed_cant_start_timer') . '"';
@@ -154,7 +154,7 @@ foreach ($rResult as $aRow) {
 
     $outputStatus .= $status['name'];
 
-    /*  if ($aRow['status'] == Tasks_model::STATUS_COMPLETE && $canChangeStatus) {
+    /*  if ($aRow['status'] == 5 && $canChangeStatus) {
        $outputStatus .= '<a href="#" onclick="unmark_complete(' . $aRow['id'] . '); return false;"><i class="fa fa-check task-icon task-finished-icon" data-toggle="tooltip" title="' . _l('task_unmark_as_complete') . '"></i></a>';
     } else {
        if ($canChangeStatus) {
@@ -196,7 +196,7 @@ foreach ($rResult as $aRow) {
 
     $outputPriority = '<span style="color:' . task_priority_color($aRow['priority']) . ';" class="inline-block">' . task_priority($aRow['priority']);
 
-    if (has_permission('tasks', '', 'edit') && $aRow['status'] != Tasks_model::STATUS_COMPLETE) {
+    if (has_permission('tasks', '', 'edit') && $aRow['status'] != 5) {
         $outputPriority .= '<div class="dropdown inline-block mleft5 table-export-exclude">';
         $outputPriority .= '<a href="#" style="font-size:14px;vertical-align:middle;" class="dropdown-toggle text-dark" id="tableTaskPriority-' . $aRow['id'] . '" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">';
         $outputPriority .= '<span data-toggle="tooltip" title="' . _l('task_single_priority') . '"><i class="fa fa-caret-down" aria-hidden="true"></i></span>';
@@ -224,14 +224,17 @@ foreach ($rResult as $aRow) {
         $row[] = (strpos($customFieldColumn, 'date_picker_') !== false ? _d($aRow[$customFieldColumn]) : $aRow[$customFieldColumn]);
     }
 
+    $hook = do_action('tasks_related_table_row_data', [
+        'output' => $row,
+        'row'    => $aRow,
+    ]);
+
+    $row = $hook['output'];
 
     $row['DT_RowClass'] = 'has-row-options';
-
-    if ((!empty($aRow['duedate']) && $aRow['duedate'] < date('Y-m-d')) && $aRow['status'] != Tasks_model::STATUS_COMPLETE) {
+    if ((!empty($aRow['duedate']) && $aRow['duedate'] < date('Y-m-d')) && $aRow['status'] != 5) {
         $row['DT_RowClass'] .= ' text-danger';
     }
-
-    $row = hooks()->apply_filters('tasks_related_table_row_data', $row, $aRow);
 
     $output['aaData'][] = $row;
 }

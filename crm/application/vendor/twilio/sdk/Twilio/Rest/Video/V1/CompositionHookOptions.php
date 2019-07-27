@@ -19,22 +19,17 @@ abstract class CompositionHookOptions {
     /**
      * @param boolean $enabled Only show Composition Hooks enabled or disabled.
      * @param \DateTime $dateCreatedAfter Only show Composition Hooks created on or
-     *                                    after this ISO8601 date-time with
-     *                                    timezone.
+     *                                    after this ISO8601 date-time.
      * @param \DateTime $dateCreatedBefore Only show Composition Hooks created
-     *                                     before this ISO8601 date-time with
-     *                                     timezone.
-     * @param string $friendlyName Only show Composition Hooks with friendly name
-     *                             that match this name.
+     *                                     before this this ISO8601 date-time.
      * @return ReadCompositionHookOptions Options builder
      */
-    public static function read($enabled = Values::NONE, $dateCreatedAfter = Values::NONE, $dateCreatedBefore = Values::NONE, $friendlyName = Values::NONE) {
-        return new ReadCompositionHookOptions($enabled, $dateCreatedAfter, $dateCreatedBefore, $friendlyName);
+    public static function read($enabled = Values::NONE, $dateCreatedAfter = Values::NONE, $dateCreatedBefore = Values::NONE) {
+        return new ReadCompositionHookOptions($enabled, $dateCreatedAfter, $dateCreatedBefore);
     }
 
     /**
-     * @param boolean $enabled Boolean flag indicating if the Composition Hook is
-     *                         active.
+     * @param boolean $enabled Boolean flag for activating the Composition Hook.
      * @param array $videoLayout The JSON video layout description.
      * @param string $audioSources A list of audio sources related to this
      *                             Composition Hook.
@@ -55,8 +50,7 @@ abstract class CompositionHookOptions {
     }
 
     /**
-     * @param boolean $enabled Boolean flag indicating if the Composition Hook is
-     *                         active.
+     * @param boolean $enabled Boolean flag for activating the Composition Hook.
      * @param array $videoLayout The JSON video layout description.
      * @param string $audioSources A list of audio sources related to this
      *                             Composition Hook.
@@ -81,19 +75,14 @@ class ReadCompositionHookOptions extends Options {
     /**
      * @param boolean $enabled Only show Composition Hooks enabled or disabled.
      * @param \DateTime $dateCreatedAfter Only show Composition Hooks created on or
-     *                                    after this ISO8601 date-time with
-     *                                    timezone.
+     *                                    after this ISO8601 date-time.
      * @param \DateTime $dateCreatedBefore Only show Composition Hooks created
-     *                                     before this ISO8601 date-time with
-     *                                     timezone.
-     * @param string $friendlyName Only show Composition Hooks with friendly name
-     *                             that match this name.
+     *                                     before this this ISO8601 date-time.
      */
-    public function __construct($enabled = Values::NONE, $dateCreatedAfter = Values::NONE, $dateCreatedBefore = Values::NONE, $friendlyName = Values::NONE) {
+    public function __construct($enabled = Values::NONE, $dateCreatedAfter = Values::NONE, $dateCreatedBefore = Values::NONE) {
         $this->options['enabled'] = $enabled;
         $this->options['dateCreatedAfter'] = $dateCreatedAfter;
         $this->options['dateCreatedBefore'] = $dateCreatedBefore;
-        $this->options['friendlyName'] = $friendlyName;
     }
 
     /**
@@ -108,11 +97,10 @@ class ReadCompositionHookOptions extends Options {
     }
 
     /**
-     * Only show Composition Hooks created on or after this ISO8601 date-time with timezone, given as `YYYY-MM-DDThh:mm:ss+|-hh:mm` or `YYYY-MM-DDThh:mm:ssZ`.
+     * Only show Composition Hooks created on or after this ISO8601 date-time, given as `YYYY-MM-DDThh:mm:ss-hh:mm`.
      * 
      * @param \DateTime $dateCreatedAfter Only show Composition Hooks created on or
-     *                                    after this ISO8601 date-time with
-     *                                    timezone.
+     *                                    after this ISO8601 date-time.
      * @return $this Fluent Builder
      */
     public function setDateCreatedAfter($dateCreatedAfter) {
@@ -121,27 +109,14 @@ class ReadCompositionHookOptions extends Options {
     }
 
     /**
-     * Only show Composition Hooks created before this ISO8601 date-time with timezone, given as `YYYY-MM-DDThh:mm:ss+|-hh:mm` or `YYYY-MM-DDThh:mm:ssZ`.
+     * Only show Composition Hooks created before this this ISO8601 date-time, given as `YYYY-MM-DDThh:mm:ss-hh:mm`.
      * 
      * @param \DateTime $dateCreatedBefore Only show Composition Hooks created
-     *                                     before this ISO8601 date-time with
-     *                                     timezone.
+     *                                     before this this ISO8601 date-time.
      * @return $this Fluent Builder
      */
     public function setDateCreatedBefore($dateCreatedBefore) {
         $this->options['dateCreatedBefore'] = $dateCreatedBefore;
-        return $this;
-    }
-
-    /**
-     * Only show Composition Hooks with friendly name that match this case-insensitive string, of up to 100 characters in length. Filtering by partial friendly names is allowed, using wildcards (e.g. `*my*hook*`).
-     * 
-     * @param string $friendlyName Only show Composition Hooks with friendly name
-     *                             that match this name.
-     * @return $this Fluent Builder
-     */
-    public function setFriendlyName($friendlyName) {
-        $this->options['friendlyName'] = $friendlyName;
         return $this;
     }
 
@@ -163,8 +138,7 @@ class ReadCompositionHookOptions extends Options {
 
 class CreateCompositionHookOptions extends Options {
     /**
-     * @param boolean $enabled Boolean flag indicating if the Composition Hook is
-     *                         active.
+     * @param boolean $enabled Boolean flag for activating the Composition Hook.
      * @param array $videoLayout The JSON video layout description.
      * @param string $audioSources A list of audio sources related to this
      *                             Composition Hook.
@@ -192,10 +166,9 @@ class CreateCompositionHookOptions extends Options {
     }
 
     /**
-     * Boolean flag indicating if the Composition Hook is active. Possible values are `true` or `false`. When `true`, the Composition Hook will be triggered for every completed Group Room on this account. When `false`, the Composition Hook never triggers.
+     * When activated, the Composition Hook is enabled and a composition will be triggered for every Video room completed by this account from this point onwards; `false` indicates the Composition Hook is left inactive.
      * 
-     * @param boolean $enabled Boolean flag indicating if the Composition Hook is
-     *                         active.
+     * @param boolean $enabled Boolean flag for activating the Composition Hook.
      * @return $this Fluent Builder
      */
     public function setEnabled($enabled) {
@@ -204,7 +177,7 @@ class CreateCompositionHookOptions extends Options {
     }
 
     /**
-     * A JSON object defining the video layout of the Composition Hook in terms of regions. See the section [Specifying Video Layouts](https://www.twilio.com/docs/video/api/compositions-resource#specifying-video-layouts) for further information.
+     * A JSON object defining the video layout of the Composition Hook in terms of regions. See the section [Managing Video Layouts](#managing-video-layouts) below for further information.
      * 
      * @param array $videoLayout The JSON video layout description.
      * @return $this Fluent Builder
@@ -215,7 +188,8 @@ class CreateCompositionHookOptions extends Options {
     }
 
     /**
-     * An array of audio sources to merge. All the specified sources must belong to the same Group Room. It can include zero or more Track names. These can be specified using wildcards (e.g. `student*`). The use of `[*]` has semantics "all if any" meaning zero or more (i.e. all) depending on whether the Group Room had audio tracks.
+     * An array of audio sources to merge. All the specified sources must belong to the same Group Room. It can include: 
+    * Zero or more Track names. These can be specified using wildcards (e.g. `student*`). The use of `[*]` has semantics "all if any" meaning zero or more (i.e. all) depending on whether the Group Room had audio tracks.
      * 
      * @param string $audioSources A list of audio sources related to this
      *                             Composition Hook.
@@ -227,7 +201,8 @@ class CreateCompositionHookOptions extends Options {
     }
 
     /**
-     * An array of audio sources to exclude from the Composition Hook. Any new Composition triggered by the Composition Hook shall include all audio sources specified in `AudioSources` except for the ones specified in `AudioSourcesExcluded`. This parameter may include zero or more Track names. These can be specified using wildcards (e.g. `student*`).
+     * An array of audio sources to exclude from the Composition Hook. Any new Composition triggered by the Composition Hook shall include all audio sources specified in `AudioSources` except for the ones specified in `AudioSourcesExcluded`. This parameter may include: 
+    * Zero or more Track names. These can be specified using wildcards (e.g. `student*`)
      * 
      * @param string $audioSourcesExcluded A list of audio sources excluded related
      *                                     to this Composition Hook.
@@ -239,20 +214,16 @@ class CreateCompositionHookOptions extends Options {
     }
 
     /**
-     * A string representing the number of pixels for rows (width) and columns (height) of the generated composed video. This string must have the format `{width}x{height}`. This parameter must comply with the following constraints: 
-
+     * A string representing the numbers of pixels for rows (width) and columns (height) of the generated composed video. This string must have the format `{width}x{height}`. This parameter must comply with the following constraints: 
     * `width >= 16 && width <= 1280`
     * `height >= 16 && height <= 1280`
     * `width * height <= 921,600`
-
     Typical values are: 
-
     * HD = `1280x720`
     * PAL = `1024x576`
     * VGA = `640x480`
     * CIF = `320x240`
-
-    Note that the `Resolution` implicitly imposes an aspect ratio to the resulting composition. When the original video tracks get constrained by this aspect ratio they are scaled-down to fit. You can find detailed information in the [Specifying Video Layouts](https://www.twilio.com/docs/video/api/compositions-resource#specifying-video-layouts) section. Defaults to `640x480`.
+    Note that the `Resolution` implicitly imposes an aspect ratio to the resulting composition. When the original video tracks get constrained by this aspect ratio they are scaled-down to fit. You can find detailed information in the [Managing Video Layouts](#managing-video-layouts) section. Defaults to `640x480`.
      * 
      * @param string $resolution Pixel resolution of the composed video.
      * @return $this Fluent Builder
@@ -299,7 +270,7 @@ class CreateCompositionHookOptions extends Options {
     }
 
     /**
-     * When activated, clips all the intervals where there is no active media in the Compositions triggered by the Composition Hook. This results in shorter compositions in cases when the Room was created but no Participant joined for some time, or if all the Participants left the room and joined at a later stage, as those gaps will be removed. You can find further information in the [Specifying Video Layouts](https://www.twilio.com/docs/video/api/compositions-resource#specifying-video-layouts) section. Defaults to `true`.
+     * When activated, clips all the intervals where there is no active media in the Compositions triggered by the Composition Hook. This results in shorter compositions in cases when the Room was created but no Participant joined for some time, or if all the Participants left the room and joined at a later stage, as those gaps will be removed. You can find further information in the [Managing Video Layouts](#managing-video-layouts) section. Defaults to `true`.
      * 
      * @param boolean $trim Boolean flag for clipping intervals that have no media.
      * @return $this Fluent Builder
@@ -327,8 +298,7 @@ class CreateCompositionHookOptions extends Options {
 
 class UpdateCompositionHookOptions extends Options {
     /**
-     * @param boolean $enabled Boolean flag indicating if the Composition Hook is
-     *                         active.
+     * @param boolean $enabled Boolean flag for activating the Composition Hook.
      * @param array $videoLayout The JSON video layout description.
      * @param string $audioSources A list of audio sources related to this
      *                             Composition Hook.
@@ -356,10 +326,9 @@ class UpdateCompositionHookOptions extends Options {
     }
 
     /**
-     * Boolean flag indicating if the Composition Hook is active. Possible values are `true` or `false`. When `true`, the Composition Hook will be triggered for every completed Group Room on this account. When `false`, the Composition Hook never triggers.
+     * When activated, the Composition Hook is enabled and a composition will be triggered for every Video room completed by this account from this point onwards; `false` indicates the Composition Hook is left inactive.
      * 
-     * @param boolean $enabled Boolean flag indicating if the Composition Hook is
-     *                         active.
+     * @param boolean $enabled Boolean flag for activating the Composition Hook.
      * @return $this Fluent Builder
      */
     public function setEnabled($enabled) {
@@ -368,7 +337,7 @@ class UpdateCompositionHookOptions extends Options {
     }
 
     /**
-     * A JSON object defining the video layout of the Composition Hook in terms of regions. See the section [Specifying Video Layouts](https://www.twilio.com/docs/video/api/compositions-resource#specifying-video-layouts) for further information.
+     * A JSON object defining the video layout of the Composition Hook in terms of regions. See the section [Managing Video Layouts](#managing-video-layouts) below for further information.
      * 
      * @param array $videoLayout The JSON video layout description.
      * @return $this Fluent Builder
@@ -379,7 +348,8 @@ class UpdateCompositionHookOptions extends Options {
     }
 
     /**
-     * An array of audio sources to merge. All the specified sources must belong to the same Group Room. It can include zero or more Track names. These can be specified using wildcards (e.g. `student*`). The use of `[*]` has semantics "all if any" meaning zero or more (i.e. all) depending on whether the Group Room had audio tracks.
+     * An array of audio sources to merge. All the specified sources must belong to the same Group Room. It can include: 
+    * Zero or more Track names. These can be specified using wildcards (e.g. `student*`). The use of `[*]` has semantics "all if any" meaning zero or more (i.e. all) depending on whether the Group Room had audio tracks.
      * 
      * @param string $audioSources A list of audio sources related to this
      *                             Composition Hook.
@@ -391,7 +361,8 @@ class UpdateCompositionHookOptions extends Options {
     }
 
     /**
-     * An array of audio sources to exclude from the Composition Hook. Any new Composition triggered by the Composition Hook shall include all audio sources specified in `AudioSources` except for the ones specified in `AudioSourcesExcluded`. This parameter may include zero or more Track names. These can be specified using wildcards (e.g. `student*`).
+     * An array of audio sources to exclude from the Composition Hook. Any new Composition triggered by the Composition Hook shall include all audio sources specified in `AudioSources` except for the ones specified in `AudioSourcesExcluded`. This parameter may include: 
+    * Zero or more Track names. These can be specified using wildcards (e.g. `student*`)
      * 
      * @param string $audioSourcesExcluded A list of audio sources excluded related
      *                                     to this Composition Hook.
@@ -403,7 +374,7 @@ class UpdateCompositionHookOptions extends Options {
     }
 
     /**
-     * When activated, clips all the intervals where there is no active media in the Compositions triggered by the Composition Hook. This results in shorter compositions in cases when the Room was created but no Participant joined for some time, or if all the Participants left the room and joined at a later stage, as those gaps will be removed. You can find further information in the [Specifying Video Layouts](https://www.twilio.com/docs/video/api/compositions-resource#specifying-video-layouts) section. Defaults to `true`.
+     * When activated, clips all the intervals where there is no active media in the Compositions triggered by the Composition Hook. This results in shorter compositions in cases when the Room was created but no Participant joined for some time, or if all the Participants left the room and joined at a later stage, as those gaps will be removed. You can find further information in the [Managing Video Layouts](#managing-video-layouts) section. Defaults to `true`.
      * 
      * @param boolean $trim Boolean flag for clipping intervals that have no media.
      * @return $this Fluent Builder
@@ -426,7 +397,16 @@ class UpdateCompositionHookOptions extends Options {
     }
 
     /**
-     * A string representing the number of pixels for rows (width) and columns (height) of the generated composed video. This string must have the format `{width}x{height}`. This parameter must comply with the following constraints: `width >= 16 && width <= 1280`, `height >= 16 && height <= 1280`, `width * height <= 921,600`. Typical values are: HD = `1280x720`, PAL = `1024x576`, VGA = `640x480`, CIF = `320x240`. Note that the `Resolution` implicitly imposes an aspect ratio to the resulting composition. When the original video tracks get constrained by this aspect ratio they are scaled-down to fit. You can find detailed information in the [Specifying Video Layouts](https://www.twilio.com/docs/video/api/compositions-resource#specifying-video-layouts) section. Defaults to `640x480`.
+     * A string representing the numbers of pixels for rows (width) and columns (height) of the generated composed video. This string must have the format `{width}x{height}`. This parameter must comply with the following constraints: 
+    * `width >= 16 && width <= 1280`
+    * `height >= 16 && height <= 1280`
+    * `width * height <= 921,600`
+    Typical values are: 
+    * HD = `1280x720`
+    * PAL = `1024x576`
+    * VGA = `640x480`
+    * CIF = `320x240`
+    Note that the `Resolution` implicitly imposes an aspect ratio to the resulting composition. When the original video tracks get constrained by this aspect ratio they are scaled-down to fit. You can find detailed information in the [Managing Video Layouts](#managing-video-layouts) section. Defaults to `640x480`.
      * 
      * @param string $resolution Pixel resolution of the composed video.
      * @return $this Fluent Builder

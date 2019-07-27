@@ -21,7 +21,7 @@ function get_relation_data($type, $rel_id = '')
         $where_clients = '';
 
         if ($q) {
-            $where_clients .= '(company LIKE "%' . $q . '%" OR CONCAT(firstname, " ", lastname) LIKE "%' . $q . '%" OR email LIKE "%' . $q . '%") AND '.db_prefix().'clients.active = 1';
+            $where_clients .= '(company LIKE "%' . $q . '%" OR CONCAT(firstname, " ", lastname) LIKE "%' . $q . '%" OR email LIKE "%' . $q . '%") AND tblclients.active = 1';
         }
 
         $data = $CI->clients_model->get($rel_id, $where_clients);
@@ -29,14 +29,14 @@ function get_relation_data($type, $rel_id = '')
         if ($rel_id != '') {
             $data = $CI->clients_model->get_contact($rel_id);
         } else {
-            $where_contacts = db_prefix().'contacts.active=1';
+            $where_contacts = 'tblcontacts.active=1';
             if ($CI->input->post('tickets_contacts')) {
                 if (!has_permission('customers', '', 'view') && get_option('staff_members_open_tickets_to_all_contacts') == 0) {
-                    $where_contacts .= ' AND '.db_prefix().'contacts.userid IN (SELECT customer_id FROM '.db_prefix().'customer_admins WHERE staff_id=' . get_staff_user_id() . ')';
+                    $where_contacts .= ' AND tblcontacts.userid IN (SELECT customer_id FROM tblcustomeradmins WHERE staff_id=' . get_staff_user_id() . ')';
                 }
             }
             if ($CI->input->post('contact_userid')) {
-                $where_contacts .= ' AND '.db_prefix().'contacts.userid=' . $CI->input->post('contact_userid');
+                $where_contacts .= ' AND tblcontacts.userid=' . $CI->input->post('contact_userid');
             }
             $search = $CI->misc_model->_search_contacts($q, 0, $where_contacts);
             $data   = $search['result'];
@@ -320,9 +320,9 @@ function get_relation_values($relation, $type)
         $link = admin_url('projects/view/' . $id);
     }
 
-    return hooks()->apply_filters('relation_values', [
-        'id'       => $id,
+    return do_action('relation_values', [
         'name'      => $name,
+        'id'        => $id,
         'link'      => $link,
         'addedfrom' => $addedfrom,
         'subtext'   => $subtext,

@@ -29,7 +29,7 @@ foreach ($custom_fields as $field) {
   array_push($table_data, $field['name']);
 }
 
-$table_data = hooks()->apply_filters('expenses_table_columns', $table_data);
+$table_data = do_action('expenses_table_columns', $table_data);
 render_datatable($table_data, (isset($class) ? $class : 'expenses'), [], [
   'data-last-order-identifier' => 'expenses',
   'data-default-order'         => get_table_last_order('expenses'),

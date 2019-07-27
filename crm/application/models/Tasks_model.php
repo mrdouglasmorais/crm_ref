@@ -2,18 +2,8 @@
 
 defined('BASEPATH') or exit('No direct script access allowed');
 
-class Tasks_model extends App_Model
+class Tasks_model extends CRM_Model
 {
-    const STATUS_NOT_STARTED = 1;
-
-    const STATUS_AWAITING_FEEDBACK = 2;
-
-    const STATUS_TESTING = 3;
-
-    const STATUS_IN_PROGRESS = 4;
-
-    const STATUS_COMPLETE = 5;
-
     public function __construct()
     {
         parent::__construct();
@@ -24,46 +14,46 @@ class Tasks_model extends App_Model
     // Not used?
     public function get_user_tasks_assigned()
     {
-        $this->db->where('id IN (SELECT taskid FROM ' . db_prefix() . 'task_assigned WHERE staffid = ' . get_staff_user_id() . ')');
+        $this->db->where('id IN (SELECT taskid FROM tblstafftaskassignees WHERE staffid = ' . get_staff_user_id() . ')');
         $this->db->where('status !=', 5);
         $this->db->order_by('duedate', 'asc');
 
-        return $this->db->get(db_prefix() . 'tasks')->result_array();
+        return $this->db->get('tblstafftasks')->result_array();
     }
 
     public function get_statuses()
     {
-        $statuses = hooks()->apply_filters('before_get_task_statuses', [
+        $statuses = do_action('before_get_task_statuses', [
             [
-                'id'             => self::STATUS_NOT_STARTED,
+                'id'             => 1,
                 'color'          => '#989898',
                 'name'           => _l('task_status_1'),
                 'order'          => 1,
                 'filter_default' => true,
                 ],
              [
-                'id'             => self::STATUS_IN_PROGRESS,
+                'id'             => 4,
                 'color'          => '#03A9F4',
                 'name'           => _l('task_status_4'),
                 'order'          => 2,
                 'filter_default' => true,
                 ],
              [
-                'id'             => self::STATUS_TESTING,
+                'id'             => 3,
                 'color'          => '#2d2d2d',
                 'name'           => _l('task_status_3'),
                 'order'          => 3,
                 'filter_default' => true,
                 ],
               [
-                'id'             => self::STATUS_AWAITING_FEEDBACK,
+                'id'             => 2,
                 'color'          => '#adca65',
                 'name'           => _l('task_status_2'),
                 'order'          => 4,
                 'filter_default' => true,
                 ],
             [
-                'id'             => self::STATUS_COMPLETE,
+                'id'             => 5,
                 'color'          => '#84c529',
                 'name'           => _l('task_status_5'),
                 'order'          => 100,
@@ -88,7 +78,7 @@ class Tasks_model extends App_Model
         $is_admin = is_admin();
         $this->db->where('id', $id);
         $this->db->where($where);
-        $task = $this->db->get(db_prefix() . 'tasks')->row();
+        $task = $this->db->get('tblstafftasks')->row();
         if ($task) {
             $task->comments      = $this->get_task_comments($id);
             $task->assignees     = $this->get_task_assignees($id);
@@ -126,14 +116,14 @@ class Tasks_model extends App_Model
             }
         }
 
-        return hooks()->apply_filters('get_task', $task);
+        return do_action('get_task', $task);
     }
 
     public function get_milestone($id)
     {
         $this->db->where('id', $id);
 
-        return $this->db->get(db_prefix() . 'milestones')->row();
+        return $this->db->get('tblmilestones')->row();
     }
 
     public function do_kanban_query($status, $search = '', $page = 1, $count = false, $where = [])
@@ -143,9 +133,9 @@ class Tasks_model extends App_Model
             $tasks_where = get_tasks_where_string(false);
         }
 
-        $this->db->select('id,name,duedate,startdate,status,' . get_sql_select_task_total_checklist_items() . ',' . get_sql_select_task_total_finished_checklist_items() . ',(SELECT COUNT(id) FROM ' . db_prefix() . 'task_comments WHERE taskid=' . db_prefix() . 'tasks.id) as total_comments,(SELECT COUNT(id) FROM ' . db_prefix() . 'files WHERE rel_id=' . db_prefix() . 'tasks.id AND rel_type="task") as total_files,' . get_sql_select_task_asignees_full_names() . ' as assignees' . ',' . get_sql_select_task_assignees_ids() . ' as assignees_ids,(SELECT staffid FROM ' . db_prefix() . 'task_assigned WHERE taskid=' . db_prefix() . 'tasks.id AND staffid=' . get_staff_user_id() . ') as current_user_is_assigned, (SELECT CASE WHEN addedfrom=' . get_staff_user_id() . ' AND is_added_from_contact=0 THEN 1 ELSE 0 END) as current_user_is_creator');
+        $this->db->select('id,name,duedate,startdate,status,' . get_sql_select_task_total_checklist_items() . ',' . get_sql_select_task_total_finished_checklist_items() . ',(SELECT COUNT(id) FROM tblstafftaskcomments WHERE taskid=tblstafftasks.id) as total_comments,(SELECT COUNT(id) FROM tblfiles WHERE rel_id=tblstafftasks.id AND rel_type="task") as total_files,' . get_sql_select_task_asignees_full_names() . ' as assignees' . ',' . get_sql_select_task_assignees_ids() . ' as assignees_ids,(SELECT staffid FROM tblstafftaskassignees WHERE taskid=tblstafftasks.id AND staffid=' . get_staff_user_id() . ') as current_user_is_assigned, (SELECT CASE WHEN addedfrom=' . get_staff_user_id() . ' AND is_added_from_contact=0 THEN 1 ELSE 0 END) as current_user_is_creator');
 
-        $this->db->from(db_prefix() . 'tasks');
+        $this->db->from('tblstafftasks');
         $this->db->where('status', $status);
 
         $this->db->where($where);
@@ -155,13 +145,13 @@ class Tasks_model extends App_Model
         }
 
         if ($search != '') {
-            if (!startsWith($search, '#')) {
-                $this->db->where('(' . db_prefix() . 'tasks.name LIKE "%' . $search . '%" OR ' . db_prefix() . 'tasks.description LIKE "%' . $search . '%")');
+            if (!_startsWith($search, '#')) {
+                $this->db->where('(tblstafftasks.name LIKE "%' . $search . '%" OR tblstafftasks.description LIKE "%' . $search . '%")');
             } else {
-                $this->db->where(db_prefix() . 'tasks.id IN
-                (SELECT rel_id FROM ' . db_prefix() . 'taggables WHERE tag_id IN
-                (SELECT id FROM ' . db_prefix() . 'tags WHERE name="' . strafter($search, '#') . '")
-                AND ' . db_prefix() . 'taggables.rel_type=\'task\' GROUP BY rel_id HAVING COUNT(tag_id) = 1)
+                $this->db->where('tblstafftasks.id IN
+                (SELECT rel_id FROM tbltags_in WHERE tag_id IN
+                (SELECT id FROM tbltags WHERE name="' . strafter($search, '#') . '")
+                AND tbltags_in.rel_type=\'task\' GROUP BY rel_id HAVING COUNT(tag_id) = 1)
                 ');
             }
         }
@@ -189,7 +179,7 @@ class Tasks_model extends App_Model
     {
         foreach ($data['order'] as $order) {
             $this->db->where('id', $order[0]);
-            $this->db->update(db_prefix() . 'tasks', [
+            $this->db->update('tblstafftasks', [
                 'kanban_order' => $order[1],
             ]);
         }
@@ -197,12 +187,12 @@ class Tasks_model extends App_Model
 
     public function get_distinct_tasks_years($get_from)
     {
-        return $this->db->query('SELECT DISTINCT(YEAR(' . $get_from . ')) as year FROM ' . db_prefix() . 'tasks WHERE ' . $get_from . ' IS NOT NULL ORDER BY year DESC')->result_array();
+        return $this->db->query('SELECT DISTINCT(YEAR(' . $get_from . ')) as year FROM tblstafftasks WHERE ' . $get_from . ' IS NOT NULL ORDER BY year DESC')->result_array();
     }
 
     public function is_task_billed($id)
     {
-        return (total_rows(db_prefix() . 'tasks', [
+        return (total_rows('tblstafftasks', [
             'id'     => $id,
             'billed' => 1,
         ]) > 0 ? true : false);
@@ -211,7 +201,7 @@ class Tasks_model extends App_Model
     public function copy($data, $overwrites = [])
     {
         $task           = $this->get($data['copy_from']);
-        $fields_tasks   = $this->db->list_fields(db_prefix() . 'tasks');
+        $fields_tasks   = $this->db->list_fields('tblstafftasks');
         $_new_task_data = [];
         foreach ($fields_tasks as $field) {
             if (isset($task->$field)) {
@@ -248,10 +238,7 @@ class Tasks_model extends App_Model
             }
         }
         unset($_new_task_data['datefinished']);
-
-        $_new_task_data = hooks()->apply_filters('before_add_task', $_new_task_data);
-
-        $this->db->insert(db_prefix() . 'tasks', $_new_task_data);
+        $this->db->insert('tblstafftasks', $_new_task_data);
         $insert_id = $this->db->insert_id();
         if ($insert_id) {
             $tags = get_tags_in($data['copy_from'], 'task');
@@ -287,7 +274,6 @@ class Tasks_model extends App_Model
             }
             $this->copy_task_custom_fields($data['copy_from'], $insert_id);
 
-            hooks()->do_action('after_add_task', $insert_id);
             return $insert_id;
         }
 
@@ -296,9 +282,9 @@ class Tasks_model extends App_Model
 
     public function copy_task_followers($from_task, $to_task)
     {
-        $followers = $this->get_task_followers($from_task);
+        $followers = $this->tasks_model->get_task_followers($from_task);
         foreach ($followers as $follower) {
-            $this->db->insert(db_prefix() . 'task_followers', [
+            $this->db->insert('tblstafftasksfollowers', [
                 'taskid'  => $to_task,
                 'staffid' => $follower['followerid'],
             ]);
@@ -307,9 +293,9 @@ class Tasks_model extends App_Model
 
     public function copy_task_assignees($from_task, $to_task)
     {
-        $assignees = $this->get_task_assignees($from_task);
+        $assignees = $this->tasks_model->get_task_assignees($from_task);
         foreach ($assignees as $assignee) {
-            $this->db->insert(db_prefix() . 'task_assigned', [
+            $this->db->insert('tblstafftaskassignees', [
                 'taskid'        => $to_task,
                 'staffid'       => $assignee['assigneeid'],
                 'assigned_from' => get_staff_user_id(),
@@ -319,9 +305,9 @@ class Tasks_model extends App_Model
 
     public function copy_task_checklist_items($from_task, $to_task)
     {
-        $checklists = $this->get_checklist_items($from_task);
+        $checklists = $this->tasks_model->get_checklist_items($from_task);
         foreach ($checklists as $list) {
-            $this->db->insert(db_prefix() . 'task_checklist_items', [
+            $this->db->insert('tbltaskchecklists', [
                 'taskid'      => $to_task,
                 'finished'    => 0,
                 'description' => $list['description'],
@@ -338,7 +324,7 @@ class Tasks_model extends App_Model
         foreach ($custom_fields as $field) {
             $value = get_custom_field_value($from_task, $field['id'], 'tasks', false);
             if ($value != '') {
-                $this->db->insert(db_prefix() . 'customfieldsvalues', [
+                $this->db->insert('tblcustomfieldsvalues', [
                     'relid'   => $to_task,
                     'fieldid' => $field['id'],
                     'fieldto' => 'tasks',
@@ -351,7 +337,6 @@ class Tasks_model extends App_Model
     public function get_billable_tasks($customer_id = false, $project_id = '')
     {
         $has_permission_view = has_permission('tasks', '', 'view');
-        $noPermissionsQuery = get_tasks_where_string(false);
 
         $this->db->where('billable', 1);
         $this->db->where('billed', 0);
@@ -367,35 +352,35 @@ class Tasks_model extends App_Model
             $this->db->where(
                 '
                 (
-                (rel_id IN (SELECT id FROM ' . db_prefix() . 'invoices WHERE clientid=' . $customer_id . ') AND rel_type="invoice")
+                (rel_id IN (SELECT id FROM tblinvoices WHERE clientid=' . $customer_id . ') AND rel_type="invoice")
                 OR
-                (rel_id IN (SELECT id FROM ' . db_prefix() . 'estimates WHERE clientid=' . $customer_id . ') AND rel_type="estimate")
+                (rel_id IN (SELECT id FROM tblestimates WHERE clientid=' . $customer_id . ') AND rel_type="estimate")
                 OR
-                (rel_id IN (SELECT id FROM ' . db_prefix() . 'contracts WHERE client=' . $customer_id . ') AND rel_type="contract")
+                (rel_id IN (SELECT id FROM tblcontracts WHERE client=' . $customer_id . ') AND rel_type="contract")
                 OR
-                ( rel_id IN (SELECT ticketid FROM ' . db_prefix() . 'tickets WHERE userid=' . $customer_id . ') AND rel_type="ticket")
+                ( rel_id IN (SELECT ticketid FROM tbltickets WHERE userid=' . $customer_id . ') AND rel_type="ticket")
                 OR
-                (rel_id IN (SELECT id FROM ' . db_prefix() . 'expenses WHERE clientid=' . $customer_id . ') AND rel_type="expense")
+                (rel_id IN (SELECT id FROM tblexpenses WHERE clientid=' . $customer_id . ') AND rel_type="expense")
                 OR
-                (rel_id IN (SELECT id FROM ' . db_prefix() . 'proposals WHERE rel_id=' . $customer_id . ' AND rel_type="customer") AND rel_type="proposal")
+                (rel_id IN (SELECT id FROM tblproposals WHERE rel_id=' . $customer_id . ' AND rel_type="customer") AND rel_type="proposal")
                 OR
-                (rel_id IN (SELECT userid FROM ' . db_prefix() . 'clients WHERE userid=' . $customer_id . ') AND rel_type="customer")
+                (rel_id IN (SELECT userid FROM tblclients WHERE userid=' . $customer_id . ') AND rel_type="customer")
                 )'
                 );
         }
 
         if (!$has_permission_view) {
-            $this->db->where($noPermissionsQuery);
+            $this->db->where(get_tasks_where_string(false));
         }
 
-        $tasks = $this->db->get(db_prefix() . 'tasks')->result_array();
+        $tasks = $this->db->get('tblstafftasks')->result_array();
 
         $i = 0;
         foreach ($tasks as $task) {
             $task_rel_data         = get_relation_data($task['rel_type'], $task['rel_id']);
             $task_rel_value        = get_relation_values($task_rel_data, $task['rel_type']);
             $tasks[$i]['rel_name'] = $task_rel_value['name'];
-            if (total_rows(db_prefix() . 'taskstimers', [
+            if (total_rows('tbltaskstimers', [
                 'task_id' => $task['id'],
                 'end_time' => null,
             ]) > 0) {
@@ -413,17 +398,17 @@ class Tasks_model extends App_Model
     {
         $data = $this->get_billable_task_data($taskId);
 
-        return app_format_number($data->total_hours * $data->hourly_rate);
+        return _format_number($data->total_hours * $data->hourly_rate);
     }
 
     public function get_billable_task_data($task_id)
     {
         $this->db->where('id', $task_id);
-        $data = $this->db->get(db_prefix() . 'tasks')->row();
+        $data = $this->db->get('tblstafftasks')->row();
         if ($data->rel_type == 'project') {
             $this->db->select('billing_type,project_rate_per_hour,name');
             $this->db->where('id', $data->rel_id);
-            $project      = $this->db->get(db_prefix() . 'projects')->row();
+            $project      = $this->db->get('tblprojects')->row();
             $billing_type = get_project_billing_type($data->rel_id);
 
             if ($project->billing_type == 2) {
@@ -442,9 +427,9 @@ class Tasks_model extends App_Model
     public function get_tasks_by_staff_id($id, $where = [])
     {
         $this->db->where($where);
-        $this->db->where('(id IN (SELECT taskid FROM ' . db_prefix() . 'task_assigned WHERE staffid=' . $id . '))');
+        $this->db->where('(id IN (SELECT taskid FROM tblstafftaskassignees WHERE staffid=' . $id . '))');
 
-        return $this->db->get(db_prefix() . 'tasks')->result_array();
+        return $this->db->get('tblstafftasks')->result_array();
     }
 
     /**
@@ -555,7 +540,7 @@ class Tasks_model extends App_Model
             }
         }
 
-        $data = hooks()->apply_filters('before_add_task', $data);
+        $data = do_action('before_add_task', $data);
 
         $tags = '';
         if (isset($data['tags'])) {
@@ -563,13 +548,13 @@ class Tasks_model extends App_Model
             unset($data['tags']);
         }
 
-        $this->db->insert(db_prefix() . 'tasks', $data);
+        $this->db->insert('tblstafftasks', $data);
         $insert_id = $this->db->insert_id();
         if ($insert_id) {
             foreach ($checklistItems as $key => $chkID) {
                 if ($chkID != '') {
                     $itemTemplate = $this->get_checklist_template($chkID);
-                    $this->db->insert(db_prefix() . 'task_checklist_items', [
+                    $this->db->insert('tbltaskchecklists', [
                         'description' => $itemTemplate->description,
                         'taskid'      => $insert_id,
                         'dateadded'   => date('Y-m-d H:i:s'),
@@ -597,21 +582,21 @@ class Tasks_model extends App_Model
                     $new_task_auto_assign_creator = false;
                 }
                 if ($new_task_auto_assign_creator == true) {
-                    $this->db->insert(db_prefix() . 'task_assigned', [
+                    $this->db->insert('tblstafftaskassignees', [
                         'taskid'        => $insert_id,
                         'staffid'       => get_staff_user_id(),
                         'assigned_from' => get_staff_user_id(),
                     ]);
                 }
                 if (get_option('new_task_auto_follower_current_member') == '1') {
-                    $this->db->insert(db_prefix() . 'task_followers', [
+                    $this->db->insert('tblstafftasksfollowers', [
                         'taskid'  => $insert_id,
                         'staffid' => get_staff_user_id(),
                     ]);
                 }
 
                 if ($ticket_to_task && isset($data['rel_type']) && $data['rel_type'] == 'ticket') {
-                    $ticket_attachments = $this->db->query('SELECT * FROM ' . db_prefix() . 'ticket_attachments WHERE ticketid=' . $data['rel_id'] . ' OR (ticketid=' . $data['rel_id'] . ' AND replyid IN (SELECT id FROM ' . db_prefix() . 'ticket_replies WHERE ticketid=' . $data['rel_id'] . '))')->result_array();
+                    $ticket_attachments = $this->db->query('SELECT * FROM tblticketattachments WHERE ticketid=' . $data['rel_id'] . ' OR (ticketid=' . $data['rel_id'] . ' AND replyid IN (SELECT id FROM tblticketreplies WHERE ticketid=' . $data['rel_id'] . '))')->result_array();
 
                     if (count($ticket_attachments) > 0) {
                         $task_path = get_upload_path_by_type('task') . $insert_id . '/';
@@ -625,7 +610,7 @@ class Tasks_model extends App_Model
                                     $filename = unique_filename($task_path, $ticket_attachment['file_name']);
                                     $fpt      = fopen($task_path . $filename, 'w');
                                     if ($fpt && fwrite($fpt, stream_get_contents($f))) {
-                                        $this->db->insert(db_prefix() . 'files', [
+                                        $this->db->insert('tblfiles', [
                                                             'rel_id'         => $insert_id,
                                                             'rel_type'       => 'task',
                                                             'file_name'      => $filename,
@@ -646,8 +631,8 @@ class Tasks_model extends App_Model
                 }
             }
 
-            log_activity('New Task Added [ID:' . $insert_id . ', Name: ' . $data['name'] . ']');
-            hooks()->do_action('after_add_task', $insert_id);
+            logActivity('New Task Added [ID:' . $insert_id . ', Name: ' . $data['name'] . ']');
+            do_action('after_add_task', $insert_id);
 
             return $insert_id;
         }
@@ -687,15 +672,6 @@ class Tasks_model extends App_Model
 
         if ($clientRequest == false) {
             $data['cycles'] = !isset($data['cycles']) ? 0 : $data['cycles'];
-
-            $original_task = $this->get($id);
-
-            // Recurring task set to NO, Cancelled
-            if ($original_task->repeat_every != '' && $data['repeat_every'] == '') {
-                $data['cycles']              = 0;
-                $data['total_cycles']        = 0;
-                $data['last_recurring_date'] = null;
-            }
 
             if ($data['repeat_every'] != '') {
                 $data['recurring'] = 1;
@@ -755,7 +731,12 @@ class Tasks_model extends App_Model
             }
         }
 
-        $data = hooks()->apply_filters('before_update_task', $data, $id);
+        $_data['data'] = $data;
+        $_data['id']   = $id;
+
+        $_data = do_action('before_update_task', $_data);
+
+        $data = $_data['data'];
 
         if (isset($data['tags'])) {
             if (handle_tags_save($data['tags'], $id, 'task')) {
@@ -766,7 +747,7 @@ class Tasks_model extends App_Model
 
         foreach ($checklistItems as $key => $chkID) {
             $itemTemplate = $this->get_checklist_template($chkID);
-            $this->db->insert(db_prefix() . 'task_checklist_items', [
+            $this->db->insert('tbltaskchecklists', [
                     'description' => $itemTemplate->description,
                     'taskid'      => $id,
                     'dateadded'   => date('Y-m-d H:i:s'),
@@ -777,11 +758,11 @@ class Tasks_model extends App_Model
         }
 
         $this->db->where('id', $id);
-        $this->db->update(db_prefix() . 'tasks', $data);
+        $this->db->update('tblstafftasks', $data);
         if ($this->db->affected_rows() > 0) {
             $affectedRows++;
-            hooks()->do_action('after_update_task', $id);
-            log_activity('Task Updated [ID:' . $id . ', Name: ' . $data['name'] . ']');
+            do_action('after_update_task', $id);
+            logActivity('Task Updated [ID:' . $id . ', Name: ' . $data['name'] . ']');
         }
 
         if ($affectedRows > 0) {
@@ -795,7 +776,7 @@ class Tasks_model extends App_Model
     {
         $this->db->where('id', $id);
 
-        return $this->db->get(db_prefix() . 'task_checklist_items')->row();
+        return $this->db->get('tbltaskchecklists')->row();
     }
 
     public function get_checklist_items($taskid)
@@ -803,12 +784,12 @@ class Tasks_model extends App_Model
         $this->db->where('taskid', $taskid);
         $this->db->order_by('list_order', 'asc');
 
-        return $this->db->get(db_prefix() . 'task_checklist_items')->result_array();
+        return $this->db->get('tbltaskchecklists')->result_array();
     }
 
     public function add_checklist_template($description)
     {
-        $this->db->insert(db_prefix() . 'tasks_checklist_templates', [
+        $this->db->insert('tblcheckliststemplates', [
             'description' => $description,
             ]);
 
@@ -818,7 +799,7 @@ class Tasks_model extends App_Model
     public function remove_checklist_item_template($id)
     {
         $this->db->where('id', $id);
-        $this->db->delete(db_prefix() . 'tasks_checklist_templates');
+        $this->db->delete('tblcheckliststemplates');
         if ($this->db->affected_rows() > 0) {
             return true;
         }
@@ -830,14 +811,14 @@ class Tasks_model extends App_Model
     {
         $this->db->order_by('description', 'asc');
 
-        return $this->db->get(db_prefix() . 'tasks_checklist_templates')->result_array();
+        return $this->db->get('tblcheckliststemplates')->result_array();
     }
 
     public function get_checklist_template($id)
     {
         $this->db->where('id', $id);
 
-        return $this->db->get(db_prefix() . 'tasks_checklist_templates')->row();
+        return $this->db->get('tblcheckliststemplates')->row();
     }
 
     /**
@@ -846,7 +827,7 @@ class Tasks_model extends App_Model
      */
     public function add_checklist_item($data)
     {
-        $this->db->insert(db_prefix() . 'task_checklist_items', [
+        $this->db->insert('tbltaskchecklists', [
             'taskid'      => $data['taskid'],
             'description' => $data['description'],
             'dateadded'   => date('Y-m-d H:i:s'),
@@ -855,7 +836,7 @@ class Tasks_model extends App_Model
         ]);
         $insert_id = $this->db->insert_id();
         if ($insert_id) {
-            hooks()->do_action('task_checklist_item_created', ['task_id' => $data['taskid'], 'checklist_id' => $insert_id]);
+            do_action('task_checklist_item_created', ['task_id' => $data['taskid'], 'checklist_id' => $insert_id]);
 
             return true;
         }
@@ -866,7 +847,7 @@ class Tasks_model extends App_Model
     public function delete_checklist_item($id)
     {
         $this->db->where('id', $id);
-        $this->db->delete(db_prefix() . 'task_checklist_items');
+        $this->db->delete('tbltaskchecklists');
         if ($this->db->affected_rows() > 0) {
             return true;
         }
@@ -878,7 +859,7 @@ class Tasks_model extends App_Model
     {
         foreach ($data['order'] as $order) {
             $this->db->where('id', $order[0]);
-            $this->db->update(db_prefix() . 'task_checklist_items', [
+            $this->db->update('tbltaskchecklists', [
                 'list_order' => $order[1],
             ]);
         }
@@ -895,10 +876,10 @@ class Tasks_model extends App_Model
         $description = strip_tags($description, '<br>,<br/>');
         if ($description === '') {
             $this->db->where('id', $id);
-            $this->db->delete(db_prefix() . 'task_checklist_items');
+            $this->db->delete('tbltaskchecklists');
         } else {
             $this->db->where('id', $id);
-            $this->db->update(db_prefix() . 'task_checklist_items', [
+            $this->db->update('tbltaskchecklists', [
                 'description' => nl2br($description),
             ]);
         }
@@ -912,7 +893,7 @@ class Tasks_model extends App_Model
     public function make_public($task_id)
     {
         $this->db->where('id', $task_id);
-        $this->db->update(db_prefix() . 'tasks', [
+        $this->db->update('tblstafftasks', [
             'is_public' => 1,
         ]);
         if ($this->db->affected_rows() > 0) {
@@ -932,7 +913,7 @@ class Tasks_model extends App_Model
         $this->db->select('addedfrom');
         $this->db->where('id', $taskid);
 
-        return $this->db->get(db_prefix() . 'tasks')->row()->addedfrom;
+        return $this->db->get('tblstafftasks')->row()->addedfrom;
     }
 
     /**
@@ -950,7 +931,7 @@ class Tasks_model extends App_Model
             $data['contact_id'] = 0;
         }
 
-        $this->db->insert(db_prefix() . 'task_comments', [
+        $this->db->insert('tblstafftaskcomments', [
             'taskid'     => $data['taskid'],
             'content'    => is_client_logged_in() ? _strip_tags($data['content']) : $data['content'],
             'staffid'    => $data['staffid'],
@@ -963,7 +944,7 @@ class Tasks_model extends App_Model
         if ($insert_id) {
             $this->db->select('rel_type,rel_id,name,visible_to_client');
             $this->db->where('id', $data['taskid']);
-            $task = $this->db->get(db_prefix() . 'tasks')->row();
+            $task = $this->db->get('tblstafftasks')->row();
 
             $description     = 'not_task_new_comment';
             $additional_data = serialize([
@@ -974,10 +955,10 @@ class Tasks_model extends App_Model
                 $this->projects_model->log_activity($task->rel_id, 'project_activity_new_task_comment', $task->name, $task->visible_to_client);
             }
 
-            $this->_send_task_responsible_users_notification($description, $data['taskid'], false, 'task_new_comment_to_staff', $additional_data, $insert_id);
-            $this->_send_customer_contacts_notification($data['taskid'], 'task_new_comment_to_customer');
+            $this->_send_task_responsible_users_notification($description, $data['taskid'], false, 'task-commented', $additional_data, $insert_id);
+            $this->_send_customer_contacts_notification($data['taskid'], 'task-commented-to-contacts');
 
-            hooks()->do_action('task_comment_added', ['task_id' => $data['taskid'], 'comment_id' => $insert_id]);
+            do_action('task_comment_added', ['task_id' => $data['taskid'], 'comment_id' => $insert_id]);
 
             return $insert_id;
         }
@@ -992,7 +973,7 @@ class Tasks_model extends App_Model
      */
     public function add_task_followers($data)
     {
-        $this->db->insert(db_prefix() . 'task_followers', [
+        $this->db->insert('tblstafftasksfollowers', [
             'taskid'  => $data['taskid'],
             'staffid' => $data['follower'],
         ]);
@@ -1008,14 +989,19 @@ class Tasks_model extends App_Model
                         $taskName,
                     ]),
                 ]);
-
                 if ($notified) {
                     pusher_trigger_notification([$data['follower']]);
                 }
-
                 $member = $this->staff_model->get($data['follower']);
 
-                send_mail_template('task_added_as_follower_to_staff', $member->email, $data['follower'], $data['taskid']);
+                $this->load->model('emails_model');
+                $this->emails_model->set_staff_id($data['follower']);
+
+                $merge_fields = [];
+                $merge_fields = array_merge($merge_fields, get_staff_merge_fields($data['follower']));
+                $merge_fields = array_merge($merge_fields, get_task_merge_fields($data['taskid']));
+
+                $this->emails_model->send_email_template('task-added-as-follower', $member->email, $merge_fields);
             }
 
             $description = 'not_task_added_someone_as_follower';
@@ -1059,14 +1045,14 @@ class Tasks_model extends App_Model
         } else {
             $assignData['assigned_from'] = get_staff_user_id();
         }
-        $this->db->insert(db_prefix() . 'task_assigned', $assignData);
+        $this->db->insert('tblstafftaskassignees', $assignData);
 
         $assigneeId = $this->db->insert_id();
 
         if ($assigneeId) {
             $this->db->select('name,visible_to_client,rel_id,rel_type');
             $this->db->where('id', $data['taskid']);
-            $task = $this->db->get(db_prefix() . 'tasks')->row();
+            $task = $this->db->get('tblstafftasks')->row();
 
             if (get_staff_user_id() != $data['assignee'] || $clientRequest) {
                 $notification_data = [
@@ -1090,10 +1076,15 @@ class Tasks_model extends App_Model
                 if (add_notification($notification_data)) {
                     pusher_trigger_notification([$data['assignee']]);
                 }
-
                 $member = $this->staff_model->get($data['assignee']);
 
-                send_mail_template('task_assigned_to_staff', $member->email, $data['assignee'], $data['taskid']);
+                $this->load->model('emails_model');
+                $this->emails_model->set_staff_id($data['assignee']);
+                $merge_fields = [];
+                $merge_fields = array_merge($merge_fields, get_staff_merge_fields($data['assignee']));
+                $merge_fields = array_merge($merge_fields, get_task_merge_fields($data['taskid']));
+
+                $this->emails_model->send_email_template('task-assigned', $member->email, $merge_fields);
             }
 
             $description                  = 'not_task_assigned_someone';
@@ -1127,19 +1118,19 @@ class Tasks_model extends App_Model
      */
     public function get_task_attachments($taskid, $where = [])
     {
-        $this->db->select(implode(', ', prefixed_table_fields_array(db_prefix() . 'files')) . ', ' . db_prefix() . 'task_comments.id as comment_file_id');
-        $this->db->where(db_prefix() . 'files.rel_id', $taskid);
-        $this->db->where(db_prefix() . 'files.rel_type', 'task');
+        $this->db->select(implode(', ', prefixed_table_fields_array('tblfiles')) . ', tblstafftaskcomments.id as comment_file_id');
+        $this->db->where('tblfiles.rel_id', $taskid);
+        $this->db->where('tblfiles.rel_type', 'task');
 
         if ((is_array($where) && count($where) > 0) || (is_string($where) && $where != '')) {
             $this->db->where($where);
         }
 
-        $this->db->join(db_prefix() . 'task_comments', db_prefix() . 'task_comments.file_id = ' . db_prefix() . 'files.id', 'left');
-        $this->db->join(db_prefix() . 'tasks', db_prefix() . 'tasks.id = ' . db_prefix() . 'files.rel_id');
-        $this->db->order_by(db_prefix() . 'files.dateadded', 'desc');
+        $this->db->join('tblstafftaskcomments', 'tblstafftaskcomments.file_id = tblfiles.id', 'left');
+        $this->db->join('tblstafftasks', 'tblstafftasks.id = tblfiles.rel_id');
+        $this->db->order_by('tblfiles.dateadded', 'desc');
 
-        return $this->db->get(db_prefix() . 'files')->result_array();
+        return $this->db->get('tblfiles')->result_array();
     }
 
     /**
@@ -1153,7 +1144,7 @@ class Tasks_model extends App_Model
         $deleted         = false;
         // Get the attachment
         $this->db->where('id', $id);
-        $attachment = $this->db->get(db_prefix() . 'files')->row();
+        $attachment = $this->db->get('tblfiles')->row();
 
         if ($attachment) {
             if (empty($attachment->external)) {
@@ -1169,10 +1160,10 @@ class Tasks_model extends App_Model
             }
 
             $this->db->where('id', $attachment->id);
-            $this->db->delete(db_prefix() . 'files');
+            $this->db->delete('tblfiles');
             if ($this->db->affected_rows() > 0) {
                 $deleted = true;
-                log_activity('Task Attachment Deleted [TaskID: ' . $attachment->rel_id . ']');
+                logActivity('Task Attachment Deleted [TaskID: ' . $attachment->rel_id . ']');
             }
 
             if (is_dir(get_upload_path_by_type('task') . $attachment->rel_id)) {
@@ -1187,20 +1178,20 @@ class Tasks_model extends App_Model
 
         if ($deleted) {
             if ($attachment->task_comment_id != 0) {
-                $total_comment_files = total_rows(db_prefix() . 'files', ['task_comment_id' => $attachment->task_comment_id]);
+                $total_comment_files = total_rows('tblfiles', ['task_comment_id' => $attachment->task_comment_id]);
                 if ($total_comment_files == 0) {
                     $this->db->where('id', $attachment->task_comment_id);
-                    $comment = $this->db->get(db_prefix() . 'task_comments')->row();
+                    $comment = $this->db->get('tblstafftaskcomments')->row();
 
                     if ($comment) {
                         // Comment is empty and uploaded only with attachments
                         // Now all attachments are deleted, we need to delete the comment too
                         if (empty($comment->content) || $comment->content === '[task_attachment]') {
                             $this->db->where('id', $attachment->task_comment_id);
-                            $this->db->delete(db_prefix() . 'task_comments');
+                            $this->db->delete('tblstafftaskcomments');
                             $comment_removed = $comment->id;
                         } else {
-                            $this->db->query('UPDATE ' . db_prefix() . "task_comments
+                            $this->db->query("UPDATE tblstafftaskcomments
                             SET content = REPLACE(content, '[task_attachment]', '')
                             WHERE id = " . $attachment->task_comment_id);
                         }
@@ -1209,7 +1200,7 @@ class Tasks_model extends App_Model
             }
 
             $this->db->where('file_id', $id);
-            $comment_attachment = $this->db->get(db_prefix() . 'task_comments')->row();
+            $comment_attachment = $this->db->get('tblstafftaskcomments')->row();
 
             if ($comment_attachment) {
                 $this->remove_comment($comment_attachment->id);
@@ -1231,7 +1222,7 @@ class Tasks_model extends App_Model
         if ($file_id) {
             $this->db->select('rel_type,rel_id,name,visible_to_client');
             $this->db->where('id', $rel_id);
-            $task = $this->db->get(db_prefix() . 'tasks')->row();
+            $task = $this->db->get('tblstafftasks')->row();
 
             if ($task->rel_type == 'project') {
                 $this->projects_model->log_activity($task->rel_id, 'project_activity_new_task_attachment', $task->name, $task->visible_to_client);
@@ -1239,15 +1230,15 @@ class Tasks_model extends App_Model
 
             if ($notification == true) {
                 $description = 'not_task_new_attachment';
-                $this->_send_task_responsible_users_notification($description, $rel_id, false, 'task_new_attachment_to_staff');
-                $this->_send_customer_contacts_notification($rel_id, 'task_new_attachment_to_customer');
+                $this->_send_task_responsible_users_notification($description, $rel_id, false, 'task-added-attachment');
+                $this->_send_customer_contacts_notification($rel_id, 'task-added-attachment-to-contacts');
             }
 
-            $task_attachment_as_comment = hooks()->apply_filters('add_task_attachment_as_comment', 'true');
+            $task_attachment_as_comment = do_action('add_task_attachment_as_comment', 'true');
 
             if ($task_attachment_as_comment == 'true') {
                 $file = $this->misc_model->get_file($file_id);
-                $this->db->insert(db_prefix() . 'task_comments', [
+                $this->db->insert('tblstafftaskcomments', [
                     'content'    => '[task_attachment]',
                     'taskid'     => $rel_id,
                     'staffid'    => $file->staffid,
@@ -1270,9 +1261,9 @@ class Tasks_model extends App_Model
      */
     public function get_task_followers($id)
     {
-        $this->db->select('id,' . db_prefix() . 'task_followers.staffid as followerid, CONCAT(firstname, " ", lastname) as full_name');
-        $this->db->from(db_prefix() . 'task_followers');
-        $this->db->join(db_prefix() . 'staff', db_prefix() . 'staff.staffid = ' . db_prefix() . 'task_followers.staffid');
+        $this->db->select('id,tblstafftasksfollowers.staffid as followerid, CONCAT(firstname, " ", lastname) as full_name');
+        $this->db->from('tblstafftasksfollowers');
+        $this->db->join('tblstaff', 'tblstaff.staffid = tblstafftasksfollowers.staffid');
         $this->db->where('taskid', $id);
 
         return $this->db->get()->result_array();
@@ -1285,9 +1276,9 @@ class Tasks_model extends App_Model
      */
     public function get_task_assignees($id)
     {
-        $this->db->select('id,' . db_prefix() . 'task_assigned.staffid as assigneeid,assigned_from,firstname,lastname,CONCAT(firstname, " ", lastname) as full_name,is_assigned_from_contact');
-        $this->db->from(db_prefix() . 'task_assigned');
-        $this->db->join(db_prefix() . 'staff', db_prefix() . 'staff.staffid = ' . db_prefix() . 'task_assigned.staffid');
+        $this->db->select('id,tblstafftaskassignees.staffid as assigneeid,assigned_from,firstname,lastname,CONCAT(firstname, " ", lastname) as full_name,is_assigned_from_contact');
+        $this->db->from('tblstafftaskassignees');
+        $this->db->join('tblstaff', 'tblstaff.staffid = tblstafftaskassignees.staffid');
         $this->db->where('taskid', $id);
 
         return $this->db->get()->result_array();
@@ -1300,11 +1291,11 @@ class Tasks_model extends App_Model
      */
     public function get_task_comments($id)
     {
-        $task_comments_order = hooks()->apply_filters('task_comments_order', 'DESC');
+        $task_comments_order = do_action('task_comments_order', 'DESC');
 
-        $this->db->select('id,dateadded,content,' . db_prefix() . 'staff.firstname,' . db_prefix() . 'staff.lastname,' . db_prefix() . 'task_comments.staffid,' . db_prefix() . 'task_comments.contact_id as contact_id,file_id,CONCAT(firstname, " ", lastname) as staff_full_name');
-        $this->db->from(db_prefix() . 'task_comments');
-        $this->db->join(db_prefix() . 'staff', db_prefix() . 'staff.staffid = ' . db_prefix() . 'task_comments.staffid', 'left');
+        $this->db->select('id,dateadded,content,tblstaff.firstname,tblstaff.lastname,tblstafftaskcomments.staffid,tblstafftaskcomments.contact_id as contact_id,file_id,CONCAT(firstname, " ", lastname) as staff_full_name');
+        $this->db->from('tblstafftaskcomments');
+        $this->db->join('tblstaff', 'tblstaff.staffid = tblstafftaskcomments.staffid', 'left');
         $this->db->where('taskid', $id);
         $this->db->order_by('dateadded', $task_comments_order);
 
@@ -1334,17 +1325,17 @@ class Tasks_model extends App_Model
     {
         // Check if user really creator
         $this->db->where('id', $data['id']);
-        $comment = $this->db->get(db_prefix() . 'task_comments')->row();
+        $comment = $this->db->get('tblstafftaskcomments')->row();
         if ($comment->staffid == get_staff_user_id() || has_permission('tasks', '', 'edit') || $comment->contact_id == get_contact_user_id()) {
             $comment_added = strtotime($comment->dateadded);
             $minus_1_hour  = strtotime('-1 hours');
             if (get_option('client_staff_add_edit_delete_task_comments_first_hour') == 0 || (get_option('client_staff_add_edit_delete_task_comments_first_hour') == 1 && $comment_added >= $minus_1_hour) || is_admin()) {
-                if (total_rows(db_prefix() . 'files', ['task_comment_id' => $comment->id]) > 0) {
+                if (total_rows('tblfiles', ['task_comment_id' => $comment->id]) > 0) {
                     $data['content'] .= '[task_attachment]';
                 }
 
                 $this->db->where('id', $data['id']);
-                $this->db->update(db_prefix() . 'task_comments', [
+                $this->db->update('tblstafftaskcomments', [
                     'content' => $data['content'],
                 ]);
                 if ($this->db->affected_rows() > 0) {
@@ -1367,7 +1358,7 @@ class Tasks_model extends App_Model
     {
         // Check if user really creator
         $this->db->where('id', $id);
-        $comment = $this->db->get(db_prefix() . 'task_comments')->row();
+        $comment = $this->db->get('tblstafftaskcomments')->row();
 
         if (!$comment) {
             return true;
@@ -1379,7 +1370,7 @@ class Tasks_model extends App_Model
             if (get_option('client_staff_add_edit_delete_task_comments_first_hour') == 0 || (get_option('client_staff_add_edit_delete_task_comments_first_hour') == 1 && $comment_added >= $minus_1_hour)
                 || (is_admin() || $force === true)) {
                 $this->db->where('id', $id);
-                $this->db->delete(db_prefix() . 'task_comments');
+                $this->db->delete('tblstafftaskcomments');
                 if ($this->db->affected_rows() > 0) {
                     if ($comment->file_id != 0) {
                         $this->remove_task_attachment($comment->file_id);
@@ -1410,24 +1401,24 @@ class Tasks_model extends App_Model
     {
         $this->db->select('rel_type,rel_id,name,visible_to_client');
         $this->db->where('id', $taskid);
-        $task = $this->db->get(db_prefix() . 'tasks')->row();
+        $task = $this->db->get('tblstafftasks')->row();
 
         $this->db->where('id', $id);
-        $assignee_data = $this->db->get(db_prefix() . 'task_assigned')->row();
+        $assignee_data = $this->db->get('tblstafftaskassignees')->row();
 
         // Delete timers
         //   $this->db->where('task_id', $taskid);
         ////   $this->db->where('staff_id', $assignee_data->staffid);
-        ///   $this->db->delete(db_prefix().'taskstimers');
+        ///   $this->db->delete('tbltaskstimers');
 
         // Stop all timers
         $this->db->where('task_id', $taskid);
         $this->db->where('staff_id', $assignee_data->staffid);
         $this->db->where('end_time IS NULL');
-        $this->db->update(db_prefix() . 'taskstimers', ['end_time' => time()]);
+        $this->db->update('tbltaskstimers', ['end_time' => time()]);
 
         $this->db->where('id', $id);
-        $this->db->delete(db_prefix() . 'task_assigned');
+        $this->db->delete('tblstafftaskassignees');
         if ($this->db->affected_rows() > 0) {
             if ($task->rel_type == 'project') {
                 $this->projects_model->log_activity($task->rel_id, 'project_activity_task_assignee_removed', $task->name . ' - ' . get_staff_full_name($assignee_data->staffid), $task->visible_to_client);
@@ -1448,7 +1439,7 @@ class Tasks_model extends App_Model
     public function remove_follower($id, $taskid)
     {
         $this->db->where('id', $id);
-        $this->db->delete(db_prefix() . 'task_followers');
+        $this->db->delete('tblstafftasksfollowers');
         if ($this->db->affected_rows() > 0) {
             return true;
         }
@@ -1466,20 +1457,20 @@ class Tasks_model extends App_Model
     {
         $this->db->select('rel_type,rel_id,name,visible_to_client,status');
         $this->db->where('id', $task_id);
-        $task = $this->db->get(db_prefix() . 'tasks')->row();
+        $task = $this->db->get('tblstafftasks')->row();
 
-        if ($task->status == self::STATUS_COMPLETE) {
+        if ($task->status == 5) {
             return $this->unmark_complete($task_id, $status);
         }
 
         $update = ['status' => $status];
 
-        if ($status == self::STATUS_COMPLETE) {
+        if ($status == 5) {
             $update['datefinished'] = date('Y-m-d H:i:s');
         }
 
         $this->db->where('id', $task_id);
-        $this->db->update(db_prefix() . 'tasks', $update);
+        $this->db->update('tblstafftasks', $update);
         if ($this->db->affected_rows() > 0) {
             $description = 'not_task_status_changed';
 
@@ -1488,33 +1479,33 @@ class Tasks_model extends App_Model
                 format_task_status($status, false, true),
             ];
 
-            if ($status == self::STATUS_COMPLETE) {
+            if ($status == 5) {
                 $description = 'not_task_marked_as_complete';
                 unset($not_data[1]);
 
                 $this->db->where('end_time IS NULL');
                 $this->db->where('task_id', $task_id);
-                $this->db->update(db_prefix() . 'taskstimers', [
+                $this->db->update('tbltaskstimers', [
                     'end_time' => time(),
                 ]);
             }
 
             if ($task->rel_type == 'project') {
-                $project_activity_log = $status == self::STATUS_COMPLETE ? 'project_activity_task_marked_complete' : 'not_project_activity_task_status_changed';
+                $project_activity_log = $status == 5 ? 'project_activity_task_marked_complete' : 'not_project_activity_task_status_changed';
 
                 $project_activity_desc = $task->name;
 
-                if ($status != self::STATUS_COMPLETE) {
+                if ($status != 5) {
                     $project_activity_desc .= ' - ' . format_task_status($status);
                 }
 
                 $this->projects_model->log_activity($task->rel_id, $project_activity_log, $project_activity_desc, $task->visible_to_client);
             }
 
-            $this->_send_task_responsible_users_notification($description, $task_id, false, 'task_status_changed_to_staff', serialize($not_data));
+            $this->_send_task_responsible_users_notification($description, $task_id, false, 'task-status-change-to-staff', serialize($not_data));
 
-            $this->_send_customer_contacts_notification($task_id, 'task_status_changed_to_customer');
-            hooks()->do_action('task_status_changed', ['status' => $status, 'task_id' => $task_id]);
+            $this->_send_customer_contacts_notification($task_id, 'task-status-change-to-contacts');
+            do_action('task_status_changed', ['status' => $status, 'task_id' => $task_id]);
 
             return true;
         }
@@ -1535,14 +1526,14 @@ class Tasks_model extends App_Model
             $status = 1;
             $this->db->select('startdate');
             $this->db->where('id', $id);
-            $_task = $this->db->get(db_prefix() . 'tasks')->row();
+            $_task = $this->db->get('tblstafftasks')->row();
             if (date('Y-m-d') > date('Y-m-d', strtotime($_task->startdate))) {
                 $status = 4;
             }
         }
 
         $this->db->where('id', $id);
-        $this->db->update(db_prefix() . 'tasks', [
+        $this->db->update('tblstafftasks', [
             'datefinished' => null,
             'status'       => $status,
         ]);
@@ -1550,7 +1541,7 @@ class Tasks_model extends App_Model
         if ($this->db->affected_rows() > 0) {
             $this->db->select('rel_type,rel_id,name,visible_to_client');
             $this->db->where('id', $id);
-            $task = $this->db->get(db_prefix() . 'tasks')->row();
+            $task = $this->db->get('tblstafftasks')->row();
 
             if ($task->rel_type == 'project') {
                 $this->projects_model->log_activity($task->rel_id, 'project_activity_task_unmarked_complete', $task->name, $task->visible_to_client);
@@ -1558,11 +1549,11 @@ class Tasks_model extends App_Model
 
             $description = 'not_task_unmarked_as_complete';
 
-            $this->_send_task_responsible_users_notification('not_task_unmarked_as_complete', $id, false, 'task_status_changed_to_staff', serialize([
+            $this->_send_task_responsible_users_notification('not_task_unmarked_as_complete', $id, false, 'task-status-change-to-staff', serialize([
                 $task->name,
             ]));
 
-            hooks()->do_action('task_status_changed', ['status' => $status, 'task_id' => $id]);
+            do_action('task_status_changed', ['status' => $status, 'task_id' => $id]);
 
             return true;
         }
@@ -1579,10 +1570,10 @@ class Tasks_model extends App_Model
     {
         $this->db->select('rel_type,rel_id,name,visible_to_client');
         $this->db->where('id', $id);
-        $task = $this->db->get(db_prefix() . 'tasks')->row();
+        $task = $this->db->get('tblstafftasks')->row();
 
         $this->db->where('id', $id);
-        $this->db->delete(db_prefix() . 'tasks');
+        $this->db->delete('tblstafftasks');
         if ($this->db->affected_rows() > 0) {
 
             // Log activity only if task is deleted indivudual not when deleting all projects
@@ -1591,52 +1582,50 @@ class Tasks_model extends App_Model
             }
 
             $this->db->where('taskid', $id);
-            $this->db->delete(db_prefix() . 'task_followers');
+            $this->db->delete('tblstafftasksfollowers');
 
             $this->db->where('taskid', $id);
-            $this->db->delete(db_prefix() . 'task_assigned');
+            $this->db->delete('tblstafftaskassignees');
 
             $this->db->where('taskid', $id);
-            $comments = $this->db->get(db_prefix() . 'task_comments')->result_array();
+            $comments = $this->db->get('tblstafftaskcomments')->result_array();
             foreach ($comments as $comment) {
                 $this->remove_comment($comment['id'], true);
             }
 
             $this->db->where('taskid', $id);
-            $this->db->delete(db_prefix() . 'task_checklist_items');
+            $this->db->delete('tbltaskchecklists');
 
             // Delete the custom field values
             $this->db->where('relid', $id);
             $this->db->where('fieldto', 'tasks');
-            $this->db->delete(db_prefix() . 'customfieldsvalues');
+            $this->db->delete('tblcustomfieldsvalues');
 
             $this->db->where('task_id', $id);
-            $this->db->delete(db_prefix() . 'taskstimers');
+            $this->db->delete('tbltaskstimers');
 
             $this->db->where('rel_id', $id);
             $this->db->where('rel_type', 'task');
-            $this->db->delete(db_prefix() . 'taggables');
+            $this->db->delete('tbltags_in');
 
             $this->db->where('rel_type', 'task');
             $this->db->where('rel_id', $id);
-            $this->db->delete(db_prefix() . 'reminders');
+            $this->db->delete('tblreminders');
 
             $this->db->where('rel_id', $id);
             $this->db->where('rel_type', 'task');
-            $attachments = $this->db->get(db_prefix() . 'files')->result_array();
+            $attachments = $this->db->get('tblfiles')->result_array();
             foreach ($attachments as $at) {
                 $this->remove_task_attachment($at['id']);
             }
 
             $this->db->where('rel_id', $id);
             $this->db->where('rel_type', 'task');
-            $this->db->delete(db_prefix() . 'related_items');
+            $this->db->delete('tblitemsrelated');
 
             if (is_dir(get_upload_path_by_type('task') . $id)) {
                 delete_dir(get_upload_path_by_type('task') . $id);
             }
-
-            hooks()->do_action('task_deleted', $id);
 
             return true;
         }
@@ -1654,9 +1643,7 @@ class Tasks_model extends App_Model
     private function _send_task_responsible_users_notification($description, $taskid, $excludeid = false, $email_template = '', $additional_notification_data = '', $comment_id = false)
     {
         $this->load->model('staff_model');
-
-        $staff = $this->staff_model->get('', ['active' => 1]);
-
+        $staff         = $this->staff_model->get('', ['active' => 1]);
         $notifiedUsers = [];
         foreach ($staff as $member) {
             if (is_numeric($excludeid)) {
@@ -1689,7 +1676,13 @@ class Tasks_model extends App_Model
                 }
 
                 if ($email_template != '') {
-                    send_mail_template($email_template, $member['email'], $member['staffid'], $taskid);
+                    $this->load->model('emails_model');
+                    $this->emails_model->set_staff_id($member['staffid']);
+                    $merge_fields = [];
+                    $merge_fields = array_merge($merge_fields, get_staff_merge_fields($member['staffid']));
+                    $merge_fields = array_merge($merge_fields, get_task_merge_fields($taskid));
+
+                    $this->emails_model->send_email_template($email_template, $member['email'], $merge_fields);
                 }
             }
         }
@@ -1700,27 +1693,30 @@ class Tasks_model extends App_Model
     public function _send_customer_contacts_notification($taskid, $template_name)
     {
         $this->db->select('rel_id,visible_to_client,rel_type');
-        $this->db->from(db_prefix() . 'tasks');
+        $this->db->from('tblstafftasks');
         $this->db->where('id', $taskid);
         $task = $this->db->get()->row();
 
         if ($task->rel_type == 'project') {
             $this->db->where('project_id', $task->rel_id);
             $this->db->where('name', 'view_tasks');
-            $project_settings = $this->db->get(db_prefix() . 'project_settings')->row();
+            $project_settings = $this->db->get('tblprojectsettings')->row();
             if ($project_settings) {
                 if ($project_settings->value == 1 && $task->visible_to_client == 1) {
                     $this->db->select('clientid');
-                    $this->db->from(db_prefix() . 'projects');
+                    $this->db->from('tblprojects');
                     $this->db->where('id', $project_settings->project_id);
                     $project  = $this->db->get()->row();
                     $contacts = $this->clients_model->get_contacts($project->clientid, ['active' => 1, 'task_emails' => 1]);
+                    $this->load->model('emails_model');
                     foreach ($contacts as $contact) {
                         if (is_client_logged_in() && get_contact_user_id() == $contact['id']) {
                             continue;
                         }
-
-                        send_mail_template($template_name, $contact['email'], $project->clientid, $contact['id'], $taskid);
+                        $merge_fields = [];
+                        $merge_fields = array_merge($merge_fields, get_client_contact_merge_fields($project->clientid, $contact['id']));
+                        $merge_fields = array_merge($merge_fields, get_task_merge_fields($taskid, true));
+                        $this->emails_model->send_email_template($template_name, $contact['email'], $merge_fields);
                     }
                 }
             }
@@ -1735,7 +1731,7 @@ class Tasks_model extends App_Model
      */
     public function staff_has_commented_on_task($userid, $taskid)
     {
-        return total_rows(db_prefix() . 'task_comments', ['staffid' => $userid, 'taskid' => $taskid]) > 0 ? true : false;
+        return total_rows('tblstafftaskcomments', ['staffid' => $userid, 'taskid' => $taskid]) > 0 ? true : false;
     }
 
     /**
@@ -1746,7 +1742,7 @@ class Tasks_model extends App_Model
      */
     public function is_task_follower($userid, $taskid)
     {
-        if (total_rows(db_prefix() . 'task_followers', [
+        if (total_rows('tblstafftasksfollowers', [
             'staffid' => $userid,
             'taskid' => $taskid,
         ]) == 0) {
@@ -1764,7 +1760,7 @@ class Tasks_model extends App_Model
      */
     public function is_task_assignee($userid, $taskid)
     {
-        if (total_rows(db_prefix() . 'task_assigned', [
+        if (total_rows('tblstafftaskassignees', [
             'staffid' => $userid,
             'taskid' => $taskid,
         ]) == 0) {
@@ -1782,7 +1778,7 @@ class Tasks_model extends App_Model
      */
     public function is_task_creator($userid, $taskid)
     {
-        if (total_rows(db_prefix() . 'tasks', [
+        if (total_rows('tblstafftasks', [
             'addedfrom' => $userid,
             'id' => $taskid,
             'is_added_from_contact' => 0,
@@ -1827,11 +1823,11 @@ class Tasks_model extends App_Model
 
         if ($newTimer) {
             $this->db->select('hourly_rate');
-            $this->db->from(db_prefix() . 'staff');
+            $this->db->from('tblstaff');
             $this->db->where('staffid', get_staff_user_id());
             $hourly_rate = $this->db->get()->row()->hourly_rate;
 
-            $this->db->insert(db_prefix() . 'taskstimers', [
+            $this->db->insert('tbltaskstimers', [
                 'start_time'  => time(),
                 'staff_id'    => get_staff_user_id(),
                 'task_id'     => $task_id,
@@ -1846,7 +1842,7 @@ class Tasks_model extends App_Model
                 $this->db->where('end_time IS NULL');
                 $this->db->where('task_id !=', '0');
                 $this->db->where('staff_id', get_staff_user_id());
-                $this->db->update(db_prefix() . 'taskstimers', [
+                $this->db->update('tbltaskstimers', [
                     'end_time' => time(),
                     'note'     => ($note != '' ? $note : null),
                 ]);
@@ -1854,11 +1850,11 @@ class Tasks_model extends App_Model
 
             if ($task_id != '0'
                 && get_option('timer_started_change_status_in_progress') == '1'
-                && total_rows(db_prefix() . 'tasks', ['id' => $task_id, 'status' => 1]) > 0) {
+                && total_rows('tblstafftasks', ['id' => $task_id, 'status' => 1]) > 0) {
                 $this->mark_as(4, $task_id);
             }
 
-            hooks()->do_action('task_timer_started', ['task_id' => $task_id, 'timer_id' => $_new_timer_id]);
+            do_action('task_timer_started', ['task_id' => $task_id, 'timer_id' => $_new_timer_id]);
 
             return true;
         }
@@ -1869,7 +1865,7 @@ class Tasks_model extends App_Model
                 return false;
             }
             $this->db->where('id', $timer_id);
-            $this->db->update(db_prefix() . 'taskstimers', [
+            $this->db->update('tbltaskstimers', [
                     'end_time' => time(),
                     'task_id'  => $task_id,
                     'note'     => ($note != '' ? $note : null),
@@ -1911,16 +1907,16 @@ class Tasks_model extends App_Model
             $this->db->where('task_id', $data['timesheet_task_id']);
             $this->db->where('staff_id', $timesheet_staff_id);
             $this->db->where('end_time IS NULL');
-            $this->db->update(db_prefix() . 'taskstimers', [
+            $this->db->update('tbltaskstimers', [
                 'end_time' => time(),
             ]);
 
             $this->db->select('hourly_rate');
-            $this->db->from(db_prefix() . 'staff');
+            $this->db->from('tblstaff');
             $this->db->where('staffid', $timesheet_staff_id);
             $hourly_rate = $this->db->get()->row()->hourly_rate;
 
-            $this->db->insert(db_prefix() . 'taskstimers', [
+            $this->db->insert('tbltaskstimers', [
                 'start_time'  => $start_time,
                 'end_time'    => $end_time,
                 'staff_id'    => $timesheet_staff_id,
@@ -1941,7 +1937,7 @@ class Tasks_model extends App_Model
             if ($insert_id) {
                 $this->db->select('rel_type,rel_id,name,visible_to_client');
                 $this->db->where('id', $data['timesheet_task_id']);
-                $task = $this->db->get(db_prefix() . 'tasks')->row();
+                $task = $this->db->get('tblstafftasks')->row();
 
                 if ($task->rel_type == 'project') {
                     $total      = $end_time - $start_time;
@@ -1958,7 +1954,7 @@ class Tasks_model extends App_Model
         }
         $affectedRows = 0;
         $this->db->where('id', $data['timer_id']);
-        $this->db->update(db_prefix() . 'taskstimers', [
+        $this->db->update('tbltaskstimers', [
                 'start_time' => $start_time,
                 'end_time'   => $end_time,
                 'staff_id'   => $timesheet_staff_id,
@@ -1985,14 +1981,14 @@ class Tasks_model extends App_Model
         $this->db->where('task_id', $task_id);
         $this->db->order_by('start_time', 'DESC');
 
-        return $this->db->get(db_prefix() . 'taskstimers')->result_array();
+        return $this->db->get('tbltaskstimers')->result_array();
     }
 
     public function get_task_timer($where)
     {
         $this->db->where($where);
 
-        return $this->db->get(db_prefix() . 'taskstimers')->row();
+        return $this->db->get('tbltaskstimers')->row();
     }
 
     public function is_timer_started($task_id, $staff_id = '')
@@ -2019,7 +2015,7 @@ class Tasks_model extends App_Model
         $this->db->where('task_id', $id);
         $this->db->where('end_time IS NULL');
         $this->db->where($where);
-        $results = $this->db->count_all_results(db_prefix() . 'taskstimers');
+        $results = $this->db->count_all_results('tbltaskstimers');
 
         return $results > 0 ? true : false;
     }
@@ -2033,14 +2029,14 @@ class Tasks_model extends App_Model
         $this->db->where('task_id', $task_id);
         $this->db->order_by('id', 'desc');
         $this->db->limit(1);
-        $timer = $this->db->get(db_prefix() . 'taskstimers')->row();
+        $timer = $this->db->get('tbltaskstimers')->row();
 
         return $timer;
     }
 
     public function task_tracking_stats($id)
     {
-        $loggers    = $this->db->query('SELECT DISTINCT(staff_id) FROM ' . db_prefix() . 'taskstimers WHERE task_id=' . $id)->result_array();
+        $loggers    = $this->db->query('SELECT DISTINCT(staff_id) FROM tbltaskstimers WHERE task_id=' . $id)->result_array();
         $labels     = [];
         $labels_ids = [];
         foreach ($loggers as $assignee) {
@@ -2068,7 +2064,7 @@ class Tasks_model extends App_Model
     public function get_timesheeets($task_id)
     {
         return $this->db->query("SELECT id,note,start_time,end_time,task_id,staff_id, CONCAT(firstname, ' ', lastname) as full_name,
-        end_time - start_time time_spent FROM " . db_prefix() . 'taskstimers JOIN ' . db_prefix() . 'staff ON ' . db_prefix() . 'staff.staffid=' . db_prefix() . "taskstimers.staff_id WHERE task_id = '$task_id' ORDER BY start_time DESC")->result_array();
+        end_time - start_time time_spent FROM tbltaskstimers JOIN tblstaff ON tblstaff.staffid=tbltaskstimers.staff_id WHERE task_id = '$task_id' ORDER BY start_time DESC")->result_array();
     }
 
     public function get_time_spent($seconds)
@@ -2100,7 +2096,7 @@ class Tasks_model extends App_Model
     public function get_unique_member_logged_task_ids($staff_id, $where = '')
     {
         $sql = 'SELECT DISTINCT(task_id)
-        FROM ' . db_prefix() . 'taskstimers WHERE staff_id =' . $staff_id . $where;
+        FROM tbltaskstimers WHERE staff_id =' . $staff_id . $where;
 
         return $this->db->query($sql)->result();
     }
@@ -2127,17 +2123,17 @@ class Tasks_model extends App_Model
     public function delete_timesheet($id)
     {
         $this->db->where('id', $id);
-        $timesheet = $this->db->get(db_prefix() . 'taskstimers')->row();
+        $timesheet = $this->db->get('tbltaskstimers')->row();
         $this->db->where('id', $id);
-        $this->db->delete(db_prefix() . 'taskstimers');
+        $this->db->delete('tbltaskstimers');
         if ($this->db->affected_rows() > 0) {
             $this->db->where('rel_id', $id);
             $this->db->where('rel_type', 'timesheet');
-            $this->db->delete(db_prefix() . 'taggables');
+            $this->db->delete('tbltags_in');
 
             $this->db->select('rel_type,rel_id,name,visible_to_client');
             $this->db->where('id', $timesheet->task_id);
-            $task = $this->db->get(db_prefix() . 'tasks')->row();
+            $task = $this->db->get('tblstafftasks')->row();
 
             if ($task->rel_type == 'project') {
                 $additional_data = $task->name;
@@ -2146,7 +2142,7 @@ class Tasks_model extends App_Model
                 $this->projects_model->log_activity($task->rel_id, 'project_activity_task_timesheet_deleted', $additional_data, $task->visible_to_client);
             }
 
-            log_activity('Timesheet Deleted [' . $id . ']');
+            logActivity('Timesheet Deleted [' . $id . ']');
 
             return true;
         }
@@ -2160,43 +2156,24 @@ class Tasks_model extends App_Model
         $this->db->where('rel_type', 'task');
         $this->db->order_by('isnotified,date', 'ASC');
 
-        return $this->db->get(db_prefix() . 'reminders')->result_array();
-    }
-
-    public function can_staff_access_task($staff_id, $task_id)
-    {
-        $retVal              = false;
-        $staffCanAccessTasks = $this->get_staff_members_that_can_access_task($task_id);
-        foreach ($staffCanAccessTasks as $staff) {
-            if ($staff['staffid'] == $staff_id) {
-                $retVal = true;
-
-                break;
-            }
-        }
-
-        return $retVal;
+        return $this->db->get('tblreminders')->result_array();
     }
 
     public function get_staff_members_that_can_access_task($task_id)
     {
-        return $this->db->query('SELECT * FROM ' . db_prefix() . 'staff
+        return $this->db->query("SELECT * FROM tblstaff
             WHERE (
                     admin=1
-                    OR staffid IN (SELECT staffid FROM ' . db_prefix() . "task_assigned WHERE taskid='.$task_id.')
-                    OR staffid IN (SELECT staffid FROM " . db_prefix() . "task_followers WHERE taskid='.$task_id.')
-                    OR staffid IN (SELECT addedfrom FROM " . db_prefix() . "tasks WHERE id='.$task_id.' AND is_added_from_contact=0)
-                    OR staffid IN(SELECT staff_id FROM " . db_prefix() . 'staff_permissions WHERE feature = "tasks" AND capability="view")
+                    OR staffid IN (SELECT staffid FROM tblstafftaskassignees WHERE taskid='.$task_id.')
+                    OR staffid IN (SELECT staffid FROM tblstafftasksfollowers WHERE taskid='.$task_id.')
+                    OR staffid IN (SELECT addedfrom FROM tblstafftasks WHERE id='.$task_id.' AND is_added_from_contact=0)
+                    OR staffid IN(SELECT staffid FROM tblstaffpermissions JOIN tblpermissions ON tblpermissions.permissionid=tblstaffpermissions.permissionid WHERE tblpermissions.name = \"tasks\" AND can_view=1)
                 )
-            AND active=1')->result_array();
+            AND active=1")->result_array();
     }
 
     private function should_staff_receive_notification($staffid, $taskid)
     {
-        if (!$this->can_staff_access_task($staffid, $taskid)) {
-            return false;
-        }
-
         return ($this->is_task_assignee($staffid, $taskid)
                 || $this->is_task_follower($staffid, $taskid)
                 || $this->is_task_creator($staffid, $taskid)

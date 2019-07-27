@@ -25,7 +25,7 @@
 <div class="modal-body">
    <div class="row">
       <div class="col-md-8 task-single-col-left">
-         <?php if(total_rows(db_prefix().'taskstimers',array('end_time'=>NULL,'staff_id !='=>get_staff_user_id(),'task_id'=>$task->id)) > 0){
+         <?php if(total_rows('tbltaskstimers',array('end_time'=>NULL,'staff_id !='=>get_staff_user_id(),'task_id'=>$task->id)) > 0){
             $startedTimers = $this->tasks_model->get_timers($task->id,array('staff_id !='=>get_staff_user_id(),'end_time'=>NULL));
 
             $usersWorking = '';
@@ -80,13 +80,13 @@
             echo '</div>';
             } ?>
          <div class="clearfix"></div>
-         <?php if($task->status != Tasks_model::STATUS_COMPLETE && ($task->current_user_is_assigned || has_permission('tasks','','edit') || $task->current_user_is_creator)){ ?>
+         <?php if($task->status != 5 && ($task->current_user_is_assigned || has_permission('tasks','','edit') || $task->current_user_is_creator)){ ?>
          <p class="no-margin pull-left" style="<?php echo 'margin-'.(is_rtl() ? 'left' : 'right').':5px !important'; ?>">
             <a href="#" class="btn btn-info" id="task-single-mark-complete-btn" autocomplete="off" data-loading-text="<?php echo _l('wait_text'); ?>" onclick="mark_complete(<?php echo $task->id; ?>); return false;" data-toggle="tooltip" title="<?php echo _l('task_single_mark_as_complete'); ?>">
             <i class="fa fa-check"></i>
             </a>
          </p>
-         <?php } else if($task->status == Tasks_model::STATUS_COMPLETE && ($task->current_user_is_assigned || has_permission('tasks','','edit') || $task->current_user_is_creator)){ ?>
+         <?php } else if($task->status == 5 && ($task->current_user_is_assigned || has_permission('tasks','','edit') || $task->current_user_is_creator)){ ?>
          <p class="no-margin pull-left" style="<?php echo 'margin-'.(is_rtl() ? 'left' : 'right').':5px !important'; ?>">
             <a href="#" class="btn btn-default" id="task-single-unmark-complete-btn" autocomplete="off" data-loading-text="<?php echo _l('wait_text'); ?>" onclick="unmark_complete(<?php echo $task->id; ?>); return false;" data-toggle="tooltip" title="<?php echo _l('task_unmark_as_complete'); ?>">
             <i class="fa fa-check"></i>
@@ -108,11 +108,11 @@
          <?php if($task->billed == 0){
             $is_assigned = $task->current_user_is_assigned;
             if(!$this->tasks_model->is_timer_started($task->id)) { ?>
-            <p class="no-margin pull-left"<?php if(!$is_assigned){ ?> data-toggle="tooltip" data-title="<?php echo _l('task_start_timer_only_assignee'); ?>"<?php } ?>>
-               <a href="#" class="mbot10 btn<?php if(!$is_assigned || $task->status == Tasks_model::STATUS_COMPLETE){echo ' disabled btn-default';}else {echo ' btn-success';} ?>" onclick="timer_action(this, <?php echo $task->id; ?>); return false;">
-               <i class="fa fa-clock-o"></i> <?php echo _l('task_start_timer'); ?>
-               </a>
-            </p>
+         <p class="no-margin pull-left"<?php if(!$is_assigned){ ?> data-toggle="tooltip" data-title="<?php echo _l('task_start_timer_only_assignee'); ?>"<?php } ?>>
+            <a href="#" class="mbot10 btn<?php if(!$is_assigned || $task->status == 5){echo ' disabled btn-default';}else {echo ' btn-success';} ?>" onclick="timer_action(this, <?php echo $task->id; ?>); return false;">
+            <i class="fa fa-clock-o"></i> <?php echo _l('task_start_timer'); ?>
+            </a>
+         </p>
          <?php } else { ?>
          <p class="no-margin pull-left">
             <a href="#" data-toggle="popover" data-placement="<?php echo is_mobile() ? 'bottom' : 'right'; ?>" data-html="true" data-trigger="manual" data-title="<?php echo _l('note'); ?>" data-content='<?php echo render_textarea('timesheet_note'); ?><button type="button" onclick="timer_action(this, <?php echo $task->id; ?>, <?php echo $this->tasks_model->get_last_timer($task->id)->id; ?>);" class="btn btn-info btn-xs"><?php echo _l('save'); ?></button>' class="btn mbot10 btn-danger<?php if(!$is_assigned){echo ' disabled';} ?>" onclick="return false;">
@@ -143,37 +143,28 @@
                      <tr>
                         <td>
                            <?php if($timesheet['note']){
-                              echo '<i class="fa fa-comment" data-html="true" data-placement="right" data-toggle="tooltip" data-title="'.html_escape($timesheet['note']).'"></i>';
+                              echo '<i class="fa fa-comment" data-html="true" data-placement="right" data-toggle="tooltip" data-title="'.htmlspecialchars($timesheet['note'],ENT_COMPAT).'"></i>';
                               }
                               ?>
                            <a href="<?php echo admin_url('staff/profile/' . $timesheet['staff_id']); ?>" target="_blank">
                            <?php echo $timesheet['full_name']; ?></a>
                         </td>
-                        <td><?php echo _dt($timesheet['start_time'], true); ?></td>
+                        <td><?php echo _dt($timesheet['start_time'],true); ?></td>
                         <td>
                            <?php
                               if($timesheet['end_time'] !== NULL){
                                  echo _dt($timesheet['end_time'],true);
                               } else {
-                                 // Allow admins to stop forgotten timers by staff member
                                  if(!$task->billed && is_admin()) {
-                                 ?>
-                                 <a href="#"
-                                 data-toggle="popover"
-                                 data-placement="bottom"
-                                 data-html="true"
-                                 data-trigger="manual"
-                                 data-title="<?php echo _l('note'); ?>"
-                                 data-content='<?php echo render_textarea('timesheet_note'); ?><button type="button" onclick="timer_action(this, <?php echo $task->id; ?>, <?php echo $timesheet['id']; ?>, 1);" class="btn btn-info btn-xs"><?php echo _l('save'); ?></button>'
-                                 class="text-danger"
-                                 onclick="return false;">
-                                    <i class="fa fa-clock-o"></i>
-                                    <?php echo _l('task_stop_timer'); ?>
-                                 </a>
+                                    // Allow admins to stop forgotten timers by staff member
+                                    ?>
+                           <a href="#" data-toggle="popover" data-placement="bottom" data-html="true" data-trigger="manual" data-title="<?php echo _l('note'); ?>" data-content='<?php echo render_textarea('timesheet_note'); ?><button type="button" onclick="timer_action(this, <?php echo $task->id; ?>, <?php echo $timesheet['id']; ?>, 1);" class="btn btn-info btn-xs"><?php echo _l('save'); ?></button>' class="text-danger" onclick="return false;">
+                           <i class="fa fa-clock-o"></i> <?php echo _l('task_stop_timer'); ?>
+                           </a>
                            <?php
                               }
-                           }
-                           ?>
+                              }
+                              ?>
                         </td>
                         <td>
                            <?php
@@ -199,7 +190,7 @@
                         <td colspan="5" class="text-center bold"><?php echo _l('no_timers_found'); ?></td>
                      </tr>
                      <?php } ?>
-                     <?php if($task->billed == 0 && ($is_assigned || (count($task->assignees) > 0 && is_admin())) && $task->status != Tasks_model::STATUS_COMPLETE){
+                     <?php if($task->billed == 0 && ($is_assigned || (count($task->assignees) > 0 && is_admin())) && $task->status != 5){
                         ?>
                      <tr class="odd">
                         <td colspan="5">
@@ -284,7 +275,7 @@
             } ?>
          <div class="clearfix"></div>
          <hr />
-         <a href="#" onclick="add_task_checklist_item('<?php echo $task->id; ?>', undefined, this); return false" class="mbot10 inline-block">
+         <a href="#" onclick="add_task_checklist_item('<?php echo $task->id; ?>'); return false" class="mbot10 inline-block">
          <span class="new-checklist-item"><i class="fa fa-plus-circle"></i>
          <?php echo _l('add_checklist_item'); ?>
          </span>
@@ -323,7 +314,7 @@
                      // Store all url related data here
                      $comments_attachments = array();
                      $attachments_data = array();
-                     $show_more_link_task_attachments = hooks()->apply_filters('show_more_link_task_attachments', 2);
+                     $show_more_link_task_attachments = do_action('show_more_link_task_attachments',2);
                      foreach($task->attachments as $attachment){ ?>
                   <?php ob_start(); ?>
                   <div data-num="<?php echo $i; ?>" data-commentid="<?php echo $attachment['comment_file_id']; ?>" data-comment-attachment="<?php echo $attachment['task_comment_id']; ?>" data-task-attachment-id="<?php echo $attachment['id']; ?>" class="task-attachment-col col-md-6<?php if($i > $show_more_link_task_attachments){echo ' hide task-attachment-col-more';} ?>">
@@ -530,9 +521,9 @@
                      }
 
                      $copy_template .= "<p>"._l('task_status')."</p>";
-                     $task_copy_statuses = hooks()->apply_filters('task_copy_statuses', $task_statuses);
+                     $task_copy_statuses = do_action('task_copy_statuses',$task_statuses);
                      foreach($task_copy_statuses as $copy_status){
-                     $copy_template .= "<div class='radio radio-primary'><input type='radio' value='".$copy_status['id']."' name='copy_task_status' id='copy_task_status_".$copy_status['id']."'".($copy_status['id'] == hooks()->apply_filters('copy_task_default_status', 1) ? ' checked' : '')."><label for='copy_task_status_".$copy_status['id']."'>".$copy_status['name']."</label></div>";
+                     $copy_template .= "<div class='radio radio-primary'><input type='radio' value='".$copy_status['id']."' name='copy_task_status' id='copy_task_status_".$copy_status['id']."'".($copy_status['id'] == do_action('copy_task_default_status',1) ? ' checked' : '')."><label for='copy_task_status_".$copy_status['id']."'>".$copy_status['name']."</label></div>";
                      }
 
                      $copy_template .= "<div class='text-center'>";
@@ -577,7 +568,7 @@
          <hr class="task-info-separator" />
          <div class="task-info task-status task-info-status">
             <h5>
-               <i class="fa fa-<?php if($task->status == Tasks_model::STATUS_COMPLETE){echo 'star';} else if($task->status == 1){echo 'star-o';} else {echo 'star-half-o';} ?> pull-left task-info-icon fa-fw fa-lg"></i><?php echo _l('task_status'); ?>:
+               <i class="fa fa-<?php if($task->status == 5){echo 'star';} else if($task->status == 1){echo 'star-o';} else {echo 'star-half-o';} ?> pull-left task-info-icon fa-fw fa-lg"></i><?php echo _l('task_status'); ?>:
                <?php if($task->current_user_is_assigned || $task->current_user_is_creator || has_permission('tasks','','edit')) { ?>
                <span class="task-single-menu task-menu-status">
                   <span class="trigger pointer manual-popover text-has-action">
@@ -586,7 +577,7 @@
                   <span class="content-menu hide">
                      <ul>
                         <?php
-                           $task_single_mark_as_statuses = hooks()->apply_filters('task_single_mark_as_statuses', $task_statuses);
+                           $task_single_mark_as_statuses = do_action('task_single_mark_as_statuses',$task_statuses);
                            foreach($task_single_mark_as_statuses as $status){ ?>
                         <?php if($task->status != $status['id']){ ?>
                         <li>
@@ -604,7 +595,7 @@
                <?php } ?>
             </h5>
          </div>
-         <?php if($task->status == Tasks_model::STATUS_COMPLETE){ ?>
+         <?php if($task->status == 5){ ?>
          <div class="task-info task-info-finished">
             <h5><i class="fa task-info-icon fa-fw fa-lg pull-left fa-check"></i>
                <?php echo _l('task_single_finished'); ?>: <span data-toggle="tooltip" data-title="<?php echo _dt($task->datefinished); ?>" data-placement="bottom" class="text-has-action"><?php echo time_ago($task->datefinished); ?></span>
@@ -622,18 +613,10 @@
             </h5>
          </div>
          <div class="task-info task-info-due-date task-single-inline-wrap<?php if(!$task->duedate && !has_permission('edit','','tasks')){echo ' hide';} ?>"<?php if(!$task->duedate){ echo ' style="opacity:0.5;"';} ?>>
-            <h5>
-               <i class="fa fa-calendar-check-o task-info-icon fa-fw fa-lg pull-left"></i>
+            <h5><i class="fa fa-calendar-check-o task-info-icon fa-fw fa-lg pull-left"></i>
                <?php echo _l('task_single_due_date'); ?>:
                <?php if(has_permission('tasks','','edit') && $task->status !=5) { ?>
-               <input
-               name="duedate"
-               tabindex="-1"
-               value="<?php echo _d($task->duedate); ?>"
-               id="task-single-duedate"
-               class="task-info-inline-input-edit datepicker pointer task-single-inline-field"
-               autocomplete="off"
-               <?php if($project_deadline){echo ' data-date-end-date="'.$project_deadline.'"';} ?>>
+               <input name="duedate" tabindex="-1" value="<?php echo _d($task->duedate); ?>" id="task-single-duedate" class="task-info-inline-input-edit datepicker pointer task-single-inline-field" autocomplete="off">
                <?php } else { ?>
                <?php echo _d($task->duedate); ?>
                <?php } ?>
@@ -643,7 +626,7 @@
             <h5>
                <i class="fa task-info-icon fa-fw fa-lg pull-left fa-bolt"></i>
                <?php echo _l('task_single_priority'); ?>:
-               <?php if(has_permission('tasks','','edit') && $task->status != Tasks_model::STATUS_COMPLETE) { ?>
+               <?php if(has_permission('tasks','','edit') && $task->status != 5) { ?>
                <span class="task-single-menu task-menu-priority">
                   <span class="trigger pointer manual-popover text-has-action" style="color:<?php echo task_priority_color($task->priority); ?>;">
                   <?php echo task_priority($task->priority); ?>
@@ -674,9 +657,9 @@
          <div class="task-info task-info-hourly-rate">
             <h5><i class="fa task-info-icon fa-fw fa-lg pull-left fa-clock-o"></i>
                <?php echo _l('task_hourly_rate'); ?>: <?php if($task->rel_type == 'project' && $task->project_data->billing_type == 2){
-                  echo app_format_number($task->project_data->project_rate_per_hour);
+                  echo _format_number($task->project_data->project_rate_per_hour);
                   } else {
-                  echo app_format_number($task->hourly_rate);
+                  echo _format_number($task->hourly_rate);
                   }
                   ?>
             </h5>
@@ -703,7 +686,7 @@
          </div>
          <?php } ?>
          <?php } ?>
-         <?php if($task->current_user_is_assigned || total_rows(db_prefix().'taskstimers',array('task_id'=>$task->id,'staff_id'=>get_staff_user_id())) > 0){ ?>
+         <?php if($task->current_user_is_assigned || total_rows('tbltaskstimers',array('task_id'=>$task->id,'staff_id'=>get_staff_user_id())) > 0){ ?>
          <div class="task-info task-info-user-logged-time">
             <h5>
                <i class="fa fa-asterisk task-info-icon fa-fw fa-lg" aria-hidden="true"></i><?php echo _l('task_user_logged_time'); ?>
@@ -826,7 +809,7 @@
                foreach ($staff as $assignee) {
                  if (!in_array($assignee['staffid'],$task->assignees_ids)) {
                    if ($task->rel_type == 'project'
-                     && total_rows(db_prefix().'project_members', array('project_id' => $task->rel_id,'staff_id' => $assignee['staffid'])) == 0) {
+                     && total_rows('tblprojectmembers', array('project_id' => $task->rel_id,'staff_id' => $assignee['staffid'])) == 0) {
                     continue;
                }
                $options .= '<option value="' . $assignee['staffid'] . '">' . $assignee['full_name'] . '</option>';
@@ -846,7 +829,7 @@
                   $_remove_assigne = ' <a href="#" class="remove-task-user text-danger" onclick="remove_assignee(' . $assignee['id'] . ',' . $task->id . '); return false;"><i class="fa fa-remove"></i></a>';
                }
                $_assignees .= '
-               <div class="task-user"  data-toggle="tooltip" data-title="'.html_escape($assignee['full_name']).'">
+               <div class="task-user"  data-toggle="tooltip" data-title="'.$assignee['full_name'].'">
                <a href="' . admin_url('profile/' . $assignee['assigneeid']) . '" target="_blank">' . staff_profile_image($assignee['assigneeid'], array(
                 'staff-profile-image-small'
                )) .'</a> ' . $_remove_assigne . '</span>
@@ -888,7 +871,7 @@
                    $_remove_follower = ' <a href="#" class="remove-task-user text-danger" onclick="remove_follower(' . $follower['id'] . ',' . $task->id . '); return false;"><i class="fa fa-remove"></i></a>';
                 }
                 $_followers .= '
-                <span class="task-user" data-toggle="tooltip" data-title="'.html_escape($follower['full_name']).'">
+                <span class="task-user" data-toggle="tooltip" data-title="'.$follower['full_name'].'">
                 <a href="' . admin_url('profile/' . $follower['followerid']) . '" target="_blank">' . staff_profile_image($follower['followerid'], array(
                  'staff-profile-image-small'
                )) . '</a> ' . $_remove_follower . '</span>
@@ -957,7 +940,7 @@
             taskExternalFileUpload(files,'dropbox',<?php echo $task->id; ?>);
          },
          linkType: "preview",
-         extensions: app.options.allowed_files.split(','),
+         extensions: app_allowed_files.split(','),
       }));
    }
 
@@ -972,7 +955,7 @@
       taskAttachmentDropzone = null;
    }
 
-   taskAttachmentDropzone = new Dropzone("#task-attachment", appCreateDropzoneOptions({
+   taskAttachmentDropzone = new Dropzone("#task-attachment", $.extend({}, _dropzone_defaults(), {
       uploadMultiple: true,
       parallelUploads: 20,
       maxFiles: 20,
